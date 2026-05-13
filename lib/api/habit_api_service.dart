@@ -26,11 +26,39 @@ class HabitApiService {
 
   // Хелпер для обработки сетевых ошибок
   String _parseError(dynamic e) {
-    final errStr = e.toString().toLowerCase();
-    if (errStr.contains('socketexception') || errStr.contains('host lookup') || errStr.contains('failed host lookup')) {
+    final errStr = e.toString();
+    
+    // 1. Handle network exceptions
+    final lower = errStr.toLowerCase();
+    if (lower.contains('socketexception') || lower.contains('host lookup') || lower.contains('failed host lookup')) {
       return 'Network error. Please check your internet connection.';
     }
-    return e.toString().replaceFirst('Exception: ', '');
+
+    // 2. Try to parse JSON from the error message (often wrapped in Exception: ...)
+    try {
+      final cleanStr = errStr.replaceFirst('Exception: ', '');
+      // The message might look like "Failed to create habit: { ... }"
+      if (cleanStr.contains('{') && cleanStr.contains('}')) {
+        final jsonStart = cleanStr.indexOf('{');
+        final jsonPart = cleanStr.substring(jsonStart);
+        final data = jsonDecode(jsonPart);
+        
+        if (data is Map) {
+          final error = data['error'];
+          if (error is Map) {
+            final code = error['code'];
+            final message = error['message'];
+            if (code == 'ProRequired') return 'ProRequired: $message';
+            return message ?? 'An unexpected error occurred.';
+          }
+          return data['message'] ?? cleanStr;
+        }
+      }
+    } catch (_) {
+      // Fallback to raw string if JSON parsing fails
+    }
+
+    return errStr.replaceFirst('Exception: ', '');
   }
 
   // ─── GET /habits ───────────────────────────────────────────────────────────

@@ -158,9 +158,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     } catch (e) {
       final msg = e.toString().replaceFirst('Exception: ', '');
       if (msg.contains('ProRequired')) {
-        if (mounted) {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaywallScreen()));
-        }
+        if (mounted) _showLimitSheet(msg.replaceFirst('ProRequired: ', ''));
       } else {
         _showError(msg);
       }
@@ -176,6 +174,87 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _showLimitSheet(String message) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: const BoxDecoration(
+          color: Color(0xFF161A22),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          boxShadow: [
+            BoxShadow(color: Colors.black54, blurRadius: 40, spreadRadius: 10),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80, height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDA22FF).withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFDA22FF).withOpacity(0.2)),
+              ),
+              child: const Icon(Icons.star_rounded, color: Color(0xFFDA22FF), size: 48),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Limit Reached',
+              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 16, height: 1.5),
+            ),
+            const SizedBox(height: 32),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFDA22FF).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  'Upgrade to Pro',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Maybe later',
+                style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/habit_template.dart';
 import 'ai_generator_screen.dart';
+import '../paywall/paywall_screen.dart';
 
 class TemplatesScreen extends StatefulWidget {
   const TemplatesScreen({super.key});
@@ -12,6 +13,7 @@ class TemplatesScreen extends StatefulWidget {
 
 class _TemplatesScreenState extends State<TemplatesScreen> {
   bool _isPro = false;
+  int _remaining = 0;
   bool _isLoading = true;
 
   @override
@@ -26,6 +28,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       if (mounted) {
         setState(() {
           _isPro = stats['isPro'] as bool? ?? false;
+          _remaining = (stats['aiGenerationsRemaining'] ?? stats['AiGenerationsRemaining']) as int? ?? 0;
           _isLoading = false;
         });
       }
@@ -60,6 +63,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   final result = await Navigator.of(context).pushNamed('/add_habit');
                   if (result == true && context.mounted) {
                     Navigator.of(context).pop(true);
+                  } else if (context.mounted) {
+                    _loadProStatus(); // Refresh when returning
                   }
                 },
                 borderRadius: BorderRadius.circular(16),
@@ -126,11 +131,21 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
               child: InkWell(
                 onTap: () async {
+                  if (!_isPro && _remaining <= 0) {
+                    final purchased = await Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => PaywallScreen()),
+                    );
+                    if (purchased == true) _loadProStatus();
+                    return;
+                  }
+
                   final result = await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AiGeneratorScreen()),
+                    MaterialPageRoute(builder: (_) => AiGeneratorScreen()),
                   );
                   if (result == true && context.mounted) {
                     Navigator.of(context).pop(true);
+                  } else if (context.mounted) {
+                    _loadProStatus(); // Refresh limit when returning
                   }
                 },
                 borderRadius: BorderRadius.circular(16),
@@ -182,10 +197,49 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                               ],
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              'Tell AI your goal, get a ready routine',
-                              style: TextStyle(color: Colors.white70, fontSize: 14),
-                            ),
+                             const Text(
+                               'Tell AI your goal, get a ready routine',
+                               style: TextStyle(color: Colors.white70, fontSize: 14),
+                             ),
+                             if (!_isLoading) ...[
+                               const SizedBox(height: 10),
+                               Container(
+                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                 decoration: BoxDecoration(
+                                   color: _isPro 
+                                     ? const Color(0xFFFFD700).withOpacity(0.1) // Gold for Pro
+                                     : (_remaining > 0 ? Colors.white.withOpacity(0.1) : const Color(0xFFFF5252).withOpacity(0.1)),
+                                   borderRadius: BorderRadius.circular(8),
+                                   border: Border.all(
+                                     color: _isPro 
+                                       ? const Color(0xFFFFD700).withOpacity(0.3)
+                                       : (_remaining > 0 ? Colors.white.withOpacity(0.2) : const Color(0xFFFF5252).withOpacity(0.3)),
+                                   ),
+                                 ),
+                                 child: Row(
+                                   mainAxisSize: MainAxisSize.min,
+                                   children: [
+                                     Icon(
+                                       _isPro ? Icons.workspace_premium : (_remaining > 0 ? Icons.flash_on : Icons.lock_clock),
+                                       color: _isPro ? const Color(0xFFFFD700) : (_remaining > 0 ? Colors.white : const Color(0xFFFF5252)),
+                                       size: 12,
+                                     ),
+                                     const SizedBox(width: 6),
+                                     Text(
+                                       _isPro 
+                                         ? 'PRO: $_remaining DAILY LEFT'
+                                         : (_remaining > 0 ? '$_remaining FREE GENERATIONS LEFT' : 'DAILY LIMIT REACHED'),
+                                       style: TextStyle(
+                                         color: _isPro ? const Color(0xFFFFD700) : (_remaining > 0 ? Colors.white : const Color(0xFFFF5252)),
+                                         fontSize: 10,
+                                         fontWeight: FontWeight.w800,
+                                         letterSpacing: 0.5,
+                                       ),
+                                     ),
+                                   ],
+                                 ),
+                               ),
+                             ],
                           ],
                         ),
                       ),

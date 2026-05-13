@@ -64,6 +64,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: Color(0xFF00C6FF),
     ),
     _OnboardingPage(
+      emoji: '📊',
+      title: 'Monthly Recap',
+      subtitle: 'Your progress, beautifully summarized',
+      description:
+          'Every month, get a detailed recap of your habits — streaks, completion rates, AI insights, and your best vs. worst habits. Know exactly where you stand.',
+      gradientColors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+      accentColor: Color(0xFFDA22FF),
+    ),
+    _OnboardingPage(
       emoji: '👥',
       title: 'Better Together',
       subtitle: 'Accountability changes everything',
@@ -87,7 +96,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   Future<void> _finish() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('onboarding_done', true);
+    await prefs.setBool('onboarded', true);
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/login');
     }

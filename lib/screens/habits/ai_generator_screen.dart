@@ -115,6 +115,17 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
     final prompt = _controller.text.trim();
     if (prompt.isEmpty) return;
 
+    // 🛑 Client-side limit check: If no generations left and not PRO, go to paywall
+    if (!_isPro && _remaining <= 0) {
+      final purchased = await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => PaywallScreen()),
+      );
+      if (purchased == true) {
+        _loadState();
+      }
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -213,12 +224,17 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red.shade800,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        if (msg.contains('ProRequired')) {
+          _showLimitSheet(msg.replaceFirst('ProRequired: ', ''));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ));
+        }
       }
     } finally {
       if (mounted) setState(() => _isAddingHabits = false);
@@ -504,43 +520,50 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
   }
 
   Widget _buildLoadingState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Column(
-        children: [
-          AnimatedBuilder(
-            animation: _pulseAnimation,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _pulseAnimation.value,
-                child: Container(
-                  width: 80, height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFDA22FF).withOpacity(0.5 * _pulseAnimation.value),
-                        blurRadius: 30,
-                        spreadRadius: 5,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _pulseAnimation.value,
+                  child: Container(
+                    width: 80, height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFDA22FF).withOpacity(0.5 * _pulseAnimation.value),
+                          blurRadius: 30,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 36),
                   ),
-                  child: const Icon(Icons.auto_awesome, color: Colors.white, size: 36),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-          const Text('AI is crafting your routine...',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          const Text('Analyzing your goals and building the perfect habits',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
-        ],
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            const Text('AI is crafting your routine...',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            const Text('Analyzing your goals and building the perfect habits',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+          ],
+        ),
       ),
     );
   }
@@ -761,6 +784,87 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showLimitSheet(String message) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: const BoxDecoration(
+          color: Color(0xFF161A22),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          boxShadow: [
+            BoxShadow(color: Colors.black54, blurRadius: 40, spreadRadius: 10),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80, height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDA22FF).withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFDA22FF).withOpacity(0.2)),
+              ),
+              child: const Icon(Icons.star_rounded, color: Color(0xFFDA22FF), size: 48),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Limit Reached',
+              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 16, height: 1.5),
+            ),
+            const SizedBox(height: 32),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFDA22FF).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  'Upgrade to Pro',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Maybe later',
+                style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
         ),
       ),
     );
