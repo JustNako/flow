@@ -18,6 +18,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   final _targetController = TextEditingController();
   final _timesController = TextEditingController();
   final _notesController = TextEditingController();
+  final _unitController = TextEditingController();
 
   HabitRepeatType _repeatType = HabitRepeatType.everyDay;
   final Set<int> _daysOfWeek = {};
@@ -110,6 +111,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     _targetController.dispose();
     _timesController.dispose();
     _notesController.dispose();
+    _unitController.dispose();
     super.dispose();
   }
 
@@ -136,8 +138,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       await _api.createHabit(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
-        notes: _notesController.text.trim(),
-        targetDays: int.tryParse(_targetController.text) ?? 0,
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+        targetDays: int.tryParse(_targetController.text) ?? 1,
+        unit: _unitController.text.trim().isEmpty ? null : _unitController.text.trim(),
         repeatType: _repeatType,
         repeatDaysOfWeek: _repeatType == HabitRepeatType.specificDaysOfWeek
             ? (_daysOfWeek.toList()..sort())
@@ -334,15 +337,41 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               child: _buildRepeatSubFields(),
             ),
 
-            // ── Daily Target ──────────────────────────────────────────────
-            _sectionLabel('Daily Target'),
-            _styledField(
-              controller: _targetController,
-              hint: 'e.g., 30',
-              keyboardType: TextInputType.number,
+            // ── Daily Target & Unit ──────────────────────────────────────────────
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionLabel('Daily Target'),
+                      _styledField(
+                        controller: _targetController,
+                        hint: 'e.g., 30',
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionLabel('Unit (Optional)'),
+                      _styledField(
+                        controller: _unitController,
+                        hint: 'e.g., min, ml, pages',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
-            const Text('Amount per day',
+            const Text('Amount and unit per day',
               style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
             const SizedBox(height: 48),
 

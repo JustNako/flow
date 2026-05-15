@@ -66,6 +66,7 @@ class Habit {
   final String title;
   final String? description;
   final int targetDays;
+  final String? unit;
   final int completedDays;
   final HabitRepeatType repeatType;
   final List<int>? repeatDaysOfWeek;   // DayOfWeek int values (0=Sun...6=Sat)
@@ -87,6 +88,7 @@ class Habit {
     required this.title,
     this.description,
     this.targetDays = 0,
+    this.unit,
     this.completedDays = 0,
     this.repeatType = HabitRepeatType.everyDay,
     this.repeatDaysOfWeek,
@@ -113,6 +115,7 @@ class Habit {
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       targetDays: json['targetDays'] as int? ?? 0,
+      unit: json['unit'] as String?,
       completedDays: json['completedDays'] as int? ?? 0,
       repeatType: _repeatTypeFromInt(json['repeatType'] as int?),
       repeatDaysOfWeek: (json['repeatDaysOfWeek'] as List<dynamic>?)
@@ -141,6 +144,7 @@ class Habit {
     'title': title,
     'description': description,
     'targetDays': targetDays,
+    'unit': unit,
     'repeatType': _repeatTypeToInt(repeatType),
     'repeatDaysOfWeek': repeatDaysOfWeek,
     'repeatDaysOfMonth': repeatDaysOfMonth,
@@ -161,6 +165,7 @@ class Habit {
     'title': title,
     'description': description,
     'targetDays': targetDays,
+    'unit': unit,
     'completedDays': completedDays,
     'repeatType': _repeatTypeToInt(repeatType),
     'repeatDaysOfWeek': repeatDaysOfWeek?.join(','),
@@ -184,6 +189,7 @@ class Habit {
       title: map['title'] as String? ?? '',
       description: map['description'] as String?,
       targetDays: map['targetDays'] as int? ?? 0,
+      unit: map['unit'] as String?,
       completedDays: map['completedDays'] as int? ?? 0,
       repeatType: _repeatTypeFromInt(map['repeatType'] as int?),
       repeatDaysOfWeek: _parseCsvInts(map['repeatDaysOfWeek'] as String?),
@@ -207,6 +213,7 @@ class Habit {
     String? title,
     String? description,
     int? targetDays,
+    String? unit,
     int? completedDays,
     HabitRepeatType? repeatType,
     List<int>? repeatDaysOfWeek,
@@ -228,6 +235,7 @@ class Habit {
       title: title ?? this.title,
       description: description ?? this.description,
       targetDays: targetDays ?? this.targetDays,
+      unit: unit ?? this.unit,
       completedDays: completedDays ?? this.completedDays,
       repeatType: repeatType ?? this.repeatType,
       repeatDaysOfWeek: repeatDaysOfWeek ?? this.repeatDaysOfWeek,

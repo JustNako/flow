@@ -622,7 +622,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           _scheduleRow(Icons.repeat, 'Frequency', _repeatLabel),
           if (_habit.targetDays > 0) ...[
             const SizedBox(height: 10),
-            _scheduleRow(Icons.flag_outlined, 'Daily Goal', '${_habit.targetDays} min / day'),
+            _scheduleRow(Icons.flag_outlined, 'Daily Goal', '${_habit.targetDays} ${_habit.unit ?? ''}'.trim() + ' / day'),
           ],
           if (_habit.repeatType == HabitRepeatType.specificDaysOfWeek &&
               (_habit.repeatDaysOfWeek?.isNotEmpty ?? false)) ...[
@@ -713,7 +713,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                   children: [
                     _progressStatRow('Completed Days', '$completed'),
                     const SizedBox(height: 8),
-                    _progressStatRow('Target Days', target > 0 ? '$target' : '—'),
+                    _progressStatRow('Daily Target', target > 0 ? '${target} ${_habit.unit}' : '—'),
                     const SizedBox(height: 8),
                     _progressStatRow('Current Streak',
                         _loadingStats ? '…' : '$_streak days 🔥'),

@@ -227,8 +227,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                                      const SizedBox(width: 6),
                                      Text(
                                        _isPro 
-                                         ? 'PRO: $_remaining DAILY LEFT'
-                                         : (_remaining > 0 ? '$_remaining FREE GENERATIONS LEFT' : 'DAILY LIMIT REACHED'),
+                                         ? (_remaining > 0 ? 'PRO: $_remaining DAILY LEFT' : 'PRO: DAILY LIMIT REACHED')
+                                         : (_remaining > 0 ? '$_remaining FREE GENERATIONS LEFT' : 'FREE LIMIT REACHED'),
                                        style: TextStyle(
                                          color: _isPro ? const Color(0xFFFFD700) : (_remaining > 0 ? Colors.white : const Color(0xFFFF5252)),
                                          fontSize: 10,

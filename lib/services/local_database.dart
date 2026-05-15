@@ -39,7 +39,7 @@ class LocalDatabase {
 
     _db = await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createTables,
       onUpgrade: _onUpgrade,
     );
@@ -61,6 +61,7 @@ class LocalDatabase {
         title TEXT NOT NULL,
         description TEXT,
         targetDays INTEGER DEFAULT 0,
+        unit TEXT,
         completedDays INTEGER DEFAULT 0,
         repeatType INTEGER DEFAULT 1,
         repeatDaysOfWeek TEXT,
@@ -124,6 +125,11 @@ class LocalDatabase {
 
     if (oldVersion == 3) {
       await db.execute('ALTER TABLE habits ADD COLUMN notes TEXT');
+      oldVersion = 4;
+    }
+
+    if (oldVersion == 4) {
+      await db.execute('ALTER TABLE habits ADD COLUMN unit TEXT');
     }
   }
 

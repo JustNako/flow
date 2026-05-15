@@ -200,6 +200,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
           title: h.title,
           description: h.description,
           targetDays: h.targetDays,
+          unit: h.unit,
           repeatType: HabitRepeatType.values[rTypeIdx],
           repeatDaysOfWeek: days,
           repeatTimesPerPeriod: times,
@@ -707,6 +708,20 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                       style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (habit.targetDays > 1 || (habit.unit != null && habit.unit!.isNotEmpty)) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Target: ${habit.targetDays} ${habit.unit ?? ''}'.trim(),
+                        style: const TextStyle(color: Color(0xFF00B4DB), fontSize: 10, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ],
                 ],

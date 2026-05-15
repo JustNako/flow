@@ -87,6 +87,7 @@ class HabitApiService {
     String? description,
     String? notes,
     required int targetDays,
+    String? unit,
     required HabitRepeatType repeatType,
 
     List<int>? repeatDaysOfWeek,
@@ -103,6 +104,7 @@ class HabitApiService {
         "description": description,
         "notes": notes,
         "targetDays": targetDays,
+        "unit": unit,
         "repeatType": _repeatTypeToInt(repeatType),
 
         "repeatDaysOfWeek": repeatDaysOfWeek,

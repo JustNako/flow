@@ -634,7 +634,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      '${habit.completedDays}/${habit.targetDays}',
+                      '${habit.completedDays}/${habit.targetDays} ${habit.unit ?? ''}'.trim(),
                       style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 11),
                     ),
                   ],

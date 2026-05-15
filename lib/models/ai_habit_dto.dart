@@ -4,6 +4,7 @@ class AiHabitDto {
   final String icon;
   final int repeatType;
   final int targetDays;
+  final String? unit;
   final List<int>? repeatDaysOfWeek;
   final int? repeatTimesPerPeriod;
 
@@ -13,6 +14,7 @@ class AiHabitDto {
     required this.icon,
     required this.repeatType,
     required this.targetDays,
+    this.unit,
     this.repeatDaysOfWeek,
     this.repeatTimesPerPeriod,
   });
@@ -24,6 +26,7 @@ class AiHabitDto {
       icon: json['icon'] ?? 'task_alt',
       repeatType: _toInt(json['repeatType']),
       targetDays: _toInt(json['targetDays']),
+      unit: json['unit'] as String?,
       repeatDaysOfWeek: (json['repeatDaysOfWeek'] as List<dynamic>?)
           ?.map((e) => _toInt(e))
           .toList(),
