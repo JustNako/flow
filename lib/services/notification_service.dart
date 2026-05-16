@@ -4,15 +4,97 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/globals.dart';
 
-// Top-level обработчик фоновых сообщений — обязателен вне класса
+// Top-level обработчик фоновых действий с кнопок (Interactive Notifications)
+@pragma('vm:entry-point')
+void onNotificationAction(NotificationResponse response) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  if (response.actionId != null && response.actionId!.startsWith('complete_')) {
+    final habitId = response.actionId!.replaceAll('complete_', '');
+    
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    
+    if (token != null) {
+      try {
+        final url = Uri.parse('${ApiService.baseUrl}/habits/$habitId/toggle');
+        final httpResp = await http.post(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'note': 'Completed via Notification'}),
+        );
+        debugPrint('Background toggle response: ${httpResp.statusCode}');
+        
+        // Hide notification after action
+        if (response.id != null) {
+          final plugin = FlutterLocalNotificationsPlugin();
+          await plugin.cancel(response.id!);
+        }
+      } catch (e) {
+        debugPrint('Failed to toggle habit from background: $e');
+      }
+    }
+  }
+}
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint('📬 Background: ${message.notification?.title}');
+  debugPrint('📬 Background Data: ${message.data}');
+  
+  final type = message.data['type'];
+  if (type == 'reminder' || type == 'test') {
+    final title = message.data['title'] ?? '⚡ Keep your streak alive!';
+    final body = message.data['body'] ?? 'You still have habits to complete today.';
+    
+    List<AndroidNotificationAction>? actions;
+    if (type == 'reminder') {
+      final idsStr = message.data['habitIds'] as String?;
+      final titlesStr = message.data['habitTitles'] as String?;
+      
+      if (idsStr != null && titlesStr != null && idsStr.isNotEmpty) {
+        final ids = idsStr.split(',');
+        final titles = titlesStr.split(',');
+        actions = [];
+        for (int i = 0; i < ids.length && i < 3; i++) {
+          actions.add(AndroidNotificationAction('complete_${ids[i]}', '✅ ${titles[i]}'));
+        }
+      }
+    }
+    
+    final plugin = FlutterLocalNotificationsPlugin();
+    
+    // Инициализация плагина обязательна в фоновом изоляте
+    const initSettings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/launcher_icon'),
+      iOS: DarwinInitializationSettings(),
+    );
+    await plugin.initialize(initSettings);
+
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'flow_channel',
+        'Flow Notifications',
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFFDA22FF),
+        actions: actions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        categoryIdentifier: 'HABIT_ACTION',
+      ),
+    );
+    
+    await plugin.show(message.hashCode, title, body, details);
+  }
 }
 
 class NotificationService {
@@ -30,7 +112,7 @@ class NotificationService {
   Future<void> initialize() async {
     await Firebase.initializeApp();
 
-    // 1. Фоновый обработчик
+    // 1. Фоновый обработчик FCM
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     // 2. Разрешения
@@ -48,11 +130,24 @@ class NotificationService {
         ?.createNotificationChannel(channel);
 
     // 4. Инициализация плагина
-    const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/launcher_icon'),
-      iOS: DarwinInitializationSettings(),
+    final iosActions = <DarwinNotificationAction>[
+      DarwinNotificationAction.plain('complete_action', '✅ Mark as Done'),
+    ];
+    final iosCategories = <DarwinNotificationCategory>[
+      DarwinNotificationCategory('HABIT_ACTION', actions: iosActions),
+    ];
+
+    final initSettings = InitializationSettings(
+      android: const AndroidInitializationSettings('@mipmap/launcher_icon'),
+      iOS: DarwinInitializationSettings(
+        notificationCategories: iosCategories,
+      ),
     );
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: onNotificationAction,
+      onDidReceiveBackgroundNotificationResponse: onNotificationAction,
+    );
 
     // 5. Слушатели
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
@@ -64,29 +159,54 @@ class NotificationService {
   }
 
   void _onForegroundMessage(RemoteMessage message) {
-    final n = message.notification;
-    if (n == null) return;
-    debugPrint('📩 Foreground: ${n.title}');
-    _show(n.hashCode, n.title ?? '', n.body ?? '');
+    debugPrint('📩 Foreground: ${message.data}');
+    
+    final type = message.data['type'];
+    if (type == 'reminder' || type == 'test') {
+      final title = message.data['title'] ?? '⚡ Keep your streak alive!';
+      final body = message.data['body'] ?? 'You still have habits to complete today.';
+      
+      List<AndroidNotificationAction>? actions;
+      if (type == 'reminder') {
+        final idsStr = message.data['habitIds'] as String?;
+        final titlesStr = message.data['habitTitles'] as String?;
+        
+        if (idsStr != null && titlesStr != null && idsStr.isNotEmpty) {
+          final ids = idsStr.split(',');
+          final titles = titlesStr.split(',');
+          actions = [];
+          for (int i = 0; i < ids.length && i < 3; i++) {
+            actions.add(AndroidNotificationAction('complete_${ids[i]}', '✅ ${titles[i]}'));
+          }
+        }
+      }
+      
+      _show(message.hashCode, title, body, actions: actions);
+    } else if (message.notification != null) {
+      final n = message.notification!;
+      _show(n.hashCode, n.title ?? '', n.body ?? '');
+    }
   }
 
   void _onMessageTap(RemoteMessage message) {
     debugPrint('👉 Tapped: ${message.notification?.title}');
   }
 
-  void _show(int id, String title, String body) {
-    const details = NotificationDetails(
+  void _show(int id, String title, String body, {List<AndroidNotificationAction>? actions}) {
+    final details = NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
         _channelName,
         importance: Importance.high,
         priority: Priority.high,
-        color: Color(0xFFDA22FF),
+        color: const Color(0xFFDA22FF),
+        actions: actions,
       ),
-      iOS: DarwinNotificationDetails(
+      iOS: const DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        categoryIdentifier: 'HABIT_ACTION',
       ),
     );
     _plugin.show(id, title, body, details);
@@ -101,16 +221,12 @@ class NotificationService {
     }
   }
 
-  /// Публичный метод — вызывается из login_screen после входа
   Future<void> sendTokenToServer() => _sendToken();
 
   Future<void> _uploadToken(String token) async {
     try {
       final authToken = await AuthService.instance.getToken();
-      if (authToken == null) {
-        debugPrint('⚠️ FCM upload skipped — not logged in yet');
-        return;
-      }
+      if (authToken == null) return;
 
       final response = await http.post(
         Uri.parse('${ApiService.baseUrl}/auth/fcm-token'),

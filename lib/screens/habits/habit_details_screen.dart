@@ -713,7 +713,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                   children: [
                     _progressStatRow('Completed Days', '$completed'),
                     const SizedBox(height: 8),
-                    _progressStatRow('Daily Target', target > 0 ? '${target} ${_habit.unit}' : '—'),
+                    _progressStatRow('Daily Target', target > 0 ? '${target} ${_habit.unit ?? ''}' : '—'),
                     const SizedBox(height: 8),
                     _progressStatRow('Current Streak',
                         _loadingStats ? '…' : '$_streak days 🔥'),

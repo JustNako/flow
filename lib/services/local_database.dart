@@ -144,6 +144,20 @@ class LocalDatabase {
     );
   }
 
+  /// Сохранить список привычек (батч-запрос для оптимизации)
+  Future<void> saveHabits(List<Habit> habits) async {
+    final batch = _db?.batch();
+    if (batch == null) return;
+    for (var habit in habits) {
+      batch.insert(
+        'habits',
+        habit.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
   /// Получить все привычки пользователя
   Future<List<Habit>> getHabits(String userId) async {
     final result = await _db?.query(
@@ -197,6 +211,20 @@ class LocalDatabase {
       log.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  /// Сохранить список логов (батч-запрос для оптимизации)
+  Future<void> saveHabitLogs(List<HabitLog> logs) async {
+    final batch = _db?.batch();
+    if (batch == null) return;
+    for (var log in logs) {
+      batch.insert(
+        'habit_logs',
+        log.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   /// Получить все логи для привычки
@@ -286,11 +314,11 @@ class LocalDatabase {
 
   // ========== УТИЛИТЫ ==========
 
-  /// Получить статистику БД (для отладки)
+  /// Получить статистику БД (только несинхронизированные данные)
   Future<Map<String, int>> getStats() async {
-    final habitsCount = Sqflite.firstIntValue(await _db?.rawQuery('SELECT COUNT(*) FROM habits') ?? []) ?? 0;
-    final logsCount = Sqflite.firstIntValue(await _db?.rawQuery('SELECT COUNT(*) FROM habit_logs') ?? []) ?? 0;
-    final queueCount = Sqflite.firstIntValue(await _db?.rawQuery('SELECT COUNT(*) FROM sync_queue') ?? []) ?? 0;
+    final habitsCount = Sqflite.firstIntValue(await _db?.rawQuery('SELECT COUNT(*) FROM habits WHERE isSynced = 0') ?? []) ?? 0;
+    final logsCount = Sqflite.firstIntValue(await _db?.rawQuery('SELECT COUNT(*) FROM habit_logs WHERE isSynced = 0') ?? []) ?? 0;
+    final queueCount = Sqflite.firstIntValue(await _db?.rawQuery('SELECT COUNT(*) FROM sync_queue WHERE isSynced = 0') ?? []) ?? 0;
 
     return {
       'habits': habitsCount,

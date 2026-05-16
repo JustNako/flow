@@ -100,18 +100,18 @@ class SyncService {
       
       // Применить загруженные привычки
       if (data['habits'] is List) {
-        for (var habitJson in data['habits']) {
-          final habit = Habit.fromJson(habitJson);
-          await _db.saveHabit(habit.copyWith(isSynced: true));
-        }
+        final habits = (data['habits'] as List)
+            .map((h) => Habit.fromJson(h).copyWith(isSynced: true))
+            .toList();
+        await _db.saveHabits(habits);
       }
 
       // Применить загруженные логи
       if (data['habitLogs'] is List) {
-        for (var logJson in data['habitLogs']) {
-          final log = HabitLog.fromJson(logJson);
-          await _db.saveHabitLog(log.copyWith(isSynced: true));
-        }
+        final logs = (data['habitLogs'] as List)
+            .map((l) => HabitLog.fromJson(l).copyWith(isSynced: true))
+            .toList();
+        await _db.saveHabitLogs(logs);
       }
 
       // Обновить время последней синхронизации серверным временем
@@ -167,13 +167,8 @@ class SyncService {
       }
 
       // Пометить как синхронизированные
-      for (var habit in unsyncedHabits) {
-        await _db.saveHabit(habit.copyWith(isSynced: true));
-      }
-
-      for (var log in unsyncedLogs) {
-        await _db.saveHabitLog(log.copyWith(isSynced: true));
-      }
+      await _db.saveHabits(unsyncedHabits.map((h) => h.copyWith(isSynced: true)).toList());
+      await _db.saveHabitLogs(unsyncedLogs.map((l) => l.copyWith(isSynced: true)).toList());
 
       print('✅ Отправлено ${unsyncedHabits.length} привычек и ${unsyncedLogs.length} логов');
     } catch (e) {

@@ -615,7 +615,7 @@ class DashboardScreenState extends State<DashboardScreen> {
               ),
 
               // ── Progress Bar ─────────────────────────────────────────────
-              if (habit.targetDays > 0) ...[
+              if (habit.targetDays > 0 && habit.unit != null && habit.unit!.trim().isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -623,7 +623,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
-                          value: progress,
+                          value: isComplete ? 1.0 : 0.0,
                           minHeight: 5,
                           backgroundColor: Colors.white.withOpacity(0.06),
                           valueColor: AlwaysStoppedAnimation(
@@ -634,7 +634,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      '${habit.completedDays}/${habit.targetDays} ${habit.unit ?? ''}'.trim(),
+                      '${habit.targetDays} ${habit.unit ?? ''}'.trim(),
                       style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 11),
                     ),
                   ],

@@ -37,7 +37,7 @@ void main() async {
   }
 
   // 4. Инициализируем RevenueCat
-  const revenueCatApiKey = 'test_RgpQjnYcUTRDpYDZOyAeswWHtQP';
+  const revenueCatApiKey = 'goog_KHTlxqdaYEYzpbpWLuwosZpuDbK';
   await Purchases.setLogLevel(LogLevel.debug);
   await Purchases.configure(PurchasesConfiguration(revenueCatApiKey));
   print('✅ RevenueCat инициализирован');
