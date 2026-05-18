@@ -205,6 +205,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
           repeatDaysOfWeek: days,
           repeatTimesPerPeriod: times,
           repeatPeriod: rTypeIdx == 3 ? 1 : null,
+          timeOfDay: h.timeOfDay,
         );
         addedCount++;
       }
@@ -710,20 +711,49 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                  if (habit.targetDays > 1 || (habit.unit != null && habit.unit!.isNotEmpty)) ...[
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'Target: ${habit.targetDays} ${habit.unit ?? ''}'.trim(),
-                        style: const TextStyle(color: Color(0xFF00B4DB), fontSize: 10, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
+                  Row(
+                    children: [
+                      if (habit.targetDays > 1 || (habit.unit != null && habit.unit!.isNotEmpty)) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Target: ${habit.targetDays} ${habit.unit ?? ''}'.trim(),
+                            style: const TextStyle(color: Color(0xFF00B4DB), fontSize: 10, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                      if (habit.timeOfDay != null) ...[
+                        if (habit.targetDays > 1 || (habit.unit != null && habit.unit!.isNotEmpty))
+                          const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: (isSelected ? gradient.colors.first : const Color(0xFFDA22FF)).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.access_time, 
+                                   color: isSelected ? Colors.white : const Color(0xFFDA22FF), size: 10),
+                              const SizedBox(width: 4),
+                              Text(
+                                habit.timeOfDay!,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : const Color(0xFFDA22FF),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),

@@ -7,6 +7,7 @@ class AiHabitDto {
   final String? unit;
   final List<int>? repeatDaysOfWeek;
   final int? repeatTimesPerPeriod;
+  final String? timeOfDay;
 
   AiHabitDto({
     required this.title,
@@ -17,6 +18,7 @@ class AiHabitDto {
     this.unit,
     this.repeatDaysOfWeek,
     this.repeatTimesPerPeriod,
+    this.timeOfDay,
   });
 
   factory AiHabitDto.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,7 @@ class AiHabitDto {
           ?.map((e) => _toInt(e))
           .toList(),
       repeatTimesPerPeriod: _toInt(json['repeatTimesPerPeriod']),
+      timeOfDay: json['timeOfDay'] as String?,
     );
   }
 

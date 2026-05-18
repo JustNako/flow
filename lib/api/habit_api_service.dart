@@ -95,6 +95,7 @@ class HabitApiService {
     int? repeatTimesPerPeriod,
     int? repeatPeriod,
     bool isPublic = true,
+    String? timeOfDay,
   }) async {
     try {
       final token = await _auth.getToken();
@@ -112,6 +113,7 @@ class HabitApiService {
         "repeatTimesPerPeriod": repeatTimesPerPeriod,
         "repeatPeriod": repeatPeriod,
         "isPublic": isPublic,
+        "timeOfDay": timeOfDay,
       };
 
       final response = await http.post(

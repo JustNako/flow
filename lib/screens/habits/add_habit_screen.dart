@@ -25,6 +25,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   final Set<int> _daysOfMonth = {};
   HabitRepeatPeriod _repeatPeriod = HabitRepeatPeriod.week;
   int _selectedIconIndex = 0;
+  TimeOfDay? _selectedTime;
   bool _isLoading = false;
   bool _isPublic = true;
   bool _isInitialized = false;
@@ -155,6 +156,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             ? (_repeatPeriod == HabitRepeatPeriod.week ? 1 : 2)
             : null,
         isPublic: _isPublic,
+        timeOfDay: _selectedTime != null
+            ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+            : null,
       );
 
       if (mounted) Navigator.of(context).pop(true);
@@ -321,6 +325,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               hint: 'Any specific instructions or notes for yourself...',
               maxLines: 3,
             ),
+            const SizedBox(height: 24),
+
+            // ── Time of Day ───────────────────────────────────────────────
+            _sectionLabel('Time of Day (Optional)'),
+            _buildTimePicker(),
             const SizedBox(height: 24),
 
             // ── Repeat Type ───────────────────────────────────────────────
@@ -729,6 +738,72 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
+  // ─── Time Picker ────────────────────────────────────────────────────────────
+  Widget _buildTimePicker() {
+    return GestureDetector(
+      onTap: () async {
+        final time = await showTimePicker(
+          context: context,
+          initialTime: _selectedTime ?? const TimeOfDay(hour: 8, minute: 0),
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+              child: Theme(
+                data: ThemeData.dark().copyWith(
+                  colorScheme: const ColorScheme.dark(
+                    primary: Color(0xFFDA22FF),
+                    onPrimary: Colors.white,
+                    surface: Color(0xFF161A22),
+                    onSurface: Colors.white,
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+          },
+        );
+        if (time != null) {
+          setState(() => _selectedTime = time);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161A22),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.access_time, 
+                 color: _selectedTime != null ? const Color(0xFFDA22FF) : const Color(0xFF8A8F9E), 
+                 size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                _selectedTime != null 
+                  ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+                  : 'Select time (24h format)',
+                style: TextStyle(
+                  color: _selectedTime != null ? Colors.white : const Color(0xFF8A8F9E),
+                  fontSize: 15,
+                  fontWeight: _selectedTime != null ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+            if (_selectedTime != null)
+              GestureDetector(
+                onTap: () => setState(() => _selectedTime = null),
+                child: const Icon(Icons.close, color: Color(0xFF8A8F9E), size: 20),
+              )
+            else
+              const Icon(Icons.chevron_right, color: Color(0xFF4A4E5A), size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ─── Visibility Toggle ──────────────────────────────────────────────────────
   Widget _buildVisibilityToggle() {
     return GestureDetector(
@@ -802,8 +877,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   Widget _buildCreateButton() {
     return GestureDetector(
       onTap: _isLoading ? null : _createHabit,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+      child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(

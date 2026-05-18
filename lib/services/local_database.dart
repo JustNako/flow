@@ -39,7 +39,7 @@ class LocalDatabase {
 
     _db = await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _createTables,
       onUpgrade: _onUpgrade,
     );
@@ -75,6 +75,7 @@ class LocalDatabase {
         isSynced INTEGER DEFAULT 0,
         isPublic INTEGER DEFAULT 1,
         notes TEXT,
+        timeOfDay TEXT,
         PRIMARY KEY (id, localId)
       )
     ''');
@@ -130,6 +131,11 @@ class LocalDatabase {
 
     if (oldVersion == 4) {
       await db.execute('ALTER TABLE habits ADD COLUMN unit TEXT');
+      oldVersion = 5;
+    }
+
+    if (oldVersion == 5) {
+      await db.execute('ALTER TABLE habits ADD COLUMN timeOfDay TEXT');
     }
   }
 

@@ -4,6 +4,7 @@ import '../../api/habit_api_service.dart';
 import '../../models/habit.dart';
 import '../../widgets/notification_settings_sheet.dart';
 import '../../services/time_tracking_service.dart';
+import '../../services/update_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -57,6 +58,12 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> loadData({bool showLoading = true}) async {
     if (showLoading) setState(() { _isLoading = true; _error = null; });
+    
+    // Background update check on manual pull-to-refresh or tab navigation
+    if (!showLoading && mounted) {
+      UpdateService.checkForUpdates(context);
+    }
+    
     try {
       final results = await Future.wait([
         _api.getHabits(),
@@ -78,10 +85,21 @@ class DashboardScreenState extends State<DashboardScreen> {
         }
       }
 
-      // Sort today habits: incomplete first
+      // Sort today habits: incomplete first, then by timeOfDay
       todayHabits.sort((a, b) {
-        if (a.isCompletedToday == b.isCompletedToday) return 0;
-        return a.isCompletedToday ? 1 : -1;
+        if (a.isCompletedToday != b.isCompletedToday) {
+          return a.isCompletedToday ? 1 : -1;
+        }
+        
+        if (a.timeOfDay != null && b.timeOfDay != null) {
+          return a.timeOfDay!.compareTo(b.timeOfDay!);
+        } else if (a.timeOfDay != null) {
+          return -1;
+        } else if (b.timeOfDay != null) {
+          return 1;
+        }
+        
+        return 0;
       });
 
       if (mounted) {
@@ -568,9 +586,30 @@ class DashboardScreenState extends State<DashboardScreen> {
                             decoration: isComplete ? TextDecoration.lineThrough : null,
                             decorationColor: const Color(0xFF8A8F9E),
                           )),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Row(
                           children: [
+                            if (habit.timeOfDay != null) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: (isComplete ? const Color(0xFF8A8F9E) : gradient.colors.first).withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.access_time, 
+                                      color: isComplete ? const Color(0xFF8A8F9E) : gradient.colors.first, size: 12),
+                                    const SizedBox(width: 4),
+                                    Text(habit.timeOfDay!, 
+                                      style: TextStyle(
+                                        color: isComplete ? const Color(0xFF8A8F9E) : gradient.colors.first, 
+                                        fontSize: 11, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
                             Icon(Icons.repeat, color: const Color(0xFF8A8F9E), size: 13),
                             const SizedBox(width: 4),
                             Text(repeatInfo,

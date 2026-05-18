@@ -81,6 +81,7 @@ class Habit {
   final bool isCompletedToday;
   final bool isPublic;
   final String? notes;
+  final String? timeOfDay;
 
   const Habit({
     this.id,
@@ -103,6 +104,7 @@ class Habit {
     this.isCompletedToday = false,
     this.isPublic = true,
     this.notes,
+    this.timeOfDay,
   });
 
   // ─── Из JSON (ответ бэка: GET /habits или PULL) ─────────────────────────────
@@ -133,6 +135,7 @@ class Habit {
       isCompletedToday: json['isCompletedToday'] as bool? ?? false,
       isPublic: json['isPublic'] as bool? ?? true,
       notes: json['notes'] as String?,
+      timeOfDay: json['timeOfDay'] as String?,
     );
   }
 
@@ -155,6 +158,7 @@ class Habit {
     'isDeleted': isDeleted,
     'isPublic': isPublic,
     'notes': notes,
+    'timeOfDay': timeOfDay,
   };
 
   // ─── Для локальной SQLite ───────────────────────────────────────────────────
@@ -180,6 +184,7 @@ class Habit {
     'isCompletedToday': isCompletedToday ? 1 : 0,
     'isPublic': isPublic ? 1 : 0,
     'notes': notes,
+    'timeOfDay': timeOfDay,
   };
 
   factory Habit.fromMap(Map<String, dynamic> map) {
@@ -204,6 +209,7 @@ class Habit {
       isCompletedToday: (map['isCompletedToday'] as int?) == 1,
       isPublic: (map['isPublic'] as int?) != 0,
       notes: map['notes'] as String?,
+      timeOfDay: map['timeOfDay'] as String?,
     );
   }
 
@@ -228,6 +234,7 @@ class Habit {
     bool? isCompletedToday,
     bool? isPublic,
     String? notes,
+    String? timeOfDay,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -250,6 +257,7 @@ class Habit {
       isCompletedToday: isCompletedToday ?? this.isCompletedToday,
       isPublic: isPublic ?? this.isPublic,
       notes: notes ?? this.notes,
+      timeOfDay: timeOfDay ?? this.timeOfDay,
     );
   }
 
