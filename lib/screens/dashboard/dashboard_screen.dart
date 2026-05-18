@@ -5,6 +5,7 @@ import '../../models/habit.dart';
 import '../../widgets/notification_settings_sheet.dart';
 import '../../services/time_tracking_service.dart';
 import '../../services/update_service.dart';
+import '../../services/widget_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -108,6 +109,9 @@ class DashboardScreenState extends State<DashboardScreen> {
           _otherHabits = otherHabits;
           _globalStreak = globalStreak;
         });
+
+        // Fast & reliable local widget update using already fetched habits
+        WidgetService.updateWidget(habits: habits);
       }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));

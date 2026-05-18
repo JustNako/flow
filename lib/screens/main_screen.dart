@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'habits/habits_screen.dart';
 import 'profile/profile_screen.dart';
 import 'stats/stats_screen.dart';
 import 'friends/friends_screen.dart';
+import '../api/habit_api_service.dart';
 import '../services/update_service.dart';
+import '../services/widget_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,6 +22,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey();
   final GlobalKey<StatsScreenState> _statsKey = GlobalKey();
   final GlobalKey<ProfileScreenState> _profileKey = GlobalKey();
+  StreamSubscription<Uri?>? _widgetClickSubscription;
 
   late final List<Widget> _screens;
 
@@ -34,11 +39,16 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       UpdateService.checkForUpdates(context);
+      _handleInitialWidgetClick();
     });
+
+    // Listen for widget tap events while app is open
+    _widgetClickSubscription = HomeWidget.widgetClicked.listen(_handleWidgetUri);
   }
 
   @override
   void dispose() {
+    _widgetClickSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -55,6 +65,31 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     if (index == 0) _dashboardKey.currentState?.loadData(showLoading: false);
     if (index == 1) _statsKey.currentState?.loadStats(showLoading: false);
     if (index == 3) _profileKey.currentState?.loadData(showLoading: false);
+  }
+
+  /// Called once on startup — handles the URI if app was launched from widget tap
+  Future<void> _handleInitialWidgetClick() async {
+    final uri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+    _handleWidgetUri(uri);
+  }
+
+  /// Toggles a habit when its row is tapped on the home screen widget
+  Future<void> _handleWidgetUri(Uri? uri) async {
+    if (uri == null) return;
+    if (uri.host != 'completehabit') return;
+    final habitId = uri.queryParameters['id'];
+    if (habitId == null || habitId.isEmpty) return;
+
+    try {
+      await HabitApiService.instance.toggleHabit(habitId);
+      // Switch to dashboard and refresh
+      setState(() => _currentIndex = 0);
+      // Small delay to let screen build before loading
+      await Future.delayed(const Duration(milliseconds: 200));
+      _dashboardKey.currentState?.loadData(showLoading: false);
+    } catch (e) {
+      debugPrint('[MainScreen] Widget toggle failed: $e');
+    }
   }
 
   @override

@@ -1,6 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../api/api_service.dart';
+import 'widget_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -18,8 +20,12 @@ class AuthService {
   Future<String> login(String username, String password) async {
     final token = await _api.login(username, password);
     
+    // Save secure data (token) in Keychain/Keystore
+    const secureStorage = FlutterSecureStorage();
+    await secureStorage.write(key: 'auth_token', value: token);
+
+    // Save non-secure data in SharedPreferences
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
     await prefs.setString('auth_username', username);
 
     // Fetch user profile to get the real userId for RevenueCat
@@ -42,17 +48,22 @@ class AuthService {
   }
 
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    const secureStorage = FlutterSecureStorage();
+    return await secureStorage.read(key: 'auth_token');
   }
 
   Future<void> logout() async {
+    const secureStorage = FlutterSecureStorage();
+    await secureStorage.delete(key: 'auth_token');
+
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
     await prefs.remove('auth_username');
     await prefs.remove('auth_user_id');
     // Unlink RevenueCat user on logout
     try { await Purchases.logOut(); } catch (_) {}
+
+    // Update Home Widgets to show the logout/unauthenticated UI
+    WidgetService.updateWidget();
   }
 
   Future<void> deleteAccount(String password) async {
@@ -60,8 +71,14 @@ class AuthService {
     final username = prefs.getString('auth_username');
     if (username == null) throw Exception('Username not found. Please re-login.');
     await _api.deleteAccount(username, password);
-    await prefs.remove('auth_token');
+    
+    const secureStorage = FlutterSecureStorage();
+    await secureStorage.delete(key: 'auth_token');
+
     await prefs.remove('auth_username');
+    
+    // Update Home Widgets to show the logout/unauthenticated UI
+    WidgetService.updateWidget();
   }
 
   Future<bool> isAuthenticated() async {

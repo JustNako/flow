@@ -6,8 +6,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/auth_service.dart';
 import '../utils/globals.dart';
+import 'widget_service.dart';
 
 // Top-level обработчик фоновых действий с кнопок (Interactive Notifications)
 @pragma('vm:entry-point')
@@ -17,8 +19,8 @@ void onNotificationAction(NotificationResponse response) async {
   if (response.actionId != null && response.actionId!.startsWith('complete_')) {
     final habitId = response.actionId!.replaceAll('complete_', '');
     
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
+    const secureStorage = FlutterSecureStorage();
+    final token = await secureStorage.read(key: 'auth_token');
     
     if (token != null) {
       try {
@@ -32,6 +34,11 @@ void onNotificationAction(NotificationResponse response) async {
           body: jsonEncode({'note': 'Completed via Notification'}),
         );
         debugPrint('Background toggle response: ${httpResp.statusCode}');
+        
+        if (httpResp.statusCode == 200) {
+          // Sync home screen widget immediately with the new background state
+          await WidgetService.updateWidget();
+        }
         
         // Hide notification after action
         if (response.id != null) {

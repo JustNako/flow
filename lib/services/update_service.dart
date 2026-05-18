@@ -1,10 +1,24 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../api/api_service.dart';
 
 class UpdateService {
+  static const _keyAndroid = 'rc_api_key_android';
+  static const _keyIOS    = 'rc_api_key_ios';
+
+  /// Returns the cached RevenueCat key for the current platform,
+  /// falling back to [fallback] when no key has been fetched yet.
+  static Future<String> getCachedRevenueCatKey(String fallback) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = Platform.isAndroid
+        ? prefs.getString(_keyAndroid)
+        : prefs.getString(_keyIOS);
+    return (cached != null && cached.isNotEmpty) ? cached : fallback;
+  }
+
   static Future<void> checkForUpdates(BuildContext context) async {
     try {
       final appInfo = await PackageInfo.fromPlatform();
@@ -13,7 +27,18 @@ class UpdateService {
       final remoteConfig = await ApiService().checkAppVersion();
       if (remoteConfig.isEmpty) return;
 
-      final latestVersion = _parseVersion(remoteConfig['latestVersion'] ?? "1.0.0");
+      // Persist the RevenueCat keys for use on the next app launch
+      final prefs = await SharedPreferences.getInstance();
+      final rcAndroid = remoteConfig['revenueCatApiKeyAndroid'] as String?;
+      final rcIOS     = remoteConfig['revenueCatApiKeyIOS'] as String?;
+      if (rcAndroid != null && rcAndroid.isNotEmpty) {
+        await prefs.setString(_keyAndroid, rcAndroid);
+      }
+      if (rcIOS != null && rcIOS.isNotEmpty) {
+        await prefs.setString(_keyIOS, rcIOS);
+      }
+
+      final latestVersion     = _parseVersion(remoteConfig['latestVersion']     ?? "1.0.0");
       final minRequiredVersion = _parseVersion(remoteConfig['minRequiredVersion'] ?? "1.0.0");
       
       final url = Platform.isAndroid 
@@ -21,11 +46,9 @@ class UpdateService {
           : remoteConfig['updateUrlIOS'];
 
       if (currentVersion < minRequiredVersion) {
-        // Force Update
         if (!context.mounted) return;
         _showUpdateDialog(context, url, isForceUpdate: true);
       } else if (currentVersion < latestVersion) {
-        // Optional Update
         if (!context.mounted) return;
         _showUpdateDialog(context, url, isForceUpdate: false);
       }

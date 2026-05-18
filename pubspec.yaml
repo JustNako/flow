@@ -44,6 +44,9 @@ dependencies:
   url_launcher: ^6.3.1
   package_info_plus: ^10.1.0
   purchases_flutter: ^8.0.0
+  flutter_secure_storage: 10.2.0
+  home_widget: 0.7.0
+
 
 dev_dependencies:
   flutter_test:
@@ -72,3 +75,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/icon/app_icon.png
+
+dependency_overrides:
+  path_provider_android: 2.2.12
