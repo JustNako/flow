@@ -38,10 +38,22 @@ class WidgetService {
       final today = DateTime.now();
 
       final todayHabits = list.where((h) => h.isScheduledFor(today)).toList();
-      final incomplete = todayHabits.where((h) => !h.isCompletedToday).toList();
-      final complete = todayHabits.where((h) => h.isCompletedToday).toList();
 
-      // Show up to 4 habits: incomplete first, then fill with completed ones
+      int compareTimes(Habit a, Habit b) {
+        if (a.timeOfDay != null && b.timeOfDay != null) {
+          return a.timeOfDay!.compareTo(b.timeOfDay!);
+        } else if (a.timeOfDay != null) {
+          return -1;
+        } else if (b.timeOfDay != null) {
+          return 1;
+        }
+        return 0;
+      }
+
+      final incomplete = todayHabits.where((h) => !h.isCompletedToday).toList()..sort(compareTimes);
+      final complete = todayHabits.where((h) => h.isCompletedToday).toList()..sort(compareTimes);
+
+      // Show up to 4 habits: incomplete first, then fill with completed ones (both sorted earliest-first)
       final displayHabits = <Habit>[...incomplete, ...complete].take(4).toList();
 
       // Clear old slots
@@ -49,6 +61,7 @@ class WidgetService {
         await HomeWidget.saveWidgetData<String>('habit_${i}_id', '');
         await HomeWidget.saveWidgetData<String>('habit_${i}_title', '');
         await HomeWidget.saveWidgetData<bool>('habit_${i}_completed', false);
+        await HomeWidget.saveWidgetData<String>('habit_${i}_time', '');
       }
 
       // Write new data
@@ -57,16 +70,21 @@ class WidgetService {
         await HomeWidget.saveWidgetData<String>('habit_${i}_id', habit.id ?? '');
         await HomeWidget.saveWidgetData<String>('habit_${i}_title', habit.title);
         await HomeWidget.saveWidgetData<bool>('habit_${i}_completed', habit.isCompletedToday);
+        await HomeWidget.saveWidgetData<String>('habit_${i}_time', habit.timeOfDay ?? '');
       }
 
       // Write totals for progress line as Strings to prevent Kotlin ClassCastExceptions
       await HomeWidget.saveWidgetData<String>('total_today', todayHabits.length.toString());
       await HomeWidget.saveWidgetData<String>('completed_today', complete.length.toString());
 
+      // Save date of this update to reset completion status on new days
+      final dateStr = today.toIso8601String().substring(0, 10);
+      await HomeWidget.saveWidgetData<String>('widget_last_update_date', dateStr);
+
       // Signal Android to redraw the widget
       await HomeWidget.updateWidget(name: androidWidgetName);
 
-      debugPrint('[WidgetService] Widget updated: ${incomplete.length} incomplete, ${complete.length} complete today.');
+      debugPrint('[WidgetService] Widget updated: ${incomplete.length} incomplete, ${complete.length} complete today. Date: $dateStr');
     } catch (e) {
       debugPrint('[WidgetService] updateWidget failed: $e');
     }

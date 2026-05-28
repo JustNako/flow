@@ -46,38 +46,38 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: Color(0xFFDA22FF),
     ),
     _OnboardingPage(
-      emoji: '🔥',
-      title: 'Build Streaks.\nStay Consistent.',
-      subtitle: 'Never break the chain',
-      description:
-          'Track your daily habits, watch your streaks grow, and unlock achievements as you reach new milestones.',
-      gradientColors: [Color(0xFFFF512F), Color(0xFFDD2476)],
-      accentColor: Color(0xFFFF512F),
-    ),
-    _OnboardingPage(
       emoji: '🤖',
-      title: 'Meet Your AI Coach',
-      subtitle: 'Powered by advanced AI',
+      title: 'AI Habit Builder',
+      subtitle: 'Smart personalized plans',
       description:
-          'Get brutally honest, personalized weekly insights. Your coach analyzes your patterns and tells you exactly what to improve.',
+          'Generate custom habit templates instantly using AI, and get brutally honest coaching insights tailored to your dynamic routine.',
       gradientColors: [Color(0xFF00C6FF), Color(0xFF0072FF)],
       accentColor: Color(0xFF00C6FF),
     ),
     _OnboardingPage(
-      emoji: '📊',
-      title: 'Monthly Recap',
-      subtitle: 'Your progress, beautifully summarized',
+      emoji: '📱',
+      title: 'Interactive Widgets',
+      subtitle: 'Progress at a glance',
       description:
-          'Every month, get a detailed recap of your habits — streaks, completion rates, AI insights, and your best vs. worst habits. Know exactly where you stand.',
-      gradientColors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-      accentColor: Color(0xFFDA22FF),
+          'Add sleek widgets to your home screen! Track your progress and check off completed habits directly from your desktop in one tap.',
+      gradientColors: [Color(0xFFFFB75E), Color(0xFFED8F03)],
+      accentColor: Color(0xFFFFB75E),
+    ),
+    _OnboardingPage(
+      emoji: '🔥',
+      title: 'Streaks & Analytics',
+      subtitle: 'Stay consistent, stay motivated',
+      description:
+          'Watch your daily streaks grow, view beautiful monthly summaries, and analyze your performance to build unstoppable momentum.',
+      gradientColors: [Color(0xFFFF512F), Color(0xFFDD2476)],
+      accentColor: Color(0xFFFF512F),
     ),
     _OnboardingPage(
       emoji: '👥',
       title: 'Better Together',
       subtitle: 'Accountability changes everything',
       description:
-          'Add friends, share your progress, and compete on leaderboards. Having people watch makes you 65% more likely to succeed.',
+          'Add friends, share progress, and compete on leaderboards. Stay motivated and build healthy life routines together.',
       gradientColors: [Color(0xFF00E676), Color(0xFF00BFA5)],
       accentColor: Color(0xFF00E676),
     ),

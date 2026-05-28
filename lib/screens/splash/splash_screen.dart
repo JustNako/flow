@@ -71,7 +71,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     
     // 4. Checking Version & Fetching API Keys
     _updateStatus('Checking for updates...', 0.65);
-    String rcApiKey = 'goog_KHTlxqdaYEYzpbpWLuwosZpuDbK'; // fallback
+    final String defaultFallback = Platform.isAndroid 
+        ? 'goog_KHTlxqdaYEYzpbpWLuwosZpuDbK' 
+        : 'appl_placeholder_ios_api_key';
+    
+    // Always load cached key first to ensure offline-first safety
+    String rcApiKey = await UpdateService.getCachedRevenueCatKey(defaultFallback);
+    
     try {
       final remoteConfig = await ApiService().checkAppVersion().timeout(const Duration(seconds: 3));
       if (remoteConfig.isNotEmpty) {
@@ -85,7 +91,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         if (rcIOS != null && rcIOS.isNotEmpty) {
           await prefs.setString('rc_api_key_ios', rcIOS);
         }
-        rcApiKey = await UpdateService.getCachedRevenueCatKey(rcApiKey);
+        rcApiKey = await UpdateService.getCachedRevenueCatKey(defaultFallback);
 
         // Perform dynamic startup version check (for force updates)
         final appInfo = await PackageInfo.fromPlatform();

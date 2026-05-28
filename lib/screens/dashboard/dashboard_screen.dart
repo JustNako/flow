@@ -6,6 +6,7 @@ import '../../widgets/notification_settings_sheet.dart';
 import '../../services/time_tracking_service.dart';
 import '../../services/update_service.dart';
 import '../../services/widget_service.dart';
+import '../../services/auth_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,6 +23,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
   int _globalStreak = 0;
   String? _error;
+  String? _username;
   final Set<String> _togglingIds = {};
 
   // ─── Gradients palette ─────────────────────────────────────────────────────
@@ -69,10 +71,12 @@ class DashboardScreenState extends State<DashboardScreen> {
       final results = await Future.wait([
         _api.getHabits(),
         _api.getGlobalStreak(),
+        AuthService.instance.getUsername(),
       ]);
       
       final habits = results[0] as List<Habit>;
       final globalStreak = results[1] as int;
+      final username = results[2] as String?;
       final today = DateTime.now();
 
       final todayHabits = <Habit>[];
@@ -108,6 +112,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           _todayHabits = todayHabits;
           _otherHabits = otherHabits;
           _globalStreak = globalStreak;
+          _username = username;
         });
 
         // Fast & reliable local widget update using already fetched habits
@@ -296,10 +301,23 @@ class DashboardScreenState extends State<DashboardScreen> {
   // ─── Header ────────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     final now = DateTime.now();
-    final dateStr = DateFormat('EEEE, MMMM d').format(now);
+    final dateStr = DateFormat('EEEE, MMM d').format(now);
     final hour = now.hour;
-    final greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-    final emoji = hour < 12 ? '☀️' : hour < 17 ? '👋' : '🌙';
+    final isMorning = hour >= 5 && hour < 12;
+    final isAfternoon = hour >= 12 && hour < 17;
+    
+    final timeGreeting = isMorning ? 'GOOD MORNING' : isAfternoon ? 'GOOD AFTERNOON' : 'GOOD EVENING';
+    final emoji = isMorning ? '☀️' : isAfternoon ? '👋' : '🌙';
+    
+    final nameStr = _username != null && _username!.isNotEmpty ? ', ${_username!.toUpperCase()}' : '';
+    final greeting = '$timeGreeting$nameStr $emoji';
+
+    final leftHabits = _totalCount - _completedCount;
+    final progressText = _totalCount == 0 
+        ? "No habits today" 
+        : leftHabits == 0 
+            ? "All done! 🎉"
+            : "$leftHabits habits left";
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -309,11 +327,26 @@ class DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('$greeting $emoji',
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                Text(greeting,
+                  style: const TextStyle(
+                    color: Color(0xFFFF7A55), // Sleek coral accent
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                  )),
                 const SizedBox(height: 4),
+                Text(progressText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  )),
+                const SizedBox(height: 2),
                 Text(dateStr,
-                  style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 14)),
+                  style: const TextStyle(
+                    color: Color(0xFF6B6B78),
+                    fontSize: 12,
+                  )),
               ],
             ),
           ),

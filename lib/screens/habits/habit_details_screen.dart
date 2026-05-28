@@ -230,7 +230,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     switch (_habit.repeatType) {
       case HabitRepeatType.everyDay: return 'Every day';
       case HabitRepeatType.specificDaysOfWeek:
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         final sel = _habit.repeatDaysOfWeek?.map((d) => days[d % 7]).join(', ') ?? '';
         return sel.isEmpty ? 'Specific days of week' : sel;
       case HabitRepeatType.specificDaysOfMonth:
@@ -652,7 +652,8 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (i) {
-        final isActive = _habit.repeatDaysOfWeek?.contains(i) ?? false;
+        final d = (i + 1) % 7;
+        final isActive = _habit.repeatDaysOfWeek?.contains(d) ?? false;
         return Container(
           width: 38, height: 38,
           decoration: BoxDecoration(

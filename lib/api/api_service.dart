@@ -84,6 +84,18 @@ class ApiService {
     }
   }
 
+  Future<void> removeFcmToken() async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/auth/fcm-token"),
+        headers: await _getHeaders(),
+      );
+      _processResponse(response);
+    } catch (e) {
+      debugPrint("Failed to remove FCM token: $e");
+    }
+  }
+
   Future<void> register(String username, String email, String password) async {
     try {
       final response = await http.post(

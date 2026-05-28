@@ -52,7 +52,15 @@ class AuthService {
     return await secureStorage.read(key: 'auth_token');
   }
 
+  Future<String?> getUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_username');
+  }
+
   Future<void> logout() async {
+    // Attempt to remove FCM token from the server to prevent cross-account push notifications
+    await _api.removeFcmToken();
+
     const secureStorage = FlutterSecureStorage();
     await secureStorage.delete(key: 'auth_token');
 
@@ -71,6 +79,9 @@ class AuthService {
     final username = prefs.getString('auth_username');
     if (username == null) throw Exception('Username not found. Please re-login.');
     await _api.deleteAccount(username, password);
+    
+    // Attempt to remove FCM token
+    await _api.removeFcmToken();
     
     const secureStorage = FlutterSecureStorage();
     await secureStorage.delete(key: 'auth_token');

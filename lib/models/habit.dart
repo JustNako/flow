@@ -283,7 +283,7 @@ class Habit {
       case HabitRepeatType.everyDay:
         return 'Every day';
       case HabitRepeatType.specificDaysOfWeek:
-        const days = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+        const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
         final selected = repeatDaysOfWeek?.map((d) => days[d % 7]).join(', ') ?? '';
         return selected.isEmpty ? 'Specific days' : selected;
       case HabitRepeatType.specificDaysOfMonth:
