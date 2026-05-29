@@ -384,4 +384,43 @@ class HabitApiService {
       throw Exception(_parseError(e));
     }
   }
+
+  // ─── POST /stats/share-recap ───────────────────────────────────────────────
+
+  Future<String> shareMonthlyRecap({
+    required int year,
+    required int month,
+    required int totalRate,
+    required int bestStreak,
+    required String bestHabit,
+    required String archetypeTitle,
+    required String archetypeDesc,
+  }) async {
+    try {
+      final body = {
+        'year': year,
+        'month': month,
+        'totalRate': totalRate,
+        'bestStreak': bestStreak,
+        'bestHabit': bestHabit,
+        'archetypeTitle': archetypeTitle,
+        'archetypeDesc': archetypeDesc,
+      };
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/stats/share-recap'),
+        headers: await _headers(),
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['link'] as String;
+      }
+      
+      throw Exception('Failed to share recap: ${response.statusCode}');
+    } catch (e) {
+      throw Exception(_parseError(e));
+    }
+  }
 }

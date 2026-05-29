@@ -3,8 +3,10 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../api/habit_api_service.dart';
-import '../../widgets/share_recap_bottom_sheet.dart';
+import '../../services/share_service.dart';
+import '../../widgets/recap_share_card.dart';
 
 class MonthlyRecapScreen extends StatefulWidget {
   final int year;
@@ -155,26 +157,31 @@ class _MonthlyRecapScreenState extends State<MonthlyRecapScreen> with TickerProv
     }
   }
 
-  void _showShareMenu() {
+  Future<void> _showShareMenu() async {
     _progressController.stop();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => ShareRecapBottomSheet(
-        monthName: _monthName,
+
+    try {
+      final link = await _api.shareMonthlyRecap(
+        year: widget.year,
+        month: widget.month,
         totalRate: _totalRate,
-        totalCompletions: (_recap!['completedDaysCount'] as num?)?.toInt() ?? 0,
-        bestHabit: _bestHabit,
-        badgeLabel: _archetypeTitle,
-        recap: _recap!,
         bestStreak: _bestStreak,
-      ),
-    ).then((_) {
+        bestHabit: _bestHabit,
+        archetypeTitle: _archetypeTitle,
+        archetypeDesc: _archetypeDesc,
+      );
+
+      await Share.share(
+        "I crushed my habits this month! See my interactive recap: $link",
+        subject: "My $_monthName Recap",
+      );
+    } catch (e) {
+      debugPrint('Share failed: $e');
+    } finally {
       if (_currentIndex < _totalSlides - 1) {
         _progressController.forward();
       }
-    });
+    }
   }
 
   @override
@@ -794,9 +801,54 @@ class _Slide5PersonalityState extends State<_Slide5Personality> with SingleTicke
 // ─────────────────────────────────────────────────────────────────────────────
 // SLIDE 6: ENDING (Radial gold, Glassmorphism CTA)
 // ─────────────────────────────────────────────────────────────────────────────
-class _Slide6Ending extends StatelessWidget {
-  final VoidCallback onShareTap;
+class _Slide6Ending extends StatefulWidget {
+  final Future<void> Function() onShareTap;
   const _Slide6Ending({required this.onShareTap});
+
+  @override
+  State<_Slide6Ending> createState() => _Slide6EndingState();
+}
+
+class _Slide6EndingState extends State<_Slide6Ending> with SingleTickerProviderStateMixin {
+  bool _isSharing = false;
+  bool _isSuccess = false;
+  late AnimationController _bloomCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _bloomCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+  }
+
+  @override
+  void dispose() {
+    _bloomCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleShare() async {
+    if (_isSharing || _isSuccess) return;
+
+    setState(() => _isSharing = true);
+    await widget.onShareTap();
+    
+    if (mounted) {
+      setState(() {
+        _isSharing = false;
+        _isSuccess = true;
+      });
+      _bloomCtrl.forward(from: 0.0);
+
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        if (mounted) {
+          _bloomCtrl.reverse();
+          Future.delayed(const Duration(milliseconds: 600), () {
+            if (mounted) setState(() => _isSuccess = false);
+          });
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -806,16 +858,25 @@ class _Slide6Ending extends StatelessWidget {
         children: [
           // Radial Gold Glow
           Center(
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [const Color(0xFFEAB308).withOpacity(0.2), Colors.transparent],
-                  radius: 0.8,
-                ),
-              ),
+            child: AnimatedBuilder(
+              animation: _bloomCtrl,
+              builder: (context, child) {
+                final bloomValue = _bloomCtrl.value;
+                return Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        Color.lerp(const Color(0xFFEAB308).withOpacity(0.2), const Color(0xFFF59E0B).withOpacity(0.5), bloomValue)!,
+                        Colors.transparent,
+                      ],
+                      radius: 0.8 + (bloomValue * 0.4),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
 
@@ -849,28 +910,84 @@ class _Slide6Ending extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 80, left: 32, right: 32),
                 child: GestureDetector(
-                  onTap: onShareTap,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                      child: Container(
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(color: Colors.white.withOpacity(0.2)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(Icons.ios_share, color: Colors.white, size: 24),
-                            SizedBox(width: 12),
-                            Text(
-                              'SHARE YOUR RECAP',
-                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 2),
+                  onTap: _handleShare,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    transform: Matrix4.identity()..scale(_isSharing ? 0.95 : 1.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: Container(
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: _isSuccess 
+                                ? const Color(0xFFF59E0B).withOpacity(0.2) 
+                                : Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(32),
+                            border: Border.all(
+                              color: _isSuccess 
+                                  ? const Color(0xFFFBBF24).withOpacity(0.5) 
+                                  : Colors.white.withOpacity(0.2),
                             ),
-                          ],
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Default State
+                              AnimatedOpacity(
+                                opacity: (!_isSharing && !_isSuccess) ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 200),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.ios_share, color: Colors.white, size: 24),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'SHARE YOUR RECAP',
+                                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Loading State
+                              AnimatedOpacity(
+                                opacity: _isSharing ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 200),
+                                child: const SizedBox(
+                                  width: 24, height: 24,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                ),
+                              ),
+                              // Success State
+                              AnimatedOpacity(
+                                opacity: _isSuccess ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 300),
+                                child: TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0.0, end: _isSuccess ? 1.0 : 0.0),
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.elasticOut,
+                                  builder: (context, val, child) {
+                                    return Transform.scale(
+                                      scale: val,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(Icons.check_circle_outline, color: Color(0xFFFBBF24), size: 24),
+                                          SizedBox(width: 12),
+                                          Text(
+                                            'SHARED!',
+                                            style: TextStyle(color: Color(0xFFFBBF24), fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 2),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
