@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/ai_habit_dto.dart';
 import '../../models/habit.dart';
+import '../../theme/app_theme.dart';
 import '../paywall/paywall_screen.dart';
 
 class AiGeneratorScreen extends StatefulWidget {
@@ -246,7 +247,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       body: Column(
         children: [
           _buildHeader(),
@@ -283,12 +284,12 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
       subtext = _remaining > 0 
         ? '$_remaining generations left today • PRO' 
         : 'Daily limit reached • PRO';
-      subtextColor = _remaining > 0 ? const Color(0xFFDA22FF) : Colors.red.shade400;
+      subtextColor = _remaining > 0 ? context.colors.secondary : context.colors.danger;
     } else {
       subtext = _remaining > 0 
         ? '$_remaining free generations left' 
         : '0 free generations left';
-      subtextColor = _remaining > 0 ? const Color(0xFF8A8F9E) : Colors.red.shade400;
+      subtextColor = _remaining > 0 ? context.colors.textSecondary : context.colors.danger;
     }
 
     return SafeArea(
@@ -305,11 +306,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                   child: Container(
                     width: 40, height: 40,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161A22),
+                      color: context.colors.card,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.05)),
+                      border: Border.all(color: context.colors.border),
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
+                    child: Icon(Icons.arrow_back_ios_new, color: context.colors.textPrimary, size: 16),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -320,14 +321,14 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                       Row(
                         children: [
                           ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+                            shaderCallback: (bounds) => LinearGradient(
+                              colors: [context.colors.secondary, context.colors.primary],
                             ).createShader(bounds),
                             child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
                           ),
                           const SizedBox(width: 8),
-                          const Text('AI Routine Builder',
-                            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text('AI Routine Builder',
+                            style: TextStyle(color: context.colors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -339,7 +340,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
+                      color: context.colors.secondary,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text('PRO', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
@@ -359,12 +360,12 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF161A22),
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFDA22FF).withOpacity(0.15)),
+        border: Border.all(color: context.colors.secondary.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFDA22FF).withOpacity(0.05),
+            color: context.colors.secondary.withOpacity(0.05),
             blurRadius: 20,
             spreadRadius: 0,
           ),
@@ -378,37 +379,37 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
+                  color: context.colors.secondary,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.psychology_outlined, color: Colors.white, size: 20),
               ),
               const SizedBox(width: 12),
-              const Text("What's your goal?",
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+              Text("What's your goal?",
+                style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _controller,
             maxLines: 3,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
             decoration: InputDecoration(
               hintText: 'e.g. "I want to lose weight, sleep better and reduce stress"',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
+              hintStyle: TextStyle(color: context.colors.textSecondary, fontSize: 14),
               filled: true,
-              fillColor: const Color(0xFF0C1017),
+              fillColor: context.colors.background,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                borderSide: BorderSide(color: context.colors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                borderSide: BorderSide(color: context.colors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFDA22FF), width: 1.5),
+                borderSide: BorderSide(color: context.colors.secondary, width: 1.5),
               ),
               contentPadding: const EdgeInsets.all(14),
             ),
@@ -419,12 +420,12 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
             children: [
               Text(
                 _isPro ? 'Daily limit' : 'Total limit',
-                style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12),
+                style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
               ),
               Text(
                 '$_remaining of $_totalLimit left',
                 style: TextStyle(
-                  color: _remaining > 0 ? const Color(0xFFDA22FF) : Colors.red.shade400,
+                  color: _remaining > 0 ? context.colors.secondary : context.colors.danger,
                   fontSize: 12, 
                   fontWeight: FontWeight.bold
                 ),
@@ -436,8 +437,8 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.white.withOpacity(0.05),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFDA22FF)),
+              backgroundColor: context.colors.border,
+              valueColor: AlwaysStoppedAnimation<Color>(context.colors.secondary),
               minHeight: 4,
             ),
           ),
@@ -450,14 +451,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 decoration: BoxDecoration(
-                  gradient: _isLoading
-                    ? null
-                    : const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
-                  color: _isLoading ? const Color(0xFF2A2F3A) : null,
+                  color: _isLoading ? context.colors.cardSecondary : context.colors.secondary,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: _isLoading ? [] : [
                     BoxShadow(
-                      color: const Color(0xFFDA22FF).withOpacity(0.35),
+                      color: context.colors.secondary.withOpacity(0.35),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
@@ -484,7 +482,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
             ),
           ),
           const SizedBox(height: 14),
-          const Text('Quick ideas:', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 12)),
+          Text('Quick ideas:', style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -512,11 +510,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF0C1017),
+          color: context.colors.background,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFDA22FF).withOpacity(0.2)),
+          border: Border.all(color: context.colors.secondary.withOpacity(0.2)),
         ),
-        child: Text(label, style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12)),
+        child: Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
       ),
     );
   }
@@ -538,12 +536,10 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                     width: 80, height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-                      ),
+                      color: context.colors.secondary,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFDA22FF).withOpacity(0.5 * _pulseAnimation.value),
+                          color: context.colors.secondary.withOpacity(0.5 * _pulseAnimation.value),
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
@@ -555,15 +551,15 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
               },
             ),
             const SizedBox(height: 24),
-            const Text('AI is crafting your routine...',
+            Text('AI is crafting your routine...',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: context.colors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            const Text('Analyzing your goals and building the perfect habits',
+            Text('Analyzing your goals and building the perfect habits',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+                style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
           ],
         ),
       ),
@@ -580,12 +576,12 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1215),
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.red.withOpacity(0.3)),
+        border: Border.all(color: context.colors.danger.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withOpacity(0.05),
+            color: context.colors.danger.withOpacity(0.05),
             blurRadius: 20,
           ),
         ],
@@ -595,26 +591,26 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
+              color: context.colors.danger.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.warning_amber_rounded, color: Colors.red.shade400, size: 28),
+            child: Icon(Icons.warning_amber_rounded, color: context.colors.danger, size: 28),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "System Glitch",
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             displayError,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, height: 1.4),
+            style: TextStyle(color: context.colors.textSecondary.withOpacity(0.6), fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 16),
           TextButton(
             onPressed: () => setState(() => _error = null),
-            child: Text("DISMISS", style: TextStyle(color: Colors.red.shade400, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            child: Text("DISMISS", style: TextStyle(color: context.colors.danger, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
           ),
         ],
       ),
@@ -627,15 +623,15 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
       children: [
         Row(
           children: [
-            const Text('Your AI Routine', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('Your AI Routine', style: TextStyle(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
             const Spacer(),
             Text('${_selectedIndices.length}/${_generatedHabits.length} selected',
-              style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
           ],
         ),
         const SizedBox(height: 4),
-        const Text('Tap to select habits you want to add',
-          style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+        Text('Tap to select habits you want to add',
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
         const SizedBox(height: 16),
         ...List.generate(_generatedHabits.length, (i) => _buildHabitCard(i)),
       ],
@@ -663,17 +659,17 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF161A22) : const Color(0xFF0F1218),
+          color: isSelected ? context.colors.card : context.colors.background,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-              ? const Color(0xFFDA22FF).withOpacity(0.3)
-              : Colors.white.withOpacity(0.04),
+              ? context.colors.secondary.withOpacity(0.3)
+              : context.colors.textPrimary.withOpacity(0.04),
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: const Color(0xFFDA22FF).withOpacity(0.08),
+              color: context.colors.secondary.withOpacity(0.08),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -685,11 +681,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
               width: 48, height: 48,
               decoration: BoxDecoration(
                 gradient: isSelected ? gradient : null,
-                color: isSelected ? null : const Color(0xFF1C1F26),
+                color: isSelected ? null : context.colors.iconBg,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(icon,
-                color: isSelected ? Colors.white : const Color(0xFF4A4E5A),
+                color: isSelected ? Colors.white : context.colors.textSecondary,
                 size: 24),
             ),
             const SizedBox(width: 14),
@@ -699,14 +695,14 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                 children: [
                   Text(habit.title,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF8A8F9E),
+                      color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     )),
                   if (habit.description.isNotEmpty) ...[
                     const SizedBox(height: 3),
                     Text(habit.description,
-                      style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12),
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -717,7 +713,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: context.colors.textPrimary.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -732,18 +728,18 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: (isSelected ? gradient.colors.first : const Color(0xFFDA22FF)).withOpacity(0.15),
+                            color: (isSelected ? gradient.colors.first : context.colors.secondary).withOpacity(0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
                             children: [
                               Icon(Icons.access_time, 
-                                   color: isSelected ? Colors.white : const Color(0xFFDA22FF), size: 10),
+                                   color: isSelected ? Colors.white : context.colors.secondary, size: 10),
                               const SizedBox(width: 4),
                               Text(
                                 habit.timeOfDay!,
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : const Color(0xFFDA22FF),
+                                  color: isSelected ? Colors.white : context.colors.secondary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -763,11 +759,9 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
               width: 28, height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: isSelected
-                  ? const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)])
-                  : null,
+                color: isSelected ? context.colors.secondary : null,
                 border: Border.all(
-                  color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.2),
+                  color: isSelected ? Colors.transparent : context.colors.textPrimary.withOpacity(0.2),
                   width: 1.5,
                 ),
               ),
@@ -786,8 +780,8 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       decoration: BoxDecoration(
-        color: const Color(0xFF0C1017),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+        color: context.colors.background,
+        border: Border(top: BorderSide(color: context.colors.border)),
       ),
       child: GestureDetector(
         onTap: _isAddingHabits || count == 0 ? null : _addSelectedHabits,
@@ -795,14 +789,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            gradient: count > 0
-              ? const LinearGradient(colors: [Color(0xFFFF7A55), Color(0xFFFF4848)])
-              : null,
-            color: count == 0 ? const Color(0xFF2A2F3A) : null,
+            color: count > 0 ? context.colors.secondary : context.colors.cardSecondary,
             borderRadius: BorderRadius.circular(16),
             boxShadow: count > 0 ? [
               BoxShadow(
-                color: const Color(0xFFFF524A).withOpacity(0.3),
+                color: context.colors.secondary.withOpacity(0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -841,10 +832,10 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
       isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        decoration: const BoxDecoration(
-          color: Color(0xFF161A22),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          boxShadow: [
+        decoration: BoxDecoration(
+          color: context.colors.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          boxShadow: const [
             BoxShadow(color: Colors.black54, blurRadius: 40, spreadRadius: 10),
           ],
         ),
@@ -854,22 +845,22 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
             Container(
               width: 80, height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFFDA22FF).withOpacity(0.1),
+                color: context.colors.secondary.withOpacity(0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFDA22FF).withOpacity(0.2)),
+                border: Border.all(color: context.colors.secondary.withOpacity(0.2)),
               ),
-              child: const Icon(Icons.star_rounded, color: Color(0xFFDA22FF), size: 48),
+              child: Icon(Icons.star_rounded, color: context.colors.secondary, size: 48),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Limit Reached',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 16, height: 1.5),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 16, height: 1.5),
             ),
             const SizedBox(height: 32),
             GestureDetector(
@@ -883,11 +874,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
+                  color: context.colors.secondary,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFDA22FF).withOpacity(0.3),
+                      color: context.colors.secondary.withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -903,9 +894,9 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
+              child: Text(
                 'Maybe later',
-                style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14),
+                style: TextStyle(color: context.colors.textSecondary, fontSize: 14),
               ),
             ),
             const SizedBox(height: 12),

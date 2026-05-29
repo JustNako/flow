@@ -7,6 +7,8 @@ import '../../services/time_tracking_service.dart';
 import '../../services/update_service.dart';
 import '../../services/widget_service.dart';
 import '../../services/auth_service.dart';
+import '../../theme/app_theme.dart';
+import '../settings/settings_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,18 +28,9 @@ class DashboardScreenState extends State<DashboardScreen> {
   String? _username;
   final Set<String> _togglingIds = {};
 
-  // ─── Gradients palette ─────────────────────────────────────────────────────
-  static const List<List<Color>> _gradients = [
-    [Color(0xFF00B4DB), Color(0xFF0083B0)],
-    [Color(0xFFFF512F), Color(0xFFDD2476)],
-    [Color(0xFFDA22FF), Color(0xFF9733EE)],
-    [Color(0xFF4776E6), Color(0xFF8E54E9)],
-    [Color(0xFF11998E), Color(0xFF38EF7D)],
-    [Color(0xFFFFB75E), Color(0xFFED8F03)],
-  ];
-
   LinearGradient _gradientFor(String title) {
-    final colors = _gradients[title.length % _gradients.length];
+    final gradients = context.colors.habitGradients;
+    final colors = gradients[title.length % gradients.length];
     return LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight);
   }
 
@@ -172,14 +165,14 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       body: SafeArea(child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFFF512F)));
+      return Center(child: CircularProgressIndicator(color: context.colors.primary ?? const Color(0xFFFF512F)));
     }
     if (_error != null) {
       return Center(
@@ -191,25 +184,25 @@ class DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3A1F26),
+                  color: context.colors.danger.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Icon(Icons.wifi_off_rounded, color: Color(0xFFFF5252), size: 48),
+                child: Icon(Icons.wifi_off_rounded, color: context.colors.danger, size: 48),
               ),
               const SizedBox(height: 20),
-              const Text('Connection Error',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+              Text('Connection Error',
+                style: TextStyle(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Text(_error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 14)),
+                style: TextStyle(color: context.colors.textSecondary, fontSize: 14)),
               const SizedBox(height: 24),
               GestureDetector(
                 onTap: loadData,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFFF7A55), Color(0xFFFF4848)]),
+                    color: context.colors.danger,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Text('Try Again',
@@ -224,8 +217,8 @@ class DashboardScreenState extends State<DashboardScreen> {
 
     return RefreshIndicator(
       onRefresh: loadData,
-      color: const Color(0xFFFF512F),
-      backgroundColor: const Color(0xFF161A22),
+      color: context.colors.primary,
+      backgroundColor: context.colors.card,
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _buildHeader()),
@@ -235,12 +228,12 @@ class DashboardScreenState extends State<DashboardScreen> {
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
               child: Row(
                 children: [
-                  const Text("Today's Habits",
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text("Today's Habits",
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
                   const Spacer(),
                   if (_totalCount > 0)
                     Text('$_completedCount / $_totalCount',
-                      style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 14)),
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 14)),
                 ],
               ),
             ),
@@ -265,17 +258,17 @@ class DashboardScreenState extends State<DashboardScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
                 child: Row(
                   children: [
-                    const Text("Other Habits",
-                      style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text("Other Habits",
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 16, fontWeight: FontWeight.w600)),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: context.colors.textSecondary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text('${_otherHabits.length}',
-                        style: const TextStyle(color: Color(0xFF6B6B78), fontSize: 12, fontWeight: FontWeight.bold)),
+                        style: TextStyle(color: context.colors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -336,15 +329,15 @@ class DashboardScreenState extends State<DashboardScreen> {
                   )),
                 const SizedBox(height: 4),
                 Text(progressText,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   )),
                 const SizedBox(height: 2),
                 Text(dateStr,
-                  style: const TextStyle(
-                    color: Color(0xFF6B6B78),
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
                     fontSize: 12,
                   )),
               ],
@@ -361,39 +354,35 @@ class DashboardScreenState extends State<DashboardScreen> {
                 margin: const EdgeInsets.only(right: 12),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161A22),
+                  color: context.colors.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: context.colors.border),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.timer_outlined, color: Color(0xFFDA22FF), size: 16),
                     const SizedBox(width: 4),
                     Text('$minutes m',
-                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                      style: TextStyle(color: context.colors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
                   ],
                 ),
               );
             },
           ),
-          // Notification bell
           GestureDetector(
             onTap: () {
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.transparent,
-                isScrollControlled: true,
-                builder: (ctx) => const NotificationSettingsBottomSheet(),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
             },
             child: Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF161A22),
+                color: context.colors.card,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: context.colors.border),
               ),
-              child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
+              child: Icon(Icons.settings_outlined, color: context.colors.textPrimary, size: 22),
             ),
           ),
         ],
@@ -408,13 +397,9 @@ class DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
+          color: context.colors.card,
           borderRadius: BorderRadius.circular(24),
-          gradient: RadialGradient(
-            center: const Alignment(-0.8, -0.8),
-            radius: 1.8,
-            colors: [const Color(0xFFFF512F).withOpacity(0.2), const Color(0xFF161A22)],
-          ),
-          border: Border.all(color: const Color(0xFFFF512F).withOpacity(0.08)),
+          border: Border.all(color: context.colors.border),
         ),
         child: Row(
           children: [
@@ -429,8 +414,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                     child: CircularProgressIndicator(
                       value: _overallProgress,
                       strokeWidth: 7,
-                      backgroundColor: Colors.white.withOpacity(0.07),
-                      valueColor: const AlwaysStoppedAnimation(Color(0xFFFF7A55)),
+                      backgroundColor: context.colors.textSecondary.withOpacity(0.1),
+                      valueColor: AlwaysStoppedAnimation(context.colors.primary ?? const Color(0xFFFF7A55)),
                       strokeCap: StrokeCap.round,
                     ),
                   ),
@@ -438,9 +423,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text('${(_overallProgress * 100).toInt()}%',
-                        style: const TextStyle(color: Colors.white, fontSize: 18,
+                        style: TextStyle(color: context.colors.textPrimary, fontSize: 18,
                             fontWeight: FontWeight.bold, height: 1)),
-                      const Text('done', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 11)),
+                      Text('done', style: TextStyle(color: context.colors.textSecondary, fontSize: 11)),
                     ],
                   ),
                 ],
@@ -457,12 +442,12 @@ class DashboardScreenState extends State<DashboardScreen> {
                         : _completedCount == 0
                             ? "Let's get started!"
                             : 'Keep going!',
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     '$_completedCount of $_totalCount habits completed today',
-                    style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 13),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 16),
                   // Streak badge
@@ -471,14 +456,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF7A55), Color(0xFFFF4848)],
-                          ),
+                          color: context.colors.danger,
                           borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(color: const Color(0xFFFF524A).withOpacity(0.3),
-                                blurRadius: 10, offset: const Offset(0, 3))
-                          ],
                         ),
                         child: Row(
                           children: [
@@ -508,27 +487,27 @@ class DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: const Color(0xFF161A22),
+          color: context.colors.card,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.03)),
+          border: Border.all(color: context.colors.border),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFFDA22FF).withOpacity(0.1),
+                color: context.colors.primary?.withOpacity(0.1) ?? const Color(0xFFDA22FF).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.add_task, color: Color(0xFFDA22FF), size: 40),
+              child: Icon(Icons.add_task, color: context.colors.primary ?? const Color(0xFFDA22FF), size: 40),
             ),
             const SizedBox(height: 20),
-            const Text('No habits today',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+            Text('No habits today',
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            const Text('Tap the + button below to create\nyour first habit!',
+            Text('Tap the + button below to create\nyour first habit!',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14, height: 1.5)),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 14, height: 1.5)),
           ],
         ),
       ),
@@ -558,21 +537,21 @@ class DashboardScreenState extends State<DashboardScreen> {
           margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
             color: isOther 
-                ? const Color(0xFF0F1218)
-                : (isComplete ? const Color(0xFF131A15) : const Color(0xFF141720)),
+                ? context.colors.cardSecondary
+                : (isComplete ? context.colors.success.withOpacity(0.05) : context.colors.card),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: isOther 
-                  ? Colors.white.withOpacity(0.02)
+                  ? context.colors.border.withOpacity(0.5)
                   : (isComplete
-                      ? const Color(0xFF00E676).withOpacity(0.15)
-                      : Colors.white.withOpacity(0.04)),
+                      ? context.colors.success.withOpacity(0.3)
+                      : context.colors.border),
             ),
           boxShadow: [
             BoxShadow(
               color: isComplete
-                  ? const Color(0xFF00E676).withOpacity(0.05)
-                  : Colors.black.withOpacity(0.15),
+                  ? context.colors.success.withOpacity(0.05)
+                  : Colors.black.withOpacity(0.05),
               blurRadius: 12,
               offset: const Offset(0, 4),
             )
@@ -590,8 +569,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                     decoration: BoxDecoration(
                       gradient: (isComplete || isOther) ? null : gradient,
                       color: isOther 
-                          ? const Color(0xFF1C1F26)
-                          : (isComplete ? const Color(0xFF1F3A2E) : null),
+                          ? context.colors.iconBg
+                          : (isComplete ? context.colors.success.withOpacity(0.1) : null),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: (isComplete || isOther) ? [] : [
                         BoxShadow(color: gradient.colors.first.withOpacity(0.3),
@@ -599,13 +578,13 @@ class DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                     child: isToggling
-                        ? const Padding(
-                            padding: EdgeInsets.all(14),
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        ? Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: CircularProgressIndicator(color: context.colors.textPrimary, strokeWidth: 2))
                         : Icon(isComplete ? Icons.check_circle_outline : icon,
                             color: isOther 
-                                ? const Color(0xFF4A4E5A)
-                                : (isComplete ? const Color(0xFF00E676) : Colors.white),
+                                ? context.colors.textSecondary
+                                : (isComplete ? context.colors.success : Colors.white),
                             size: 26),
                   ),
                   const SizedBox(width: 14),
@@ -617,11 +596,11 @@ class DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(habit.title,
                           style: TextStyle(
-                            color: isComplete ? const Color(0xFF8A8F9E) : Colors.white,
+                            color: isComplete ? context.colors.textSecondary : context.colors.textPrimary,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             decoration: isComplete ? TextDecoration.lineThrough : null,
-                            decorationColor: const Color(0xFF8A8F9E),
+                            decorationColor: context.colors.textSecondary,
                           )),
                         const SizedBox(height: 6),
                         Row(
@@ -630,27 +609,27 @@ class DashboardScreenState extends State<DashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: (isComplete ? const Color(0xFF8A8F9E) : gradient.colors.first).withOpacity(0.15),
+                                  color: (isComplete ? context.colors.textSecondary : gradient.colors.first).withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
                                   children: [
                                     Icon(Icons.access_time, 
-                                      color: isComplete ? const Color(0xFF8A8F9E) : gradient.colors.first, size: 12),
+                                      color: isComplete ? context.colors.textSecondary : gradient.colors.first, size: 12),
                                     const SizedBox(width: 4),
                                     Text(habit.timeOfDay!, 
                                       style: TextStyle(
-                                        color: isComplete ? const Color(0xFF8A8F9E) : gradient.colors.first, 
+                                        color: isComplete ? context.colors.textSecondary : gradient.colors.first, 
                                         fontSize: 11, fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ),
                               const SizedBox(width: 8),
                             ],
-                            Icon(Icons.repeat, color: const Color(0xFF8A8F9E), size: 13),
+                            Icon(Icons.repeat, color: context.colors.textSecondary, size: 13),
                             const SizedBox(width: 4),
                             Text(repeatInfo,
-                              style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12)),
+                              style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
                           ],
                         ),
                       ],
@@ -667,26 +646,26 @@ class DashboardScreenState extends State<DashboardScreen> {
                         width: 36, height: 36,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isComplete ? const Color(0xFF1F3A2E) : Colors.transparent,
+                          color: isComplete ? context.colors.success.withOpacity(0.1) : Colors.transparent,
                           border: Border.all(
                             color: isComplete
-                                ? const Color(0xFF00E676)
-                                : Colors.white.withOpacity(0.25),
+                                ? context.colors.success
+                                : context.colors.border,
                             width: 1.5,
                           ),
                         ),
                         child: isToggling
-                            ? const Padding(
-                                padding: EdgeInsets.all(8),
-                                child: CircularProgressIndicator(color: Color(0xFF00E676), strokeWidth: 2))
+                            ? Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: CircularProgressIndicator(color: context.colors.success, strokeWidth: 2))
                             : Icon(
                                 isComplete ? Icons.check : null,
                                 size: 18,
-                                color: const Color(0xFF00E676)),
+                                color: context.colors.success),
                       ),
                     )
                   else
-                    const Icon(Icons.lock_outline, color: Color(0xFF3A3E4A), size: 18),
+                    Icon(Icons.lock_outline, color: context.colors.textSecondary, size: 18),
                 ],
               ),
 
@@ -701,9 +680,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                         child: LinearProgressIndicator(
                           value: isComplete ? 1.0 : 0.0,
                           minHeight: 5,
-                          backgroundColor: Colors.white.withOpacity(0.06),
+                          backgroundColor: context.colors.textSecondary.withOpacity(0.1),
                           valueColor: AlwaysStoppedAnimation(
-                            isComplete ? const Color(0xFF00E676) : gradient.colors.first,
+                            isComplete ? context.colors.success : gradient.colors.first,
                           ),
                         ),
                       ),
@@ -711,7 +690,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(width: 12),
                     Text(
                       '${habit.targetDays} ${habit.unit ?? ''}'.trim(),
-                      style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 11),
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 11),
                     ),
                   ],
                 ),

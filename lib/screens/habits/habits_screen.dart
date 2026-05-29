@@ -3,6 +3,7 @@ import '../../api/habit_api_service.dart';
 import '../../models/habit.dart';
 import '../../services/auth_service.dart';
 import '../../services/offline_manager.dart';
+import '../../theme/app_theme.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -151,7 +152,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -161,7 +162,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddHabit,
-        backgroundColor: const Color(0xFF7C3AED),
+        backgroundColor: context.colors.primary ?? const Color(0xFF7C3AED),
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('Add Habit', style: TextStyle(color: Colors.white)),
       ),
@@ -171,22 +172,22 @@ class _HabitsScreenState extends State<HabitsScreen> {
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.transparent,
-      title: const Text(
+      title: Text(
         'All Habits',
         style: TextStyle(
-          color: Colors.white,
+          color: context.colors.textPrimary,
           fontWeight: FontWeight.bold,
           fontSize: 24,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh, color: Colors.white70),
+          icon: Icon(Icons.refresh, color: context.colors.textSecondary),
           onPressed: _loadHabits,
           tooltip: 'Refresh',
         ),
         IconButton(
-          icon: const Icon(Icons.logout, color: Colors.white70),
+          icon: Icon(Icons.logout, color: context.colors.textSecondary),
           onPressed: _logout,
           tooltip: 'Logout',
         ),
@@ -251,8 +252,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+      return Center(
+        child: CircularProgressIndicator(color: context.colors.primary ?? const Color(0xFF7C3AED)),
       );
     }
 
@@ -263,11 +264,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+              Icon(Icons.error_outline, color: context.colors.danger, size: 48),
               const SizedBox(height: 16),
               Text(
                 _error!,
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: context.colors.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -276,7 +277,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C3AED),
+                  backgroundColor: context.colors.primary ?? const Color(0xFF7C3AED),
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -291,20 +292,20 @@ class _HabitsScreenState extends State<HabitsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.track_changes, color: Color(0xFF7C3AED), size: 64),
+            Icon(Icons.track_changes, color: context.colors.primary ?? const Color(0xFF7C3AED), size: 64),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No habits yet',
               style: TextStyle(
-                color: Colors.white,
+                color: context.colors.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Start your journey by adding\nyour first habit below',
-              style: TextStyle(color: Colors.white54),
+              style: TextStyle(color: context.colors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -314,7 +315,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadHabits,
-      color: const Color(0xFF7C3AED),
+      color: context.colors.primary,
+      backgroundColor: context.colors.card,
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
         itemCount: _habits.length,
@@ -369,18 +371,12 @@ class _HabitCard extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isComplete
-                  ? [const Color(0xFF1D4A2A), const Color(0xFF1A3A20)]
-                  : [const Color(0xFF1E1E35), const Color(0xFF16162A)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: isComplete ? context.colors.success.withOpacity(0.1) : context.colors.card,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isComplete
-                  ? Colors.green.withOpacity(0.4)
-                  : const Color(0xFF7C3AED).withOpacity(0.2),
+                  ? context.colors.success.withOpacity(0.4)
+                  : context.colors.border,
             ),
           ),
           child: Padding(
@@ -398,8 +394,8 @@ class _HabitCard extends StatelessWidget {
                             habit.title,
                             style: TextStyle(
                               color: isComplete
-                                  ? Colors.greenAccent
-                                  : Colors.white,
+                                  ? context.colors.success
+                                  : context.colors.textPrimary,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -408,8 +404,8 @@ class _HabitCard extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               habit.description!,
-                              style: const TextStyle(
-                                color: Colors.white54,
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
                                 fontSize: 13,
                               ),
                               maxLines: 1,
@@ -419,8 +415,8 @@ class _HabitCard extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             habit.repeatLabel,
-                            style: const TextStyle(
-                              color: Color(0xFF7C3AED),
+                            style: TextStyle(
+                              color: context.colors.primary,
                               fontSize: 12,
                             ),
                           ),
@@ -437,27 +433,27 @@ class _HabitCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: isToggling
-                              ? Colors.white10
+                              ? context.colors.textSecondary.withOpacity(0.1)
                               : isComplete
-                                  ? Colors.green.withOpacity(0.2)
-                                  : const Color(0xFF7C3AED).withOpacity(0.15),
+                                  ? context.colors.success.withOpacity(0.2)
+                                  : (context.colors.primary?.withOpacity(0.15) ?? const Color(0xFF7C3AED).withOpacity(0.15)),
                           border: Border.all(
                             color: isToggling
-                                ? Colors.white24
+                                ? context.colors.border
                                 : isComplete
-                                    ? Colors.greenAccent
-                                    : const Color(0xFF7C3AED),
+                                    ? context.colors.success
+                                    : (context.colors.primary ?? const Color(0xFF7C3AED)),
                             width: 2,
                           ),
                         ),
                         child: isToggling
-                            ? const Center(
+                            ? Center(
                                 child: SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white54,
+                                    color: context.colors.textSecondary,
                                   ),
                                 ),
                               )
@@ -466,8 +462,8 @@ class _HabitCard extends StatelessWidget {
                                     ? Icons.check_circle
                                     : Icons.radio_button_unchecked,
                                 color: isComplete
-                                    ? Colors.greenAccent
-                                    : const Color(0xFF7C3AED),
+                                    ? context.colors.success
+                                    : context.colors.primary,
                                 size: 26,
                               ),
                       ),
@@ -484,9 +480,9 @@ class _HabitCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 6,
-                          backgroundColor: Colors.white10,
+                          backgroundColor: context.colors.textSecondary.withOpacity(0.1),
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            isComplete ? Colors.greenAccent : const Color(0xFF7C3AED),
+                            isComplete ? context.colors.success : (context.colors.primary ?? const Color(0xFF7C3AED)),
                           ),
                         ),
                       ),
@@ -494,10 +490,10 @@ class _HabitCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Text(
                       '${habit.completedDays}/${habit.targetDays}',
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: context.colors.textSecondary,
                         fontSize: 12,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],

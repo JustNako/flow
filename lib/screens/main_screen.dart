@@ -9,6 +9,7 @@ import 'friends/friends_screen.dart';
 import '../api/habit_api_service.dart';
 import '../services/update_service.dart';
 import '../services/widget_service.dart';
+import '../theme/app_theme.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -95,7 +96,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
@@ -138,12 +139,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           highlightColor: Colors.transparent,
         ),
         child: BottomNavigationBar(
-          backgroundColor: const Color(0xFF0C1017),
+          backgroundColor: context.colors.background,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
-          selectedItemColor: Colors.white,
-          unselectedItemColor: const Color(0xFF6B6B78),
+          selectedItemColor: context.colors.textPrimary,
+          unselectedItemColor: context.colors.textSecondary,
           selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.8),
           unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.8),
           onTap: _onTabTapped,

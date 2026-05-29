@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/habit.dart';
 import '../../models/habit_template.dart';
+import '../../theme/app_theme.dart';
 import '../paywall/paywall_screen.dart';
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
@@ -205,11 +206,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             Container(
               width: 80, height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFFDA22FF).withOpacity(0.1),
+                color: context.colors.primary?.withOpacity(0.1) ?? const Color(0xFFDA22FF).withOpacity(0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFDA22FF).withOpacity(0.2)),
+                border: Border.all(color: context.colors.primary?.withOpacity(0.2) ?? const Color(0xFFDA22FF).withOpacity(0.2)),
               ),
-              child: const Icon(Icons.star_rounded, color: Color(0xFFDA22FF), size: 48),
+              child: Icon(Icons.star_rounded, color: context.colors.primary ?? const Color(0xFFDA22FF), size: 48),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -234,11 +235,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
+                  color: context.colors.primary ?? const Color(0xFFDA22FF),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFDA22FF).withOpacity(0.3),
+                      color: (context.colors.primary ?? const Color(0xFFDA22FF)).withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -269,12 +270,12 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -284,11 +285,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
           children: [
             // ── Header ────────────────────────────────────────────────────
-            const Text('Create New Habit',
-              style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+            Text('Create New Habit',
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-            const Text('Start building a new positive habit',
-              style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 15)),
+            Text('Start building a new positive habit',
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 15)),
             const SizedBox(height: 32),
 
             // ── Habit Name ────────────────────────────────────────────────
@@ -380,8 +381,8 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            const Text('Amount and unit per day',
-              style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+            Text('Amount and unit per day',
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
             const SizedBox(height: 48),
 
             // ── Visibility Toggle ─────────────────────────────────────────
@@ -401,7 +402,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(text,
-        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+        style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -416,35 +417,35 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   }) {
     return TextFormField(
       controller: controller,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
+      style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
       maxLines: maxLines,
       maxLength: maxLength,
       keyboardType: keyboardType,
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFF4A4E5A), fontSize: 15),
+        hintStyle: TextStyle(color: context.colors.textSecondary, fontSize: 15),
         filled: true,
-        fillColor: const Color(0xFF161A22),
+        fillColor: context.colors.cardSecondary,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+          borderSide: BorderSide(color: context.colors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFDA22FF), width: 1.5),
+          borderSide: BorderSide(color: context.colors.primary ?? const Color(0xFFDA22FF), width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFFF5252), width: 1.5),
+          borderSide: BorderSide(color: context.colors.danger, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFFF5252), width: 1.5),
+          borderSide: BorderSide(color: context.colors.danger, width: 1.5),
         ),
-        errorStyle: const TextStyle(color: Color(0xFFFF5252)),
+        errorStyle: TextStyle(color: context.colors.danger),
       ),
     );
   }
@@ -812,12 +813,12 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161A22),
+          color: context.colors.cardSecondary,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isPublic
-                ? const Color(0xFF00E676).withOpacity(0.4)
-                : Colors.white.withOpacity(0.05),
+                ? context.colors.success.withOpacity(0.4)
+                : context.colors.border,
           ),
         ),
         child: Row(
@@ -827,13 +828,13 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: _isPublic
-                    ? const Color(0xFF00E676).withOpacity(0.15)
-                    : const Color(0xFF8A8F9E).withOpacity(0.1),
+                    ? context.colors.success.withOpacity(0.15)
+                    : context.colors.textSecondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 _isPublic ? Icons.people_outline : Icons.lock_outline,
-                color: _isPublic ? const Color(0xFF00E676) : const Color(0xFF8A8F9E),
+                color: _isPublic ? context.colors.success : context.colors.textSecondary,
                 size: 22,
               ),
             ),
@@ -845,7 +846,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   Text(
                     _isPublic ? 'Visible to Friends' : 'Private',
                     style: TextStyle(
-                      color: _isPublic ? Colors.white : const Color(0xFF8A8F9E),
+                      color: _isPublic ? context.colors.textPrimary : context.colors.textSecondary,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
@@ -855,7 +856,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     _isPublic
                         ? 'Friends can see this habit and your progress'
                         : 'Only you can see this habit',
-                    style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
                   ),
                 ],
               ),
@@ -863,9 +864,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             Switch(
               value: _isPublic,
               onChanged: (v) => setState(() => _isPublic = v),
-              activeColor: const Color(0xFF00E676),
-              inactiveThumbColor: const Color(0xFF8A8F9E),
-              inactiveTrackColor: const Color(0xFF262A34),
+              activeColor: context.colors.success,
+              inactiveThumbColor: context.colors.textSecondary,
+              inactiveTrackColor: context.colors.cardSecondary,
             ),
           ],
         ),
@@ -882,16 +883,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          gradient: _isLoading
-              ? const LinearGradient(colors: [Color(0xFF3A1F26), Color(0xFF3A1F26)])
-              : const LinearGradient(
-                  colors: [Color(0xFFFF7A55), Color(0xFFFF4848)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
+          color: context.colors.primary,
           boxShadow: _isLoading ? [] : [
             BoxShadow(
-              color: const Color(0xFFFF524A).withOpacity(0.4),
+              color: (context.colors.primary ?? const Color(0xFFFF524A)).withOpacity(0.4),
               blurRadius: 20,
               offset: const Offset(0, 6),
             )
@@ -952,22 +947,15 @@ class _IconItem extends StatelessWidget {
           curve: Curves.easeInOut,
           width: 72, height: 72,
           decoration: BoxDecoration(
-            color: isSelected ? Colors.transparent : const Color(0xFF161A22),
+            color: isSelected ? context.colors.primary : context.colors.cardSecondary,
             borderRadius: BorderRadius.circular(20),
-            gradient: isSelected
-                ? const LinearGradient(
-                    colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
             border: Border.all(
-              color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.05),
+              color: isSelected ? Colors.transparent : context.colors.border,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFDA22FF).withOpacity(0.3),
+                      color: (context.colors.primary ?? const Color(0xFFDA22FF)).withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     )
@@ -977,12 +965,12 @@ class _IconItem extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 28),
+              Icon(icon, color: isSelected ? Colors.white : context.colors.textPrimary, size: 28),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : const Color(0xFF8A8F9E),
+                  color: isSelected ? Colors.white : context.colors.textSecondary,
                   fontSize: 10,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),

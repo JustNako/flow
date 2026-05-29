@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/achievement.dart';
 import '../../api/achievements_api_service.dart';
+import '../../theme/app_theme.dart';
 
 class AchievementsScreen extends StatelessWidget {
   final List<UserAchievementDto> unlockedAchievements;
@@ -12,14 +13,14 @@ class AchievementsScreen extends StatelessWidget {
     final unlockedTypes = unlockedAchievements.map((e) => e.type).toSet();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Achievements', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Achievements', style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.bold)),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: context.colors.textPrimary, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -35,23 +36,23 @@ class AchievementsScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final achievement = allAchievements[index];
           final isUnlocked = unlockedTypes.contains(achievement.type);
-          return _buildAchievementCard(achievement, isUnlocked);
+          return _buildAchievementCard(context, achievement, isUnlocked);
         },
       ),
     );
   }
 
-  Widget _buildAchievementCard(Achievement achievement, bool isUnlocked) {
+  Widget _buildAchievementCard(BuildContext context, Achievement achievement, bool isUnlocked) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF161A22),
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isUnlocked ? const Color(0xFFDA22FF).withOpacity(0.5) : const Color(0xFF262A34),
+          color: isUnlocked ? context.colors.secondary.withOpacity(0.5) : context.colors.border,
           width: 1.5,
         ),
         boxShadow: isUnlocked ? [
-          BoxShadow(color: const Color(0xFFDA22FF).withOpacity(0.15), blurRadius: 20, offset: const Offset(0, 4))
+          BoxShadow(color: context.colors.secondary.withOpacity(0.15), blurRadius: 20, offset: const Offset(0, 4))
         ] : null,
       ),
       padding: const EdgeInsets.all(16),
@@ -62,16 +63,16 @@ class AchievementsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: isUnlocked ? const LinearGradient(
-                colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+              gradient: isUnlocked ? LinearGradient(
+                colors: [context.colors.secondary, context.colors.secondary.withOpacity(0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ) : null,
-              color: isUnlocked ? null : const Color(0xFF262A34),
+              color: isUnlocked ? null : context.colors.iconBg,
             ),
             child: Icon(
               isUnlocked ? Icons.emoji_events : Icons.lock_outline,
-              color: isUnlocked ? Colors.white : const Color(0xFF8A8F9E),
+              color: isUnlocked ? Colors.white : context.colors.textSecondary,
               size: 32,
             ),
           ),
@@ -80,7 +81,7 @@ class AchievementsScreen extends StatelessWidget {
             achievement.title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isUnlocked ? Colors.white : const Color(0xFF8A8F9E),
+              color: isUnlocked ? context.colors.textPrimary : context.colors.textSecondary,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -91,8 +92,8 @@ class AchievementsScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xFF8A8F9E),
+            style: TextStyle(
+              color: context.colors.textSecondary,
               fontSize: 11,
             ),
           ),

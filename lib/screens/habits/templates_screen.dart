@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/habit_template.dart';
+import '../../theme/app_theme.dart';
 import 'ai_generator_screen.dart';
 import '../paywall/paywall_screen.dart';
 
@@ -40,15 +41,15 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
+        iconTheme: IconThemeData(color: context.colors.textPrimary),
+        title: Text(
           'Choose a Habit',
           style: TextStyle(
-            color: Colors.white,
+            color: context.colors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -71,15 +72,11 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF7C3AED), Color(0xFF4F46E5)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: context.colors.secondary,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7C3AED).withOpacity(0.3),
+                        color: context.colors.secondary.withOpacity(0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -89,8 +86,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: const BoxDecoration(
-                          color: Colors.white24,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.24),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.add, color: Colors.white, size: 28),
@@ -152,15 +149,11 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: context.colors.primary,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFDA22FF).withOpacity(0.35),
+                        color: context.colors.primary.withOpacity(0.35),
                         blurRadius: 16,
                         offset: const Offset(0, 4),
                       ),
@@ -170,8 +163,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: const BoxDecoration(
-                          color: Colors.white24,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.24),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
@@ -251,13 +244,13 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Text(
                 'Popular Templates',
                 style: TextStyle(
-                  color: Colors.white54,
+                  color: context.colors.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
@@ -302,8 +295,8 @@ class _CategorySection extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 category.name,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -333,9 +326,9 @@ class _CategorySection extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E2A),
+                    color: context.colors.card,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white10),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Row(
                     children: [
@@ -354,8 +347,8 @@ class _CategorySection extends StatelessWidget {
                           children: [
                             Text(
                               template.title,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.colors.textPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -363,15 +356,15 @@ class _CategorySection extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               template.description,
-                              style: const TextStyle(
-                                color: Colors.white54,
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
                                 fontSize: 13,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(Icons.add_circle_outline, color: Colors.white38),
+                      Icon(Icons.add_circle_outline, color: context.colors.textSecondary.withOpacity(0.5)),
                     ],
                   ),
                 ),

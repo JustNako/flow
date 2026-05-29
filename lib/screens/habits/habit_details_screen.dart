@@ -4,6 +4,7 @@ import '../../api/habit_api_service.dart';
 import '../../models/habit.dart';
 import '../../services/local_database.dart';
 import '../../services/sync_service.dart';
+import '../../theme/app_theme.dart';
 
 class HabitDetailsScreen extends StatefulWidget {
   const HabitDetailsScreen({super.key});
@@ -246,9 +247,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       body: _isDeleting
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF512F)))
+          ? Center(child: CircularProgressIndicator(color: context.colors.primary))
           : NestedScrollView(
               headerSliverBuilder: (_, __) => [_buildSliverAppBar()],
               body: Column(
@@ -273,15 +274,15 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
       expandedHeight: 280,
       floating: false,
       pinned: true,
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
         onPressed: () => Navigator.of(context).pop(),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.delete_outline, color: Color(0xFFFF5252)),
+          icon: Icon(Icons.delete_outline, color: context.colors.danger),
           onPressed: _deleteHabit,
           tooltip: 'Delete',
         ),
@@ -293,7 +294,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
             gradient: LinearGradient(
               colors: [
                 _gradient.colors.first.withOpacity(0.2),
-                const Color(0xFF0C1017),
+                context.colors.background,
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -392,13 +393,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
   // ─── TabBar ────────────────────────────────────────────────────────────────
   Widget _buildTabBar() {
     return Container(
-      color: const Color(0xFF0C1017),
+      color: context.colors.background,
       child: TabBar(
         controller: _tabController,
         indicatorColor: _gradient.colors.first,
         indicatorWeight: 2,
-        labelColor: Colors.white,
-        unselectedLabelColor: const Color(0xFF8A8F9E),
+        labelColor: context.colors.textPrimary,
+        unselectedLabelColor: context.colors.textSecondary,
         labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         tabs: const [
           Tab(text: 'Overview'),
@@ -452,10 +453,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
-          gradient: isDone
-              ? const LinearGradient(colors: [Color(0xFF1F3A2E), Color(0xFF162B20)])
-              : LinearGradient(colors: _gradient.colors),
-          border: isDone ? Border.all(color: const Color(0xFF00E676).withOpacity(0.3)) : null,
+          color: isDone ? context.colors.success.withOpacity(0.1) : null,
+          gradient: isDone ? null : LinearGradient(colors: _gradient.colors),
+          border: isDone ? Border.all(color: context.colors.success.withOpacity(0.3)) : null,
           boxShadow: isDone ? [] : [
             BoxShadow(color: _gradient.colors.first.withOpacity(0.4),
                 blurRadius: 20, offset: const Offset(0, 6))
@@ -470,13 +470,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                 children: [
                   Icon(
                     isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: isDone ? const Color(0xFF00E676) : Colors.white, size: 22,
+                    color: isDone ? context.colors.success : Colors.white, size: 22,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     isDone ? 'Completed Today ✓' : 'Mark as Done',
                     style: TextStyle(
-                      color: isDone ? const Color(0xFF00E676) : Colors.white,
+                      color: isDone ? context.colors.success : Colors.white,
                       fontSize: 16, fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -496,13 +496,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: _habit.isPublic
-                  ? const Color(0xFF00E676).withOpacity(0.15)
-                  : const Color(0xFF8A8F9E).withOpacity(0.1),
+                  ? context.colors.success.withOpacity(0.15)
+                  : context.colors.textSecondary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               _habit.isPublic ? Icons.people_outline : Icons.lock_outline,
-              color: _habit.isPublic ? const Color(0xFF00E676) : const Color(0xFF8A8F9E),
+              color: _habit.isPublic ? context.colors.success : context.colors.textSecondary,
               size: 22,
             ),
           ),
@@ -514,7 +514,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                 Text(
                   _habit.isPublic ? 'Visible to Friends' : 'Private',
                   style: TextStyle(
-                    color: _habit.isPublic ? Colors.white : const Color(0xFF8A8F9E),
+                    color: _habit.isPublic ? context.colors.textPrimary : context.colors.textSecondary,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
@@ -524,7 +524,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                   _habit.isPublic
                       ? 'Friends can see this habit'
                       : 'Only you can see this habit',
-                  style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12),
+                  style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -532,9 +532,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           Switch(
             value: _habit.isPublic,
             onChanged: (v) => _toggleVisibility(),
-            activeColor: const Color(0xFF00E676),
-            inactiveThumbColor: const Color(0xFF8A8F9E),
-            inactiveTrackColor: const Color(0xFF262A34),
+            activeColor: context.colors.success,
+            inactiveThumbColor: context.colors.textSecondary,
+            inactiveTrackColor: context.colors.cardSecondary,
           ),
         ],
       ),
@@ -637,11 +637,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
   Widget _scheduleRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, color: const Color(0xFF8A8F9E), size: 18),
+        Icon(icon, color: context.colors.textSecondary, size: 18),
         const SizedBox(width: 10),
-        Text(label, style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 14)),
+        Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 14)),
         const Spacer(),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 14,
+        Text(value, style: TextStyle(color: context.colors.textPrimary, fontSize: 14,
             fontWeight: FontWeight.w500)),
       ],
     );
@@ -732,8 +732,8 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 13,
+        Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+        Text(value, style: TextStyle(color: context.colors.textPrimary, fontSize: 13,
             fontWeight: FontWeight.w500)),
       ],
     );
@@ -904,9 +904,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF161A22),
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.04)),
+        border: Border.all(color: context.colors.border),
       ),
       child: child,
     );
@@ -918,7 +918,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
         Icon(icon, color: _gradient.colors.first, size: 18),
         const SizedBox(width: 8),
         Text(title,
-          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
       ],
     );
   }

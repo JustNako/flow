@@ -30,7 +30,7 @@ class ShareService {
 
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'Check out my monthly habit progress on Flow! 🚀',
+        text: 'Check out my monthly habit progress on Flow!',
       );
     } catch (e) {
       debugPrint('Error sharing image: $e');
@@ -62,7 +62,7 @@ class ShareService {
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
-                      pw.Text('FLOW', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.deepPurple)),
+                      pw.Text('FLOW', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey800)),
                       pw.Text(monthName, style: const pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
                     ],
                   ),
@@ -103,7 +103,7 @@ class ShareService {
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          pw.Text("COACH'S INSIGHT", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.deepPurple)),
+                          pw.Text("COACH'S INSIGHT", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey800)),
                           pw.SizedBox(height: 8),
                           pw.Text(aiInsight, style: const pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic)),
                         ],
@@ -125,7 +125,7 @@ class ShareService {
 
       await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'My Monthly Habit Report from Flow 📄',
+        text: 'My Monthly Habit Report from Flow',
       );
     } catch (e) {
       debugPrint('Error sharing PDF: $e');

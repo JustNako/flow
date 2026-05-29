@@ -8,6 +8,7 @@ import '../paywall/paywall_screen.dart';
 import '../../widgets/notification_settings_sheet.dart';
 import '../../widgets/account_settings_sheet.dart';
 import '../../api/achievements_api_service.dart';
+import '../../theme/app_theme.dart';
 import 'achievements_screen.dart';
 
 // ─── Отдельный виджет для диалога удаления ─────────────────────────────────
@@ -31,15 +32,15 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF161A22),
+      backgroundColor: context.colors.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Color(0xFFFF5252), size: 28),
-          SizedBox(width: 12),
+          Icon(Icons.warning_amber_rounded, color: context.colors.danger, size: 28),
+          const SizedBox(width: 12),
           Text(
             'Delete Account',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -47,35 +48,35 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'This action is permanent and cannot be undone. All your habits and data will be deleted.',
-            style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14, height: 1.5),
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 14, height: 1.5),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Enter your password to confirm:',
-            style: TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _passwordController,
             obscureText: _obscureText,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: context.colors.textPrimary),
             decoration: InputDecoration(
               hintText: 'Your password',
-              hintStyle: const TextStyle(color: Color(0xFF4A4E5A)),
+              hintStyle: TextStyle(color: context.colors.textSecondary),
               filled: true,
-              fillColor: const Color(0xFF101218),
+              fillColor: context.colors.background,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFFF5252), width: 1.5),
+                borderSide: BorderSide(color: context.colors.danger, width: 1.5),
               ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: const Color(0xFF8A8F9E),
+                  color: context.colors.textSecondary,
                 ),
                 onPressed: () => setState(() => _obscureText = !_obscureText),
               ),
@@ -86,7 +87,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(null),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 16)),
+          child: Text('Cancel', style: TextStyle(color: context.colors.textSecondary, fontSize: 16)),
         ),
         TextButton(
           onPressed: () {
@@ -94,9 +95,9 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
             if (password.isEmpty) return;
             Navigator.of(context).pop(password); // Возвращаем пароль, не вызываем async код
           },
-          child: const Text(
+          child: Text(
             'Delete',
-            style: TextStyle(color: Color(0xFFFF5252), fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(color: context.colors.danger, fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -197,7 +198,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   void _showPrivacyBottomSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161A22),
+      backgroundColor: context.colors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -210,12 +211,12 @@ class ProfileScreenState extends State<ProfileScreen> {
             Center(
               child: Container(
                 width: 40, height: 4,
-                decoration: BoxDecoration(color: const Color(0xFF262A34), borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: context.colors.iconBg, borderRadius: BorderRadius.circular(2)),
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Privacy & Security',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Privacy & Security',
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             GestureDetector(
               onTap: () async {
@@ -226,34 +227,34 @@ class ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3A1F26),
+                  color: context.colors.danger.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFFF5252).withOpacity(0.15)),
+                  border: Border.all(color: context.colors.danger.withOpacity(0.15)),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF5252).withOpacity(0.15),
+                        color: context.colors.danger.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.delete_forever_outlined, color: Color(0xFFFF5252), size: 24),
+                      child: Icon(Icons.delete_forever_outlined, color: context.colors.danger, size: 24),
                     ),
                     const SizedBox(width: 16),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Delete Account',
-                            style: TextStyle(color: Color(0xFFFF5252), fontSize: 16, fontWeight: FontWeight.w600)),
-                          SizedBox(height: 4),
+                            style: TextStyle(color: context.colors.danger, fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
                           Text('Permanently delete your account and all data',
-                            style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+                            style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: Color(0xFFFF5252), size: 20),
+                    Icon(Icons.chevron_right, color: context.colors.danger, size: 20),
                   ],
                 ),
               ),
@@ -268,27 +269,27 @@ class ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF0C1017),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFFDA22FF))),
+      return Scaffold(
+        backgroundColor: context.colors.background,
+        body: Center(child: CircularProgressIndicator(color: context.colors.secondary)),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: loadData,
-          color: const Color(0xFFDA22FF),
-          backgroundColor: const Color(0xFF161A22),
+          color: context.colors.secondary,
+          backgroundColor: context.colors.card,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Profile',
-                  style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                Text('Profile',
+                  style: TextStyle(color: context.colors.textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 32),
                 _buildUserCard(),
                 if (_userProfile?['isPro'] != true) ...[
@@ -309,9 +310,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
+                        color: context.colors.secondary,
                         borderRadius: BorderRadius.circular(24),
-                        boxShadow: [BoxShadow(color: const Color(0xFFDA22FF).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
+                        boxShadow: [BoxShadow(color: context.colors.secondary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
                       ),
                       child: const Row(
                         children: [
@@ -334,8 +335,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
                 const SizedBox(height: 40),
-                const Text('Settings',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500)),
+                Text('Settings',
+                  style: TextStyle(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 16),
                 _buildSettingsList(),
                 const SizedBox(height: 40),
@@ -360,9 +361,9 @@ class ProfileScreenState extends State<ProfileScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: const Color(0xFF161A22),
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.03)),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         children: [
@@ -370,11 +371,8 @@ class ProfileScreenState extends State<ProfileScreen> {
             width: 100, height: 100,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-              ),
-              boxShadow: [BoxShadow(color: const Color(0xFFDA22FF).withOpacity(0.3), blurRadius: 24, spreadRadius: 4, offset: const Offset(0, 4))],
+              color: context.colors.secondary,
+              boxShadow: [BoxShadow(color: context.colors.secondary.withOpacity(0.3), blurRadius: 24, spreadRadius: 4, offset: const Offset(0, 4))],
             ),
             child: const Icon(Icons.person_outline, color: Colors.white, size: 48),
           ),
@@ -382,13 +380,13 @@ class ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(userName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w600)),
+              Text(userName, style: TextStyle(color: context.colors.textPrimary, fontSize: 22, fontWeight: FontWeight.w600)),
               if (_userProfile?['isPro'] == true) ...[
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFDA22FF), Color(0xFF9733EE)]),
+                    color: context.colors.secondary,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text('PRO', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
@@ -401,7 +399,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 8),
           _buildInfoRow(Icons.calendar_today_outlined, 'Member since $joinedAtStr'),
           const SizedBox(height: 32),
-          const Divider(color: Color(0xFF262A34), thickness: 1),
+          Divider(color: context.colors.iconBg, thickness: 1),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -422,9 +420,9 @@ class ProfileScreenState extends State<ProfileScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, color: const Color(0xFF8A8F9E), size: 16),
+        Icon(icon, color: context.colors.textSecondary, size: 16),
         const SizedBox(width: 8),
-        Text(text, style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 14)),
+        Text(text, style: TextStyle(color: context.colors.textSecondary, fontSize: 14)),
       ],
     );
   }
@@ -443,9 +441,9 @@ class ProfileScreenState extends State<ProfileScreen> {
             child: Icon(icon, color: Colors.white, size: 24),
           ),
           const SizedBox(height: 16),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(value, style: TextStyle(color: context.colors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12)),
+          Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
         ],
       ),
     );
@@ -491,17 +489,17 @@ class ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161A22),
+          color: context.colors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.02)),
+          border: Border.all(color: context.colors.border),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 24),
+            Icon(icon, color: context.colors.textPrimary, size: 24),
             const SizedBox(width: 16),
             Expanded(child: Text(title,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500))),
-            const Icon(Icons.chevron_right, color: Color(0xFF8A8F9E), size: 20),
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w500))),
+            Icon(Icons.chevron_right, color: context.colors.textSecondary, size: 20),
           ],
         ),
       ),
@@ -519,17 +517,17 @@ class ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(color: const Color(0xFF3A1F26), borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: context.colors.danger.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
         child: _isDeletingAccount
-          ? const Center(child: SizedBox(width: 24, height: 24,
-              child: CircularProgressIndicator(color: Color(0xFFFF5252), strokeWidth: 2)))
-          : const Row(
+          ? Center(child: SizedBox(width: 24, height: 24,
+              child: CircularProgressIndicator(color: context.colors.danger, strokeWidth: 2)))
+          : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.logout, color: Color(0xFFFF5252), size: 24),
-                SizedBox(width: 12),
+                Icon(Icons.logout, color: context.colors.danger, size: 24),
+                const SizedBox(width: 12),
                 Text('Log Out',
-                  style: TextStyle(color: Color(0xFFFF5252), fontSize: 18, fontWeight: FontWeight.w600)),
+                  style: TextStyle(color: context.colors.danger, fontSize: 18, fontWeight: FontWeight.w600)),
               ],
             ),
       ),
