@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -200,7 +200,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFDA22FF).withOpacity(0.08),
+                color: const Color(0xFFE8845C).withOpacity(0.08),
                 backgroundBlendMode: BlendMode.screen,
               ),
             ),
@@ -213,7 +213,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF9733EE).withOpacity(0.08),
+                color: const Color(0xFFC96B42).withOpacity(0.08),
                 backgroundBlendMode: BlendMode.screen,
               ),
             ),
@@ -247,7 +247,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFDA22FF).withOpacity(0.15),
+                      color: const Color(0xFFE8845C).withOpacity(0.15),
                       blurRadius: 35,
                       spreadRadius: 8,
                     ),
@@ -287,7 +287,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 child: LinearProgressIndicator(
                   value: _progress,
                   backgroundColor: const Color(0xFF161920),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFDA22FF)),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE8845C)),
                 ),
               ),
             ),
@@ -362,11 +362,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDA22FF),
+                backgroundColor: const Color(0xFFE8845C),
                 padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 5,
-                shadowColor: const Color(0xFFDA22FF).withOpacity(0.4),
+                shadowColor: const Color(0xFFE8845C).withOpacity(0.4),
               ),
               onPressed: () async {
                 // Launch app store URL

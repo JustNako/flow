@@ -109,24 +109,24 @@ class AppTheme {
   static const _success = Color(0xFF00E676);
   static const _warning = Color(0xFFFFB75E);
 
-  // Original vivid gradients for Dark Mode
+  // Zen-aligned gradients for Dark Mode
   static const List<List<Color>> _darkGradients = [
-    [Color(0xFF00B4DB), Color(0xFF0083B0)],
-    [Color(0xFFFF512F), Color(0xFFDD2476)],
-    [Color(0xFFDA22FF), Color(0xFF9733EE)],
-    [Color(0xFF4776E6), Color(0xFF8E54E9)],
-    [Color(0xFF11998E), Color(0xFF38EF7D)],
-    [Color(0xFFFFB75E), Color(0xFFED8F03)],
+    [Color(0xFF00B4DB), Color(0xFF0083B0)], // Ocean blue
+    [Color(0xFFFF512F), Color(0xFFDD2476)], // Coral/rose
+    [Color(0xFFE8845C), Color(0xFFC96B42)], // Terracotta
+    [Color(0xFF4776E6), Color(0xFF2A5298)], // Deep blue
+    [Color(0xFF11998E), Color(0xFF38EF7D)], // Teal/green
+    [Color(0xFFFFB75E), Color(0xFFED8F03)], // Amber
   ];
 
   // Softer pastel gradients for Light Mode
   static const List<List<Color>> _lightGradients = [
     [Color(0xFF4ACEEB), Color(0xFF42A5C9)], // Soft blue
     [Color(0xFFFF8A75), Color(0xFFE85B93)], // Soft coral/pink
-    [Color(0xFFE56BFF), Color(0xFFB165F5)], // Soft purple
-    [Color(0xFF7B9DF0), Color(0xFFA174F2)], // Soft indigo
+    [Color(0xFFE8845C), Color(0xFFC96B42)], // Terracotta
+    [Color(0xFF7B9DF0), Color(0xFF4776E6)], // Soft steel blue
     [Color(0xFF43C6B9), Color(0xFF5DF2A6)], // Soft teal/green
-    [Color(0xFFFFC985), Color(0xFFF2A433)], // Soft orange
+    [Color(0xFFFFC985), Color(0xFFF2A433)], // Soft amber
   ];
 
   static final ThemeData darkTheme = ThemeData(
@@ -140,7 +140,7 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       surface: _darkBackground,
       primary: Color(0xFFFF512F),
-      secondary: Color(0xFFDA22FF),
+      secondary: Color(0xFFE8845C),
     ),
     useMaterial3: true,
     extensions: const <ThemeExtension<dynamic>>[
@@ -156,7 +156,7 @@ class AppTheme {
         success: _success,
         warning: _warning,
         primary: const Color(0xFFFF512F),
-        secondary: const Color(0xFFDA22FF),
+        secondary: const Color(0xFFE8845C),
         habitGradients: _darkGradients,
       ),
     ],
@@ -173,7 +173,7 @@ class AppTheme {
     colorScheme: const ColorScheme.light(
       surface: _lightBackground,
       primary: Color(0xFFFF512F),
-      secondary: Color(0xFFDA22FF),
+      secondary: Color(0xFFE8845C),
     ),
     useMaterial3: true,
     extensions: const <ThemeExtension<dynamic>>[
@@ -189,7 +189,7 @@ class AppTheme {
         success: _success,
         warning: _warning,
         primary: const Color(0xFFFF512F),
-        secondary: const Color(0xFFDA22FF),
+        secondary: const Color(0xFFE8845C),
         habitGradients: _lightGradients,
       ),
     ],

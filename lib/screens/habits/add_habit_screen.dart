@@ -65,7 +65,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       icon: Icons.calendar_view_week,
       label: 'Days of Week',
       subtitle: 'Mon, Wed, Fri...',
-      color: const Color(0xFFDA22FF),
+      color: const Color(0xFFE8845C),
     ),
     _RepeatOption(
       type: HabitRepeatType.specificDaysOfMonth,
@@ -193,11 +193,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        decoration: const BoxDecoration(
-          color: Color(0xFF161A22),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        decoration: BoxDecoration(
+          color: context.colors.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           boxShadow: [
-            BoxShadow(color: Colors.black54, blurRadius: 40, spreadRadius: 10),
+            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 40, spreadRadius: 10),
           ],
         ),
         child: Column(
@@ -206,22 +206,22 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             Container(
               width: 80, height: 80,
               decoration: BoxDecoration(
-                color: context.colors.primary?.withOpacity(0.1) ?? const Color(0xFFDA22FF).withOpacity(0.1),
+                color: context.colors.primary?.withOpacity(0.1) ?? const Color(0xFFE8845C).withOpacity(0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: context.colors.primary?.withOpacity(0.2) ?? const Color(0xFFDA22FF).withOpacity(0.2)),
+                border: Border.all(color: context.colors.primary?.withOpacity(0.2) ?? const Color(0xFFE8845C).withOpacity(0.2)),
               ),
-              child: Icon(Icons.star_rounded, color: context.colors.primary ?? const Color(0xFFDA22FF), size: 48),
+              child: Icon(Icons.star_rounded, color: context.colors.primary ?? const Color(0xFFE8845C), size: 48),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Limit Reached',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 16, height: 1.5),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 16, height: 1.5),
             ),
             const SizedBox(height: 32),
             GestureDetector(
@@ -235,11 +235,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: context.colors.primary ?? const Color(0xFFDA22FF),
+                  color: context.colors.primary ?? const Color(0xFFE8845C),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: (context.colors.primary ?? const Color(0xFFDA22FF)).withOpacity(0.3),
+                      color: (context.colors.primary ?? const Color(0xFFE8845C)).withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -255,9 +255,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
+              child: Text(
                 'Maybe later',
-                style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14),
+                style: TextStyle(color: context.colors.textSecondary, fontSize: 14),
               ),
             ),
             const SizedBox(height: 12),
@@ -435,7 +435,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: context.colors.primary ?? const Color(0xFFDA22FF), width: 1.5),
+          borderSide: BorderSide(color: context.colors.primary ?? const Color(0xFFE8845C), width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -512,11 +512,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Select Days',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Select Days',
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          const Text('Habit will repeat on selected days every week',
-            style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+          Text('Habit will repeat on selected days every week',
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -532,12 +532,12 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   duration: const Duration(milliseconds: 180),
                   width: 42, height: 48,
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFDA22FF) : const Color(0xFF161A22),
+                    color: isSelected ? const Color(0xFFE8845C) : context.colors.cardSecondary,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFFDA22FF) : Colors.white.withOpacity(0.05)),
+                      color: isSelected ? const Color(0xFFE8845C) : context.colors.border),
                     boxShadow: isSelected
-                        ? [BoxShadow(color: const Color(0xFFDA22FF).withOpacity(0.35),
+                        ? [BoxShadow(color: const Color(0xFFE8845C).withOpacity(0.35),
                             blurRadius: 10, offset: const Offset(0, 4))]
                         : [],
                   ),
@@ -546,11 +546,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     children: [
                       Text(_weekDayLabels[i].substring(0, 1),
                         style: TextStyle(
-                          color: isSelected ? Colors.white : const Color(0xFF8A8F9E),
+                          color: isSelected ? Colors.white : context.colors.textSecondary,
                           fontSize: 14, fontWeight: FontWeight.w600)),
                       Text(_weekDayLabels[i].substring(1),
                         style: TextStyle(
-                          color: isSelected ? Colors.white70 : const Color(0xFF4A4E5A),
+                          color: isSelected ? Colors.white.withOpacity(0.7) : context.colors.textSecondary.withOpacity(0.5),
                           fontSize: 10)),
                     ],
                   ),
@@ -570,11 +570,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Select Days of Month',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Select Days of Month',
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          const Text('Habit repeats on chosen dates each month',
-            style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+          Text('Habit repeats on chosen dates each month',
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
           const SizedBox(height: 14),
           GridView.builder(
             shrinkWrap: true,
@@ -592,15 +592,15 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF11998E) : const Color(0xFF161A22),
+                    color: isSelected ? const Color(0xFF11998E) : context.colors.cardSecondary,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFF38EF7D) : Colors.white.withOpacity(0.05)),
+                      color: isSelected ? const Color(0xFF38EF7D) : context.colors.border),
                   ),
                   child: Center(
                     child: Text('$day',
                       style: TextStyle(
-                        color: isSelected ? Colors.white : const Color(0xFF8A8F9E),
+                        color: isSelected ? Colors.white : context.colors.textSecondary,
                         fontSize: 12, fontWeight: FontWeight.w500)),
                   ),
                 ),
@@ -619,11 +619,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Set Frequency',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Set Frequency',
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          const Text('How many times do you want to repeat this habit?',
-            style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+          Text('How many times do you want to repeat this habit?',
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -632,19 +632,19 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Times', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+                    Text('Times', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _timesController,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Colors.white, fontSize: 24,
+                      style: TextStyle(color: context.colors.textPrimary, fontSize: 24,
                           fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                       decoration: InputDecoration(
                         hintText: '3',
-                        hintStyle: const TextStyle(color: Color(0xFF4A4E5A), fontSize: 24),
+                        hintStyle: TextStyle(color: context.colors.textSecondary.withOpacity(0.5), fontSize: 24),
                         filled: true,
-                        fillColor: const Color(0xFF161A22),
+                        fillColor: context.colors.cardSecondary,
                         contentPadding: const EdgeInsets.symmetric(vertical: 16),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -659,8 +659,8 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               const SizedBox(width: 8),
               Padding(
                 padding: const EdgeInsets.only(top: 20),
-                child: const Text('times per',
-                  style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14)),
+                child: Text('times per',
+                  style: TextStyle(color: context.colors.textSecondary, fontSize: 14)),
               ),
               const SizedBox(width: 8),
               // Period toggle (week / month)
@@ -668,12 +668,12 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Period', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+                    Text('Period', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
                     const SizedBox(height: 8),
                     Container(
                       height: 56,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF161A22),
+                        color: context.colors.cardSecondary,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -729,7 +729,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           child: Center(
             child: Text(label,
               style: TextStyle(
-                color: isActive ? Colors.white : const Color(0xFF8A8F9E),
+                color: isActive ? Colors.white : context.colors.textSecondary,
                 fontSize: 13,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
               )),
@@ -747,16 +747,24 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           context: context,
           initialTime: _selectedTime ?? const TimeOfDay(hour: 8, minute: 0),
           builder: (context, child) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
             return MediaQuery(
               data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
               child: Theme(
-                data: ThemeData.dark().copyWith(
-                  colorScheme: const ColorScheme.dark(
-                    primary: Color(0xFFDA22FF),
-                    onPrimary: Colors.white,
-                    surface: Color(0xFF161A22),
-                    onSurface: Colors.white,
-                  ),
+                data: Theme.of(context).copyWith(
+                  colorScheme: isDark
+                      ? const ColorScheme.dark(
+                          primary: Color(0xFFE8845C),
+                          onPrimary: Colors.white,
+                          surface: Color(0xFF161A22),
+                          onSurface: Colors.white,
+                        )
+                      : const ColorScheme.light(
+                          primary: Color(0xFFE8845C),
+                          onPrimary: Colors.white,
+                          surface: Colors.white,
+                          onSurface: Color(0xFF1E2230),
+                        ),
                 ),
                 child: child!,
               ),
@@ -770,14 +778,14 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161A22),
+          color: context.colors.cardSecondary,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: context.colors.border),
         ),
         child: Row(
           children: [
             Icon(Icons.access_time, 
-                 color: _selectedTime != null ? const Color(0xFFDA22FF) : const Color(0xFF8A8F9E), 
+                 color: _selectedTime != null ? const Color(0xFFE8845C) : context.colors.textSecondary, 
                  size: 22),
             const SizedBox(width: 14),
             Expanded(
@@ -786,7 +794,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
                   : 'Select time (24h format)',
                 style: TextStyle(
-                  color: _selectedTime != null ? Colors.white : const Color(0xFF8A8F9E),
+                  color: _selectedTime != null ? context.colors.textPrimary : context.colors.textSecondary,
                   fontSize: 15,
                   fontWeight: _selectedTime != null ? FontWeight.w600 : FontWeight.normal,
                 ),
@@ -795,10 +803,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             if (_selectedTime != null)
               GestureDetector(
                 onTap: () => setState(() => _selectedTime = null),
-                child: const Icon(Icons.close, color: Color(0xFF8A8F9E), size: 20),
+                child: Icon(Icons.close, color: context.colors.textSecondary, size: 20),
               )
             else
-              const Icon(Icons.chevron_right, color: Color(0xFF4A4E5A), size: 22),
+              Icon(Icons.chevron_right, color: context.colors.textSecondary.withOpacity(0.5), size: 22),
           ],
         ),
       ),
@@ -955,7 +963,7 @@ class _IconItem extends StatelessWidget {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: (context.colors.primary ?? const Color(0xFFDA22FF)).withOpacity(0.3),
+                      color: (context.colors.primary ?? const Color(0xFFE8845C)).withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     )
@@ -1004,10 +1012,10 @@ class _RepeatTypeCard extends StatelessWidget {
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? option.color.withOpacity(0.12) : const Color(0xFF161A22),
+            color: isSelected ? option.color.withOpacity(0.12) : context.colors.cardSecondary,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? option.color.withOpacity(0.5) : Colors.white.withOpacity(0.05),
+              color: isSelected ? option.color.withOpacity(0.5) : context.colors.border,
               width: isSelected ? 1.5 : 1,
             ),
           ),
@@ -1035,7 +1043,7 @@ class _RepeatTypeCard extends StatelessWidget {
                     Text(
                       option.label,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : const Color(0xFFB0B5C0),
+                        color: isSelected ? option.color : context.colors.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1043,7 +1051,7 @@ class _RepeatTypeCard extends StatelessWidget {
                     ),
                     Text(
                       option.subtitle,
-                      style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 11),
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 11),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],

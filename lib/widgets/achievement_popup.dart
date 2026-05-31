@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class AchievementPopup extends StatefulWidget {
   final String title;
@@ -56,10 +56,10 @@ class _AchievementPopupState extends State<AchievementPopup> with SingleTickerPr
         decoration: BoxDecoration(
           color: const Color(0xFF161A22),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFDA22FF).withOpacity(0.5), width: 2),
+          border: Border.all(color: const Color(0xFFE8845C).withOpacity(0.5), width: 2),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFDA22FF).withOpacity(0.2),
+              color: const Color(0xFFE8845C).withOpacity(0.2),
               blurRadius: 30,
               spreadRadius: 5,
             )
@@ -78,13 +78,13 @@ class _AchievementPopupState extends State<AchievementPopup> with SingleTickerPr
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+                      colors: [Color(0xFFE8845C), Color(0xFFC96B42)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFDA22FF).withOpacity(0.5 * _glowAnimation.value),
+                        color: const Color(0xFFE8845C).withOpacity(0.5 * _glowAnimation.value),
                         blurRadius: 30 * _glowAnimation.value,
                         spreadRadius: 10 * _glowAnimation.value,
                       )
@@ -126,7 +126,7 @@ class _AchievementPopupState extends State<AchievementPopup> with SingleTickerPr
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: Color(0xFFDA22FF), width: 1.5),
+                    side: const BorderSide(color: Color(0xFFE8845C), width: 1.5),
                   ),
                 ),
                 child: const Text('Awesome!', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),

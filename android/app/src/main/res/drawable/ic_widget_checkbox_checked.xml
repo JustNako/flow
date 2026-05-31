@@ -6,7 +6,7 @@
     android:viewportHeight="24">
     <!-- Outer filled circle for checked state -->
     <path
-        android:fillColor="#DA22FF"
+        android:fillColor="#E8845C"
         android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
     <!-- White sharp checkmark -->
     <path

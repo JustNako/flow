@@ -1,4 +1,4 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
+﻿import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -92,7 +92,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         'Flow Notifications',
         importance: Importance.high,
         priority: Priority.high,
-        color: const Color(0xFFDA22FF),
+        color: const Color(0xFFE8845C),
         actions: actions,
       ),
       iOS: const DarwinNotificationDetails(
@@ -206,7 +206,7 @@ class NotificationService {
         _channelName,
         importance: Importance.high,
         priority: Priority.high,
-        color: const Color(0xFFDA22FF),
+        color: const Color(0xFFE8845C),
         actions: actions,
       ),
       iOS: const DarwinNotificationDetails(

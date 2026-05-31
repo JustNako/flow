@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/habit.dart';
@@ -360,7 +360,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.timer_outlined, color: Color(0xFFDA22FF), size: 16),
+                    const Icon(Icons.timer_outlined, color: Color(0xFFE8845C), size: 16),
                     const SizedBox(width: 4),
                     Text('$minutes m',
                       style: TextStyle(color: context.colors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
@@ -496,10 +496,10 @@ class DashboardScreenState extends State<DashboardScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: context.colors.primary?.withOpacity(0.1) ?? const Color(0xFFDA22FF).withOpacity(0.1),
+                color: context.colors.primary?.withOpacity(0.1) ?? const Color(0xFFE8845C).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.add_task, color: context.colors.primary ?? const Color(0xFFDA22FF), size: 40),
+              child: Icon(Icons.add_task, color: context.colors.primary ?? const Color(0xFFE8845C), size: 40),
             ),
             const SizedBox(height: 20),
             Text('No habits today',

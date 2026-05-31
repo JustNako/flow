@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../api/api_service.dart';
 
@@ -100,13 +100,13 @@ class _EmailPendingScreenState extends State<EmailPendingScreen> with SingleTick
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+                      colors: [Color(0xFFE8845C), Color(0xFFC96B42)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFDA22FF).withOpacity(0.35),
+                        color: const Color(0xFFE8845C).withOpacity(0.35),
                         blurRadius: 40,
                         spreadRadius: 8,
                       ),
@@ -160,7 +160,7 @@ class _EmailPendingScreenState extends State<EmailPendingScreen> with SingleTick
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                       side: BorderSide(
-                        color: _cooldown > 0 ? const Color(0xFF262A34) : const Color(0xFFDA22FF),
+                        color: _cooldown > 0 ? const Color(0xFF262A34) : const Color(0xFFE8845C),
                         width: 1.5,
                       ),
                     ),

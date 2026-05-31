@@ -47,8 +47,8 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:background="@drawable/widget_progress_badge"
-            android:text="0/0 completed"
-            android:textColor="#DA22FF"
+            android:text="0/0 done"
+            android:textColor="#E8845C"
             android:textSize="11sp"
             android:textStyle="bold"
             android:paddingLeft="8dp"
@@ -67,6 +67,7 @@
         android:layout_marginBottom="10dp"
         android:visibility="gone">
 
+        <!-- Checkbox icon -->
         <ImageView
             android:id="@+id/habit_checkbox_0"
             android:layout_width="40dp"
@@ -74,6 +75,17 @@
             android:padding="8dp"
             android:scaleType="centerInside"
             android:src="@drawable/ic_widget_checkbox_unchecked" />
+
+        <!-- Loading spinner (shown while API call in progress) -->
+        <ProgressBar
+            android:id="@+id/habit_loading_0"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:indeterminateTint="#E8845C"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/habit_title_0"
@@ -120,6 +132,16 @@
             android:scaleType="centerInside"
             android:src="@drawable/ic_widget_checkbox_unchecked" />
 
+        <ProgressBar
+            android:id="@+id/habit_loading_1"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:indeterminateTint="#E8845C"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/habit_title_1"
             android:layout_width="0dp"
@@ -165,6 +187,16 @@
             android:scaleType="centerInside"
             android:src="@drawable/ic_widget_checkbox_unchecked" />
 
+        <ProgressBar
+            android:id="@+id/habit_loading_2"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:indeterminateTint="#E8845C"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/habit_title_2"
             android:layout_width="0dp"
@@ -209,6 +241,16 @@
             android:scaleType="centerInside"
             android:src="@drawable/ic_widget_checkbox_unchecked" />
 
+        <ProgressBar
+            android:id="@+id/habit_loading_3"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:indeterminateTint="#E8845C"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/habit_title_3"
             android:layout_width="0dp"
@@ -244,7 +286,7 @@
         android:gravity="center"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="24dp"
-        android:text="✨ All done for today! 🎉"
+        android:text="All done for today!"
         android:textColor="#8E94A6"
         android:textSize="14sp"
         android:visibility="gone" />
@@ -257,7 +299,7 @@
         android:gravity="center"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="24dp"
-        android:text="🔒 Please log in to see habits"
+        android:text="Please log in to see your habits"
         android:textColor="#8E94A6"
         android:textSize="14sp"
         android:visibility="gone" />

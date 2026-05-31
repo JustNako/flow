@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../api/api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -92,7 +92,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.lock_reset, size: 64, color: Color(0xFFDA22FF)),
+        const Icon(Icons.lock_reset, size: 64, color: Color(0xFFE8845C)),
         const SizedBox(height: 24),
         const Text(
           'Reset Password',
@@ -137,7 +137,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFDA22FF).withOpacity(0.3),
+                color: const Color(0xFFE8845C).withOpacity(0.3),
                 blurRadius: 24,
                 spreadRadius: 2,
                 offset: const Offset(0, 4),
@@ -147,7 +147,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: ElevatedButton(
             onPressed: _isLoading ? null : _sendResetLink,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDA22FF),
+              backgroundColor: const Color(0xFFE8845C),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

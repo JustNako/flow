@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../api/api_service.dart';
+import '../theme/app_theme.dart';
 
 class NotificationSettingsBottomSheet extends StatefulWidget {
   const NotificationSettingsBottomSheet({super.key});
@@ -81,9 +82,9 @@ class _NotificationSettingsBottomSheetState extends State<NotificationSettingsBo
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF161A22),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: context.colors.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.all(28),
       child: Column(
@@ -93,51 +94,51 @@ class _NotificationSettingsBottomSheetState extends State<NotificationSettingsBo
           Center(
             child: Container(
               width: 40, height: 4,
-              decoration: BoxDecoration(color: const Color(0xFF262A34), borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Notification Settings',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          Text('Notification Settings',
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 24),
           if (_isLoading)
-            const Center(child: CircularProgressIndicator(color: Color(0xFFDA22FF)))
+            const Center(child: CircularProgressIndicator(color: Color(0xFFE8845C)))
           else ...[
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Daily Habit Reminders', style: TextStyle(color: Colors.white, fontSize: 16)),
-              subtitle: const Text('Remind me to complete my habits', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
-              activeColor: const Color(0xFFDA22FF),
+              title: Text('Daily Habit Reminders', style: TextStyle(color: context.colors.textPrimary, fontSize: 16)),
+              subtitle: Text('Remind me to complete my habits', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+              activeColor: const Color(0xFFE8845C),
               value: _enabled,
               onChanged: (val) => _saveSettings(val, _frequency),
             ),
             if (_enabled) ...[
               const SizedBox(height: 16),
-              const Text('Frequency', style: TextStyle(color: Colors.white, fontSize: 14)),
+              Text('Frequency', style: TextStyle(color: context.colors.textPrimary, fontSize: 14)),
               const SizedBox(height: 12),
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0C1017),
+                  color: context.colors.background,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: context.colors.border),
                 ),
                 child: Column(
                   children: [
                     RadioListTile<int>(
-                      title: const Text('Once a day (Morning)', style: TextStyle(color: Colors.white, fontSize: 14)),
+                      title: Text('Once a day (Morning)', style: TextStyle(color: context.colors.textPrimary, fontSize: 14)),
                       value: 1,
                       groupValue: _frequency,
-                      activeColor: const Color(0xFFDA22FF),
+                      activeColor: const Color(0xFFE8845C),
                       onChanged: (val) {
                         if (val != null) _saveSettings(_enabled, val);
                       },
                     ),
-                    Divider(height: 1, color: Colors.white.withOpacity(0.05)),
+                    Divider(height: 1, color: context.colors.border),
                     RadioListTile<int>(
-                      title: const Text('Twice a day (Morning & Evening)', style: TextStyle(color: Colors.white, fontSize: 14)),
+                      title: Text('Twice a day (Morning & Evening)', style: TextStyle(color: context.colors.textPrimary, fontSize: 14)),
                       value: 2,
                       groupValue: _frequency,
-                      activeColor: const Color(0xFFDA22FF),
+                      activeColor: const Color(0xFFE8845C),
                       onChanged: (val) {
                         if (val != null) _saveSettings(_enabled, val);
                       },
@@ -153,13 +154,13 @@ class _NotificationSettingsBottomSheetState extends State<NotificationSettingsBo
             child: OutlinedButton(
               onPressed: _isTesting ? null : _sendTestNotification,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                side: BorderSide(color: context.colors.border),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: _isTesting
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Send Test Notification', style: TextStyle(color: Colors.white)),
+                ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.textPrimary))
+                : Text('Send Test Notification', style: TextStyle(color: context.colors.textPrimary)),
             ),
           ),
           const SizedBox(height: 24),

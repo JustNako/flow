@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -42,8 +42,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       subtitle: 'The habit tracker that actually\nunderstands you',
       description:
           'Build powerful routines, track your progress, and become the best version of yourself — one habit at a time.',
-      gradientColors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-      accentColor: Color(0xFFDA22FF),
+      gradientColors: [Color(0xFFE8845C), Color(0xFFC96B42)],
+      accentColor: Color(0xFFE8845C),
     ),
     _OnboardingPage(
       emoji: '🤖',

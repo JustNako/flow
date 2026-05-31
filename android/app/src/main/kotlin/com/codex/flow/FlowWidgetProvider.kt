@@ -21,10 +21,11 @@ import java.util.Locale
 class FlowWidgetProvider : HomeWidgetProvider() {
 
     // Direct resource ID references to avoid getIdentifier() crashes
-    private val rowIds = intArrayOf(R.id.habit_row_0, R.id.habit_row_1, R.id.habit_row_2, R.id.habit_row_3)
-    private val checkIds = intArrayOf(R.id.habit_checkbox_0, R.id.habit_checkbox_1, R.id.habit_checkbox_2, R.id.habit_checkbox_3)
-    private val titleIds = intArrayOf(R.id.habit_title_0, R.id.habit_title_1, R.id.habit_title_2, R.id.habit_title_3)
-    private val timeIds = intArrayOf(R.id.habit_time_0, R.id.habit_time_1, R.id.habit_time_2, R.id.habit_time_3)
+    private val rowIds     = intArrayOf(R.id.habit_row_0,      R.id.habit_row_1,      R.id.habit_row_2,      R.id.habit_row_3)
+    private val checkIds   = intArrayOf(R.id.habit_checkbox_0, R.id.habit_checkbox_1, R.id.habit_checkbox_2, R.id.habit_checkbox_3)
+    private val titleIds   = intArrayOf(R.id.habit_title_0,    R.id.habit_title_1,    R.id.habit_title_2,    R.id.habit_title_3)
+    private val timeIds    = intArrayOf(R.id.habit_time_0,     R.id.habit_time_1,     R.id.habit_time_2,     R.id.habit_time_3)
+    private val loadingIds = intArrayOf(R.id.habit_loading_0,  R.id.habit_loading_1,  R.id.habit_loading_2,  R.id.habit_loading_3)
 
     private fun getSafeInt(prefs: SharedPreferences, key: String, default: Int): Int {
         try {
@@ -73,13 +74,12 @@ class FlowWidgetProvider : HomeWidgetProvider() {
                     // Check if day has changed since last widget sync
                     val widgetLastUpdateDate = widgetData.getString("widget_last_update_date", "") ?: ""
                     val isNewDay = widgetLastUpdateDate.isNotEmpty() && widgetLastUpdateDate != currentDateStr
-                    Log.d("FlowWidget", "Widget ID $widgetId: widgetLastUpdateDate = $widgetLastUpdateDate, currentDateStr = $currentDateStr, isNewDay = $isNewDay")
+                    Log.d("FlowWidget", "Widget ID $widgetId: isNewDay = $isNewDay")
 
                     // Load Overall Progress
                     val totalToday = getSafeInt(widgetData, "total_today", 0)
                     val completedToday = if (isNewDay) 0 else getSafeInt(widgetData, "completed_today", 0)
-                    Log.d("FlowWidget", "Widget ID $widgetId: totalToday = $totalToday, completedToday = $completedToday")
-                    views.setTextViewText(R.id.widget_progress_text, "$completedToday/$totalToday completed")
+                    views.setTextViewText(R.id.widget_progress_text, "$completedToday/$totalToday done")
 
                     // Open App on root tap safely using custom PendingIntent
                     val rootIntent = Intent(context, MainActivity::class.java).apply {
@@ -103,11 +103,13 @@ class FlowWidgetProvider : HomeWidgetProvider() {
 
                     // Populate 4 habits using direct R.id references
                     for (i in 0 until 4) {
-                        val habitId = widgetData.getString("habit_${i}_id", "") ?: ""
-                        val habitTitle = widgetData.getString("habit_${i}_title", "") ?: ""
+                        val habitId        = widgetData.getString("habit_${i}_id",        "") ?: ""
+                        val habitTitle     = widgetData.getString("habit_${i}_title",      "") ?: ""
                         val habitCompleted = if (isNewDay) false else widgetData.getBoolean("habit_${i}_completed", false)
-                        val habitTime = widgetData.getString("habit_${i}_time", "") ?: ""
-                        Log.d("FlowWidget", "  Slot $i: id='$habitId', title='$habitTitle', completed=$habitCompleted, time='$habitTime'")
+                        val habitTime      = widgetData.getString("habit_${i}_time",       "") ?: ""
+                        val isLoading      = widgetData.getBoolean("habit_${i}_loading",   false)
+
+                        Log.d("FlowWidget", "  Slot $i: id='$habitId', completed=$habitCompleted, loading=$isLoading")
 
                         if (habitId.isEmpty() || habitTitle.isEmpty()) {
                             views.setViewVisibility(rowIds[i], View.GONE)
@@ -117,16 +119,26 @@ class FlowWidgetProvider : HomeWidgetProvider() {
                             views.setTextViewText(titleIds[i], habitTitle)
                             views.setTextColor(
                                 titleIds[i],
-                                if (habitCompleted) Color.parseColor("#8E94A6")
+                                if (habitCompleted || isLoading) Color.parseColor("#8E94A6")
                                 else Color.parseColor("#E3E5EB")
                             )
-                            views.setImageViewResource(
-                                checkIds[i],
-                                if (habitCompleted) R.drawable.ic_widget_checkbox_checked
-                                else R.drawable.ic_widget_checkbox_unchecked
-                            )
 
-                            // Show/hide target time based on whether it is configured
+                            if (isLoading) {
+                                // Show spinner, hide checkbox
+                                views.setViewVisibility(checkIds[i],   View.GONE)
+                                views.setViewVisibility(loadingIds[i], View.VISIBLE)
+                            } else {
+                                // Show checkbox in correct state, hide spinner
+                                views.setViewVisibility(loadingIds[i], View.GONE)
+                                views.setViewVisibility(checkIds[i],   View.VISIBLE)
+                                views.setImageViewResource(
+                                    checkIds[i],
+                                    if (habitCompleted) R.drawable.ic_widget_checkbox_checked
+                                    else R.drawable.ic_widget_checkbox_unchecked
+                                )
+                            }
+
+                            // Show/hide target time
                             if (habitTime.isEmpty()) {
                                 views.setViewVisibility(timeIds[i], View.GONE)
                             } else {
@@ -134,7 +146,7 @@ class FlowWidgetProvider : HomeWidgetProvider() {
                                 views.setTextViewText(timeIds[i], habitTime)
                             }
 
-                            // 1. Click on Row text opens the full app
+                            // 1. Click on Row text → opens the full app
                             val intent = Intent(context, MainActivity::class.java).apply {
                                 action = Intent.ACTION_VIEW
                                 data = Uri.parse("flowWidget://completehabit?id=${Uri.encode(habitId)}")
@@ -147,13 +159,13 @@ class FlowWidgetProvider : HomeWidgetProvider() {
                             }
                             val tapPendingIntent = PendingIntent.getActivity(
                                 context,
-                                habitId.hashCode(), // Unique requestCode to prevent Intent overwriting
+                                habitId.hashCode(),
                                 intent,
                                 launchFlags
                             )
                             views.setOnClickPendingIntent(rowIds[i], tapPendingIntent)
 
-                            // 2. Click on Checkbox marks/toggles the habit in the background (NO app launch)
+                            // 2. Click on Checkbox → background toggle (NO app launch)
                             val backgroundIntent = Intent(context, es.antonborri.home_widget.HomeWidgetBackgroundReceiver::class.java).apply {
                                 action = "es.antonborri.home_widget.action.BACKGROUND"
                                 data = Uri.parse("flowWidget://completehabit?id=${Uri.encode(habitId)}")
@@ -165,7 +177,7 @@ class FlowWidgetProvider : HomeWidgetProvider() {
                             }
                             val backgroundPendingIntent = PendingIntent.getBroadcast(
                                 context,
-                                habitId.hashCode() + 1, // Unique requestCode to avoid collision with launch intent
+                                habitId.hashCode() + 1,
                                 backgroundIntent,
                                 backgroundFlags
                             )
@@ -174,12 +186,11 @@ class FlowWidgetProvider : HomeWidgetProvider() {
                     }
 
                     // Show empty/loading state
-                    Log.d("FlowWidget", "Widget ID $widgetId: hasAnyHabit = $hasAnyHabit")
                     if (!hasAnyHabit) {
-                        views.setViewVisibility(R.id.widget_empty_text, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_empty_text,    View.VISIBLE)
                         views.setViewVisibility(R.id.widget_progress_text, View.GONE)
                     } else {
-                        views.setViewVisibility(R.id.widget_empty_text, View.GONE)
+                        views.setViewVisibility(R.id.widget_empty_text,    View.GONE)
                         views.setViewVisibility(R.id.widget_progress_text, View.VISIBLE)
                     }
                 }

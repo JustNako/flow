@@ -56,12 +56,13 @@ class WidgetService {
       // Show up to 4 habits: incomplete first, then fill with completed ones (both sorted earliest-first)
       final displayHabits = <Habit>[...incomplete, ...complete].take(4).toList();
 
-      // Clear old slots
+      // Clear old slots (also clear any stuck loading states)
       for (int i = 0; i < 4; i++) {
         await HomeWidget.saveWidgetData<String>('habit_${i}_id', '');
         await HomeWidget.saveWidgetData<String>('habit_${i}_title', '');
         await HomeWidget.saveWidgetData<bool>('habit_${i}_completed', false);
         await HomeWidget.saveWidgetData<String>('habit_${i}_time', '');
+        await HomeWidget.saveWidgetData<bool>('habit_${i}_loading', false);
       }
 
       // Write new data
@@ -98,11 +99,40 @@ class WidgetService {
       final habitId = uri?.queryParameters['id'];
       if (habitId != null && habitId.isNotEmpty) {
         try {
+          await HomeWidget.setAppGroupId(appGroupId);
+
+          // Find which slot this habit occupies so we can set its loading state
+          int? loadingSlot;
+          for (int i = 0; i < 4; i++) {
+            final slotId = await HomeWidget.getWidgetData<String>('habit_${i}_id') ?? '';
+            if (slotId == habitId) {
+              loadingSlot = i;
+              break;
+            }
+          }
+
+          // Step 1: Show spinner immediately — before the API call
+          if (loadingSlot != null) {
+            await HomeWidget.saveWidgetData<bool>('habit_${loadingSlot}_loading', true);
+            await HomeWidget.updateWidget(name: androidWidgetName);
+          }
+
+          // Step 2: Call API
           final api = HabitApiService.instance;
           await api.toggleHabit(habitId);
-          await updateWidget(); // refresh widget after toggling
+
+          // Step 3: Clear loading flag and do a full widget refresh
+          if (loadingSlot != null) {
+            await HomeWidget.saveWidgetData<bool>('habit_${loadingSlot}_loading', false);
+          }
+          await updateWidget();
         } catch (e) {
           debugPrint('[WidgetService] Background toggle failed: $e');
+          // On error: clear all loading states to avoid stuck spinners
+          for (int i = 0; i < 4; i++) {
+            await HomeWidget.saveWidgetData<bool>('habit_${i}_loading', false);
+          }
+          await HomeWidget.updateWidget(name: androidWidgetName);
         }
       }
     }

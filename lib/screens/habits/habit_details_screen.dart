@@ -138,17 +138,17 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF161A22),
+        backgroundColor: context.colors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Habit?', style: TextStyle(color: Colors.white, fontSize: 18)),
-        content: const Text(
+        title: Text('Delete Habit?', style: TextStyle(color: context.colors.textPrimary, fontSize: 18)),
+        content: Text(
           'This will permanently delete the habit and all its history.',
-          style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14, height: 1.5),
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF8A8F9E))),
+            child: Text('Cancel', style: TextStyle(color: context.colors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -204,8 +204,8 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
   static const List<List<Color>> _gradients = [
     [Color(0xFF00B4DB), Color(0xFF0083B0)],
     [Color(0xFFFF512F), Color(0xFFDD2476)],
-    [Color(0xFFDA22FF), Color(0xFF9733EE)],
-    [Color(0xFF4776E6), Color(0xFF8E54E9)],
+    [Color(0xFFE8845C), Color(0xFFC96B42)],
+    [Color(0xFF4776E6), Color(0xFFC96B42)],
     [Color(0xFF11998E), Color(0xFF38EF7D)],
     [Color(0xFFFFB75E), Color(0xFFED8F03)],
   ];
@@ -327,7 +327,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(_habit.title,
-                              style: const TextStyle(color: Colors.white, fontSize: 22,
+                              style: TextStyle(color: context.colors.textPrimary, fontSize: 22,
                                   fontWeight: FontWeight.bold)),
                             const SizedBox(height: 4),
                             Row(
@@ -355,7 +355,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                       const SizedBox(width: 12),
                       _quickStat(
                         _habit.targetDays > 0 ? '${_habit.targetDays}' : '∞',
-                        'Target', Icons.flag_outlined, const Color(0xFF8E54E9)),
+                        'Target', Icons.flag_outlined, const Color(0xFFC96B42)),
                     ],
                   ),
                 ],
@@ -383,7 +383,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
             Text(value,
               style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold, height: 1)),
             const SizedBox(height: 2),
-            Text(label, style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 11)),
+            Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 11)),
           ],
         ),
       ),
@@ -562,7 +562,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
             Text(
               content,
               style: TextStyle(
-                color: content.contains('Tap to add') ? const Color(0xFF4A4E5A) : const Color(0xFFD0D5E0),
+                color: content.contains('Tap to add') ? context.colors.textSecondary.withOpacity(0.6) : context.colors.textPrimary,
                 fontSize: 14,
                 height: 1.6,
                 fontStyle: content.contains('Tap to add') ? FontStyle.italic : FontStyle.normal,
@@ -579,25 +579,25 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF161A22),
+        backgroundColor: context.colors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Personal Notes', style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text('Personal Notes', style: TextStyle(color: context.colors.textPrimary, fontSize: 18)),
         content: TextField(
           controller: controller,
           maxLines: 5,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Enter your notes here...',
-            hintStyle: const TextStyle(color: Color(0xFF4A4E5A)),
+            hintStyle: TextStyle(color: context.colors.textSecondary.withOpacity(0.6)),
             filled: true,
-            fillColor: const Color(0xFF0C1017),
+            fillColor: context.colors.background,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF8A8F9E))),
+            child: Text('Cancel', style: TextStyle(color: context.colors.textSecondary)),
           ),
           TextButton(
             onPressed: () {
@@ -657,13 +657,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
         return Container(
           width: 38, height: 38,
           decoration: BoxDecoration(
-            color: isActive ? _gradient.colors.first : const Color(0xFF1E2230),
+            color: isActive ? _gradient.colors.first : context.colors.iconBg,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(
             child: Text(labels[i],
               style: TextStyle(
-                color: isActive ? Colors.white : const Color(0xFF8A8F9E),
+                color: isActive ? Colors.white : context.colors.textSecondary,
                 fontSize: 12, fontWeight: FontWeight.w600,
               )),
           ),
@@ -697,13 +697,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                       child: CircularProgressIndicator(
                         value: progress,
                         strokeWidth: 7,
-                        backgroundColor: Colors.white.withOpacity(0.07),
+                        backgroundColor: context.colors.textSecondary.withOpacity(0.1),
                         valueColor: AlwaysStoppedAnimation(_gradient.colors.first),
                         strokeCap: StrokeCap.round,
                       ),
                     ),
                     Text('${(progress * 100).toInt()}%',
-                      style: const TextStyle(color: Colors.white, fontSize: 16,
+                      style: TextStyle(color: context.colors.textPrimary, fontSize: 16,
                           fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -762,7 +762,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                 child: Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
-                    color: isCompleted ? _gradient.colors.first : const Color(0xFF1E2230),
+                    color: isCompleted ? _gradient.colors.first : context.colors.iconBg,
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: isCompleted ? [
                       BoxShadow(color: _gradient.colors.first.withOpacity(0.4),
@@ -770,7 +770,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                     ] : [],
                   ),
                   child: isCompleted
-                      ? Icon(Icons.check, color: Colors.white, size: 16) : null,
+                      ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
                 ),
               );
             }).toList(),
@@ -779,16 +779,16 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           Row(
             children: [
               Container(width: 12, height: 12,
-                decoration: BoxDecoration(color: const Color(0xFF1E2230),
+                decoration: BoxDecoration(color: context.colors.iconBg,
                     borderRadius: BorderRadius.circular(3))),
               const SizedBox(width: 6),
-              const Text('Skipped', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 12)),
+              Text('Skipped', style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
               const SizedBox(width: 16),
               Container(width: 12, height: 12,
                 decoration: BoxDecoration(
                     gradient: _gradient, borderRadius: BorderRadius.circular(3))),
               const SizedBox(width: 6),
-              const Text('Completed', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 12)),
+              Text('Completed', style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
             ],
           ),
         ],
@@ -807,12 +807,12 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, color: const Color(0xFF8A8F9E).withOpacity(0.4), size: 56),
+            Icon(Icons.history, color: context.colors.textSecondary.withOpacity(0.4), size: 56),
             const SizedBox(height: 16),
-            const Text('No history yet', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 16)),
+            Text('No history yet', style: TextStyle(color: context.colors.textSecondary, fontSize: 16)),
             const SizedBox(height: 8),
-            const Text('Start completing this habit to see your history!',
-              style: TextStyle(color: Color(0xFF4A4E5A), fontSize: 13),
+            Text('Start completing this habit to see your history!',
+              style: TextStyle(color: context.colors.textSecondary.withOpacity(0.6), fontSize: 13),
               textAlign: TextAlign.center),
           ],
         ),
@@ -825,7 +825,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
       itemCount: entries.length,
-      separatorBuilder: (_, __) => const Divider(color: Color(0xFF1E2230), height: 1),
+      separatorBuilder: (_, __) => Divider(color: context.colors.border, height: 1),
       itemBuilder: (_, i) {
         final entry = entries[i];
         final isCompleted = (entry['value'] as int?) == 1;
@@ -886,7 +886,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                     const SizedBox(height: 2),
                     Text(
                       date != null ? DateFormat('EEEE, MMMM d, yyyy').format(date) : dateStr,
-                      style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 13),
+                      style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),

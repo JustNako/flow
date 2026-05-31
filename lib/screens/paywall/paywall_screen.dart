@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../utils/globals.dart';
@@ -85,7 +85,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+                        colors: [Color(0xFFE8845C), Color(0xFFC96B42)],
                       ),
                     ),
                     child: const Icon(Icons.workspace_premium, color: Colors.white, size: 48),
@@ -103,7 +103,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDA22FF),
+                        backgroundColor: const Color(0xFFE8845C),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -170,7 +170,7 @@ class _PaywallScreenState extends State<PaywallScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK', style: TextStyle(color: Color(0xFFDA22FF))),
+            child: const Text('OK', style: TextStyle(color: Color(0xFFE8845C))),
           ),
         ],
       ),
@@ -205,7 +205,7 @@ class _PaywallScreenState extends State<PaywallScreen>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(colors: [
-                  const Color(0xFFDA22FF).withOpacity(0.3),
+                  const Color(0xFFE8845C).withOpacity(0.3),
                   Colors.transparent
                 ]),
               ),
@@ -252,8 +252,8 @@ class _PaywallScreenState extends State<PaywallScreen>
                               shape: BoxShape.circle,
                               gradient: const LinearGradient(
                                 colors: [
-                                  Color(0xFFDA22FF),
-                                  Color(0xFF9733EE)
+                                  Color(0xFFE8845C),
+                                  Color(0xFFC96B42)
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -261,7 +261,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      const Color(0xFFDA22FF).withOpacity(0.5),
+                                      const Color(0xFFE8845C).withOpacity(0.5),
                                   blurRadius: 30,
                                   spreadRadius: 5,
                                 )
@@ -317,7 +317,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                                     FlSpot(6, 7),
                                   ],
                                   isCurved: true,
-                                  color: const Color(0xFFDA22FF),
+                                  color: const Color(0xFFE8845C),
                                   barWidth: 4,
                                   isStrokeCapRound: true,
                                   dotData: const FlDotData(show: false),
@@ -325,7 +325,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                                     show: true,
                                     gradient: LinearGradient(
                                       colors: [
-                                        const Color(0xFFDA22FF)
+                                        const Color(0xFFE8845C)
                                             .withOpacity(0.2),
                                         Colors.transparent
                                       ],
@@ -401,7 +401,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                           child: Padding(
                           padding: EdgeInsets.all(24),
                           child:
-                              CircularProgressIndicator(color: Color(0xFFDA22FF)),
+                              CircularProgressIndicator(color: Color(0xFFE8845C)),
                         ))
                       : Column(
                           children: [
@@ -446,13 +446,13 @@ class _PaywallScreenState extends State<PaywallScreen>
                                 child: Ink(
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(colors: [
-                                      Color(0xFFDA22FF),
-                                      Color(0xFF9733EE)
+                                      Color(0xFFE8845C),
+                                      Color(0xFFC96B42)
                                     ]),
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                          color: const Color(0xFFDA22FF)
+                                          color: const Color(0xFFE8845C)
                                               .withOpacity(0.4),
                                           blurRadius: 15,
                                           offset: const Offset(0, 5))
@@ -523,12 +523,12 @@ class _PaywallScreenState extends State<PaywallScreen>
             const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFDA22FF).withOpacity(0.1)
+              ? const Color(0xFFE8845C).withOpacity(0.1)
               : Colors.white.withOpacity(0.02),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFDA22FF)
+                ? const Color(0xFFE8845C)
                 : Colors.white.withOpacity(0.05),
             width: isSelected ? 2 : 1,
           ),
@@ -591,11 +591,11 @@ class _PaywallScreenState extends State<PaywallScreen>
           ? BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: const Color(0xFFDA22FF).withOpacity(0.5)),
+                  color: const Color(0xFFE8845C).withOpacity(0.5)),
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFFDA22FF).withOpacity(0.08),
-                  const Color(0xFF9733EE).withOpacity(0.05)
+                  const Color(0xFFE8845C).withOpacity(0.08),
+                  const Color(0xFFC96B42).withOpacity(0.05)
                 ],
               ),
             )
@@ -606,11 +606,11 @@ class _PaywallScreenState extends State<PaywallScreen>
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: highlight
-                  ? const Color(0xFFDA22FF).withOpacity(0.25)
-                  : const Color(0xFFDA22FF).withOpacity(0.15),
+                  ? const Color(0xFFE8845C).withOpacity(0.25)
+                  : const Color(0xFFE8845C).withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: const Color(0xFFDA22FF), size: 24),
+            child: Icon(icon, color: const Color(0xFFE8845C), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -631,8 +631,8 @@ class _PaywallScreenState extends State<PaywallScreen>
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(colors: [
-                            Color(0xFFDA22FF),
-                            Color(0xFF9733EE)
+                            Color(0xFFE8845C),
+                            Color(0xFFC96B42)
                           ]),
                           borderRadius: BorderRadius.circular(6),
                         ),

@@ -3,6 +3,7 @@ import '../services/auth_service.dart';
 import '../api/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../screens/auth/email_pending_screen.dart';
+import '../theme/app_theme.dart';
 
 class AccountSettingsBottomSheet extends StatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -95,13 +96,13 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF161A22),
-        title: const Text('Cancel Pro Plan', style: TextStyle(color: Colors.white)),
-        content: const Text('Are you sure you want to cancel your Pro plan? You will lose access to advanced analytics and AI insights.', style: TextStyle(color: Color(0xFF8A8F9E))),
+        backgroundColor: context.colors.card,
+        title: Text('Cancel Pro Plan', style: TextStyle(color: context.colors.textPrimary)),
+        content: Text('Are you sure you want to cancel your Pro plan? You will lose access to advanced analytics and AI insights.', style: TextStyle(color: context.colors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Keep Pro', style: TextStyle(color: Color(0xFF8A8F9E))),
+            child: Text('Keep Pro', style: TextStyle(color: context.colors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -142,9 +143,9 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
         left: 28, right: 28, top: 28,
         bottom: MediaQuery.of(context).viewInsets.bottom + 28,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFF161A22),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: context.colors.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -154,12 +155,12 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
             Center(
               child: Container(
                 width: 40, height: 4,
-                decoration: BoxDecoration(color: const Color(0xFF262A34), borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(2)),
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Account Settings',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Account Settings',
+              style: TextStyle(color: context.colors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             
             if (_error != null) ...[
@@ -181,9 +182,9 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
             const SizedBox(height: 16),
             _buildField('Email', _emailController, icon: Icons.mail_outline),
             const SizedBox(height: 24),
-            const Divider(color: Color(0xFF262A34)),
+            Divider(color: context.colors.border),
             const SizedBox(height: 24),
-            const Text('Change Password', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+            Text('Change Password', style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
             _buildField(
               'Current Password', _currentPasswordController, 
@@ -205,7 +206,7 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDA22FF),
+                  backgroundColor: const Color(0xFFE8845C),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -219,9 +220,9 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
 
             if (widget.initialData != null && widget.initialData!['isPro'] == true) ...[
               const SizedBox(height: 32),
-              const Divider(color: Color(0xFF262A34)),
+              Divider(color: context.colors.border),
               const SizedBox(height: 24),
-              const Text('Subscription', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+              Text('Subscription', style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -242,8 +243,8 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
             Center(
               child: TextButton.icon(
                 onPressed: _launchPrivacyPolicy,
-                icon: const Icon(Icons.privacy_tip_outlined, size: 18, color: Color(0xFF8A8F9E)),
-                label: const Text('Privacy Policy', style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 13)),
+                icon: Icon(Icons.privacy_tip_outlined, size: 18, color: context.colors.textSecondary),
+                label: Text('Privacy Policy', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 ),
@@ -259,28 +260,28 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 12)),
+        Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: obscureText ?? false,
-          style: const TextStyle(color: Colors.white, fontSize: 15),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Color(0xFF3A3E4A), fontSize: 14),
-            prefixIcon: Icon(icon, color: const Color(0xFFDA22FF), size: 20),
+            hintStyle: TextStyle(color: context.colors.textSecondary.withOpacity(0.5), fontSize: 14),
+            prefixIcon: Icon(icon, color: const Color(0xFFE8845C), size: 20),
             suffixIcon: isPassword 
                 ? IconButton(
                     icon: Icon(
                       (obscureText ?? true) ? Icons.visibility_off : Icons.visibility,
-                      color: const Color(0xFF8A8F9E),
+                      color: context.colors.textSecondary,
                       size: 20,
                     ),
                     onPressed: onToggleObscure,
                   )
                 : null,
             filled: true,
-            fillColor: const Color(0xFF0C1017),
+            fillColor: context.colors.background,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),

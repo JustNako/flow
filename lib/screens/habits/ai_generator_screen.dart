@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/ai_habit_dto.dart';
 import '../../models/habit.dart';
@@ -99,11 +99,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
   }
 
   static const List<List<Color>> _gradients = [
-    [Color(0xFFDA22FF), Color(0xFF9733EE)],
+    [Color(0xFFE8845C), Color(0xFFC96B42)],
     [Color(0xFF00B4DB), Color(0xFF0083B0)],
     [Color(0xFF11998E), Color(0xFF38EF7D)],
     [Color(0xFFFF512F), Color(0xFFDD2476)],
-    [Color(0xFF4776E6), Color(0xFF8E54E9)],
+    [Color(0xFF4776E6), Color(0xFFC96B42)],
     [Color(0xFFFFB75E), Color(0xFFED8F03)],
   ];
 
