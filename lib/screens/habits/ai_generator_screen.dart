@@ -1,9 +1,44 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 import '../../api/habit_api_service.dart';
 import '../../models/ai_habit_dto.dart';
 import '../../models/habit.dart';
-import '../../theme/app_theme.dart';
 import '../paywall/paywall_screen.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ChatMessage {
+  final String text;
+  final bool isUser;
+  final List<AiHabitDto>? habits;
+  final bool isLoading;
+
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    this.habits,
+    this.isLoading = false,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'isUser': isUser,
+      'habits': habits?.map((h) => h.toJson()).toList(),
+    };
+  }
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      text: json['text'] as String,
+      isUser: json['isUser'] as bool,
+      habits: (json['habits'] as List<dynamic>?)
+          ?.map((e) => AiHabitDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
 
 class AiGeneratorScreen extends StatefulWidget {
   const AiGeneratorScreen({super.key});
@@ -12,56 +47,81 @@ class AiGeneratorScreen extends StatefulWidget {
   State<AiGeneratorScreen> createState() => _AiGeneratorScreenState();
 }
 
-class _AiGeneratorScreenState extends State<AiGeneratorScreen>
-    with TickerProviderStateMixin {
+class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProviderStateMixin {
   final _api = HabitApiService.instance;
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
 
-  bool _isLoading = false;
-  String? _error;
-  List<AiHabitDto> _generatedHabits = [];
-  final Set<int> _selectedIndices = {};
+  final List<ChatMessage> _messages = [];
+  final Set<AiHabitDto> _selectedHabits = {};
 
   bool _isAddingHabits = false;
-
-  // Animation
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
-  // Usage stats
   int _remaining = 0;
   int _totalLimit = 0;
   bool _isPro = false;
 
+  late AnimationController _sparkController;
+
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
+    _sparkController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
+
     _loadState();
+    _loadChatHistory();
+  }
+
+  Future<void> _loadChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final historyJson = prefs.getString('ai_chat_history');
+    if (historyJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(historyJson);
+        setState(() {
+          _messages.clear();
+          _messages.addAll(decoded.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>)));
+        });
+        _scrollToBottom();
+      } catch (e) {
+        debugPrint('Error loading chat history: $e');
+        _initDefaultGreeting();
+      }
+    } else {
+      _initDefaultGreeting();
+    }
+  }
+
+  void _initDefaultGreeting() {
+    setState(() {
+      _messages.add(
+        ChatMessage(
+          text: "Hello. What would you like to build today?",
+          isUser: false,
+        ),
+      );
+    });
+  }
+
+  Future<void> _saveChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final historyJson = jsonEncode(_messages.where((m) => !m.isLoading).map((m) => m.toJson()).toList());
+    await prefs.setString('ai_chat_history', historyJson);
   }
 
   Future<void> _loadState() async {
     try {
       final stats = await _api.getGlobalStats();
-      debugPrint('AI Usage Stats: $stats');
-      
       setState(() {
         _isPro = stats['isPro'] as bool? ?? false;
-        
-        // Handle both camelCase and PascalCase from server
         _remaining = (stats['aiGenerationsRemaining'] ?? stats['AiGenerationsRemaining']) as int? ?? 0;
         _totalLimit = (stats['aiTotalLimit'] ?? stats['AiTotalLimit']) as int? ?? (_isPro ? 5 : 2);
       });
     } catch (e) {
       debugPrint('Error loading AI stats: $e');
-      // On error, we don't want to show 5/5 if we don't know
       setState(() {
         _remaining = 0;
         _totalLimit = _isPro ? 5 : 2;
@@ -71,55 +131,20 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
 
   @override
   void dispose() {
-    _pulseController.dispose();
+    _sparkController.dispose();
     _controller.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
-  }
-
-  IconData _iconFor(String iconName) {
-    switch (iconName) {
-      case 'fitness_center': return Icons.fitness_center;
-      case 'water_drop': return Icons.water_drop_outlined;
-      case 'book': return Icons.book_outlined;
-      case 'self_improvement': return Icons.self_improvement;
-      case 'code': return Icons.code;
-      case 'local_fire_department': return Icons.local_fire_department;
-      case 'monitor_heart': return Icons.monitor_heart_outlined;
-      case 'spa': return Icons.spa_outlined;
-      case 'directions_run': return Icons.directions_run;
-      case 'bolt': return Icons.bolt;
-      case 'directions_walk': return Icons.directions_walk;
-      case 'bedtime': return Icons.bedtime_outlined;
-      case 'restaurant': return Icons.restaurant_outlined;
-      case 'psychology': return Icons.psychology_outlined;
-      case 'savings': return Icons.savings_outlined;
-      default: return Icons.task_alt;
-    }
-  }
-
-  static const List<List<Color>> _gradients = [
-    [Color(0xFFE8845C), Color(0xFFC96B42)],
-    [Color(0xFF00B4DB), Color(0xFF0083B0)],
-    [Color(0xFF11998E), Color(0xFF38EF7D)],
-    [Color(0xFFFF512F), Color(0xFFDD2476)],
-    [Color(0xFF4776E6), Color(0xFFC96B42)],
-    [Color(0xFFFFB75E), Color(0xFFED8F03)],
-  ];
-
-  LinearGradient _gradientFor(int index) {
-    final colors = _gradients[index % _gradients.length];
-    return LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight);
   }
 
   Future<void> _generate() async {
     final prompt = _controller.text.trim();
     if (prompt.isEmpty) return;
 
-    // 🛑 Client-side limit check: If no generations left and not PRO, go to paywall
     if (!_isPro && _remaining <= 0) {
       final purchased = await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => PaywallScreen()),
+        MaterialPageRoute(builder: (_) => const PaywallScreen()),
       );
       if (purchased == true) {
         _loadState();
@@ -127,39 +152,43 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
       return;
     }
 
+    _controller.clear();
+    _focusNode.unfocus();
+
     setState(() {
-      _isLoading = true;
-      _error = null;
-      _generatedHabits = [];
-      _selectedIndices.clear();
+      _messages.add(ChatMessage(text: prompt, isUser: true));
+      _messages.add(ChatMessage(text: "", isUser: false, isLoading: true));
     });
+    
+    _scrollToBottom();
 
     try {
       final result = await _api.generateAiRoutine(prompt);
       
       setState(() {
-        _generatedHabits = result['habits'] as List<AiHabitDto>;
         _isPro = result['isPro'] as bool? ?? false;
-
-        // Use unified keys
         _remaining = (result['aiGenerationsRemaining'] ?? result['AiGenerationsRemaining'] ?? result['remaining']) as int? ?? 0;
         _totalLimit = (result['aiTotalLimit'] ?? result['AiTotalLimit'] ?? result['totalLimit']) as int? ?? (_isPro ? 5 : 2);
         
-        _selectedIndices.addAll(List.generate(_generatedHabits.length, (i) => i));
+        final habits = result['habits'] as List<AiHabitDto>;
+        _messages.removeLast(); // remove loading
+        _messages.add(
+          ChatMessage(
+            text: "Here are some suggestions to help you get started.",
+            isUser: false,
+            habits: habits,
+          ),
+        );
       });
-
-      Future.delayed(const Duration(milliseconds: 200), () {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOut,
-          );
-        }
-      });
+      _scrollToBottom();
+      _saveChatHistory();
     } catch (e) {
       String errMsg = e.toString().replaceFirst('Exception: ', '');
       if (errMsg.contains('ProRequired')) {
+        setState(() {
+          _messages.removeLast();
+          _messages.add(ChatMessage(text: "You've reached your free limit. Please upgrade to Pro to continue.", isUser: false));
+        });
         final purchased = await Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const PaywallScreen()),
         );
@@ -167,22 +196,47 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
           _loadState(); 
         }
       } else {
-        setState(() => _error = errMsg);
+        setState(() {
+          _messages.removeLast();
+          _messages.add(ChatMessage(text: "Sorry, I encountered an error: $errMsg", isUser: false));
+        });
       }
-    } finally {
-      setState(() => _isLoading = false);
+      _scrollToBottom();
+      _saveChatHistory();
     }
   }
 
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   Future<void> _addSelectedHabits() async {
-    if (_selectedIndices.isEmpty) return;
+    if (_selectedHabits.isEmpty) return;
+
+    if (_selectedHabits.length > 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('You can only add up to 10 habits at a time.'),
+          backgroundColor: Colors.red.shade800,
+          behavior: SnackBarBehavior.floating,
+        )
+      );
+      return;
+    }
 
     setState(() => _isAddingHabits = true);
     int addedCount = 0;
 
     try {
-      for (final index in _selectedIndices) {
-        final h = _generatedHabits[index];
+      for (final h in _selectedHabits) {
         int rTypeIdx = h.repeatType;
         List<int>? days = h.repeatDaysOfWeek;
         int? times = h.repeatTimesPerPeriod;
@@ -214,695 +268,438 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(children: [
-              const Icon(Icons.check_circle, color: Color(0xFF00E676)),
+              const Icon(Icons.check_circle, color: Color(0xFF8BA888)),
               const SizedBox(width: 8),
-              Text('$addedCount habit${addedCount != 1 ? 's' : ''} added to your dashboard!'),
+              Text('$addedCount habit${addedCount != 1 ? 's' : ''} added!'),
             ]),
-            backgroundColor: const Color(0xFF1A2E1A),
+            backgroundColor: const Color(0xFF2C2C2E),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
-        Navigator.of(context).pop(true);
+        setState(() {
+          _selectedHabits.clear();
+        });
       }
     } catch (e) {
       if (mounted) {
         final msg = e.toString().replaceFirst('Exception: ', '');
-        if (msg.contains('ProRequired')) {
-          _showLimitSheet(msg.replaceFirst('ProRequired: ', ''));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(msg),
-            backgroundColor: Colors.red.shade800,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ));
-        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.red.shade800,
+          behavior: SnackBarBehavior.floating,
+        ));
       }
     } finally {
       if (mounted) setState(() => _isAddingHabits = false);
     }
   }
 
+  IconData _iconFor(String iconName) {
+    switch (iconName) {
+      case 'fitness_center': return Icons.fitness_center;
+      case 'water_drop': return Icons.water_drop_outlined;
+      case 'book': return Icons.book_outlined;
+      case 'self_improvement': return Icons.self_improvement;
+      case 'code': return Icons.code;
+      case 'local_fire_department': return Icons.local_fire_department;
+      case 'monitor_heart': return Icons.monitor_heart_outlined;
+      case 'spa': return Icons.spa_outlined;
+      case 'directions_run': return Icons.directions_run;
+      case 'bolt': return Icons.bolt;
+      case 'directions_walk': return Icons.directions_walk;
+      case 'bedtime': return Icons.bedtime_outlined;
+      case 'restaurant': return Icons.restaurant_outlined;
+      case 'psychology': return Icons.psychology_outlined;
+      case 'savings': return Icons.savings_outlined;
+      default: return Icons.task_alt;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
+    
     return Scaffold(
-      backgroundColor: context.colors.background,
-      body: Column(
+      backgroundColor: const Color(0xFF1A1A1A), // Soft dark background
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFFE0E0E0), size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Flow AI',
+          style: GoogleFonts.playfairDisplay(
+            color: const Color(0xFFE0E0E0),
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Text(
+                '$_remaining/$_totalLimit left${_isPro ? ' • PRO' : ''}',
+                style: const TextStyle(color: Color(0xFF8BA888), fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+            ),
+          )
+        ],
+      ),
+      body: Stack(
         children: [
-          _buildHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildPromptCard(),
-                  if (_isLoading) _buildLoadingState(),
-                  if (_error != null) _buildError(),
-                  if (_generatedHabits.isNotEmpty) ...[
-                    _buildResultsSection(),
-                  ],
-                  const SizedBox(height: 120),
-                ],
-              ),
-            ),
+          // Chat list
+          ListView.builder(
+            controller: _scrollController,
+            padding: EdgeInsets.only(top: 10, bottom: 120 + bottomPadding, left: 16, right: 16),
+            itemCount: _messages.length,
+            itemBuilder: (context, index) {
+              final msg = _messages[index];
+              return msg.isUser ? _buildUserMessage(msg) : _buildAiMessage(msg);
+            },
           ),
-          if (_generatedHabits.isNotEmpty && !_isLoading)
-            _buildAddButton(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    String subtext;
-    Color subtextColor;
-
-    if (_isPro) {
-      subtext = _remaining > 0 
-        ? '$_remaining generations left today • PRO' 
-        : 'Daily limit reached • PRO';
-      subtextColor = _remaining > 0 ? context.colors.secondary : context.colors.danger;
-    } else {
-      subtext = _remaining > 0 
-        ? '$_remaining free generations left' 
-        : '0 free generations left';
-      subtextColor = _remaining > 0 ? context.colors.textSecondary : context.colors.danger;
-    }
-
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(
-                      color: context.colors.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: context.colors.border),
-                    ),
-                    child: Icon(Icons.arrow_back_ios_new, color: context.colors.textPrimary, size: 16),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          ShaderMask(
-                            shaderCallback: (bounds) => LinearGradient(
-                              colors: [context.colors.secondary, context.colors.primary],
-                            ).createShader(bounds),
-                            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 8),
-                          Text('AI Routine Builder',
-                            style: TextStyle(color: context.colors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(subtext, style: TextStyle(color: subtextColor, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                if (_isPro)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: context.colors.secondary,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text('PRO', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPromptCard() {
-    double progress = _totalLimit > 0 ? _remaining / _totalLimit : 0;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.colors.secondary.withOpacity(0.15)),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.secondary.withOpacity(0.05),
-            blurRadius: 20,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: context.colors.secondary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.psychology_outlined, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Text("What's your goal?",
-                style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            maxLines: 3,
-            style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
-            decoration: InputDecoration(
-              hintText: 'e.g. "I want to lose weight, sleep better and reduce stress"',
-              hintStyle: TextStyle(color: context.colors.textSecondary, fontSize: 14),
-              filled: true,
-              fillColor: context.colors.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: context.colors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: context.colors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: context.colors.secondary, width: 1.5),
-              ),
-              contentPadding: const EdgeInsets.all(14),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _isPro ? 'Daily limit' : 'Total limit',
-                style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
-              ),
-              Text(
-                '$_remaining of $_totalLimit left',
-                style: TextStyle(
-                  color: _remaining > 0 ? context.colors.secondary : context.colors.danger,
-                  fontSize: 12, 
-                  fontWeight: FontWeight.bold
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: context.colors.border,
-              valueColor: AlwaysStoppedAnimation<Color>(context.colors.secondary),
-              minHeight: 4,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: GestureDetector(
-              onTap: _isLoading ? null : _generate,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                decoration: BoxDecoration(
-                  color: _isLoading ? context.colors.cardSecondary : context.colors.secondary,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: _isLoading ? [] : [
-                    BoxShadow(
-                      color: context.colors.secondary.withOpacity(0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_isLoading)
-                      const SizedBox(
-                        width: 18, height: 18,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    else
-                      const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isLoading ? 'AI is building your routine...' : 'Generate My Routine ⚡',
-                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text('Quick ideas:', style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildChip('🏃 Lose weight'),
-              _buildChip('🧠 Learn programming'),
-              _buildChip('😴 Sleep better'),
-              _buildChip('📚 Read more'),
-              _buildChip('💰 Save money'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChip(String label) {
-    return GestureDetector(
-      onTap: () {
-        _controller.text = label.replaceAll(RegExp(r'^[^\s]+\s'), '');
-        _controller.selection = TextSelection.fromPosition(
-          TextPosition(offset: _controller.text.length));
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: context.colors.background,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.colors.secondary.withOpacity(0.2)),
-        ),
-        child: Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            AnimatedBuilder(
-              animation: _pulseAnimation,
-              builder: (context, child) {
-                return Opacity(
-                  opacity: _pulseAnimation.value,
-                  child: Container(
-                    width: 80, height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: context.colors.secondary,
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.colors.secondary.withOpacity(0.5 * _pulseAnimation.value),
-                          blurRadius: 30,
-                          spreadRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 36),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            Text('AI is crafting your routine...',
-                style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            Text('Analyzing your goals and building the perfect habits',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildError() {
-    String displayError = _error!;
-    if (displayError.contains('subtype') || displayError.contains('index')) {
-      displayError = "Connection sync issue. Please redeploy the backend or try again later. ⚡";
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.colors.danger.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.danger.withOpacity(0.05),
-            blurRadius: 20,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: context.colors.danger.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.warning_amber_rounded, color: context.colors.danger, size: 28),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "System Glitch",
-            style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            displayError,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.colors.textSecondary.withOpacity(0.6), fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => setState(() => _error = null),
-            child: Text("DISMISS", style: TextStyle(color: context.colors.danger, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResultsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text('Your AI Routine', style: TextStyle(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
-            const Spacer(),
-            Text('${_selectedIndices.length}/${_generatedHabits.length} selected',
-              style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text('Tap to select habits you want to add',
-          style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
-        const SizedBox(height: 16),
-        ...List.generate(_generatedHabits.length, (i) => _buildHabitCard(i)),
-      ],
-    );
-  }
-
-  Widget _buildHabitCard(int index) {
-    final habit = _generatedHabits[index];
-    final isSelected = _selectedIndices.contains(index);
-    final gradient = _gradientFor(index);
-    final icon = _iconFor(habit.icon);
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          if (isSelected) {
-            _selectedIndices.remove(index);
-          } else {
-            _selectedIndices.add(index);
-          }
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected ? context.colors.card : context.colors.background,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-              ? context.colors.secondary.withOpacity(0.3)
-              : context.colors.textPrimary.withOpacity(0.04),
-            width: isSelected ? 1.5 : 1,
-          ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: context.colors.secondary.withOpacity(0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ] : [],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48, height: 48,
+          
+          // Floating Input Field
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              padding: EdgeInsets.only(bottom: bottomPadding + 16, left: 16, right: 16, top: 16),
               decoration: BoxDecoration(
-                gradient: isSelected ? gradient : null,
-                color: isSelected ? null : context.colors.iconBg,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon,
-                color: isSelected ? Colors.white : context.colors.textSecondary,
-                size: 24),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(habit.title,
-                    style: TextStyle(
-                      color: isSelected ? context.colors.textPrimary : context.colors.textSecondary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    )),
-                  if (habit.description.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(habit.description,
-                      style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF1A1A1A).withOpacity(0.0),
+                    const Color(0xFF1A1A1A).withOpacity(0.9),
+                    const Color(0xFF1A1A1A),
                   ],
-                  Row(
-                    children: [
-                      if (habit.targetDays > 1 || (habit.unit != null && habit.unit!.isNotEmpty)) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_selectedHabits.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: GestureDetector(
+                        onTap: _isAddingHabits ? null : _addSelectedHabits,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           decoration: BoxDecoration(
-                            color: context.colors.textPrimary.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Target: ${habit.targetDays} ${habit.unit ?? ''}'.trim(),
-                            style: const TextStyle(color: Color(0xFF00B4DB), fontSize: 10, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                      if (habit.timeOfDay != null) ...[
-                        if (habit.targetDays > 1 || (habit.unit != null && habit.unit!.isNotEmpty))
-                          const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: (isSelected ? gradient.colors.first : context.colors.secondary).withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.access_time, 
-                                   color: isSelected ? Colors.white : context.colors.secondary, size: 10),
-                              const SizedBox(width: 4),
-                              Text(
-                                habit.timeOfDay!,
-                                style: TextStyle(
-                                  color: isSelected ? Colors.white : context.colors.secondary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            color: const Color(0xFF8BA888), // Sage green
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF8BA888).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
+                          child: _isAddingHabits
+                              ? const SizedBox(
+                                  width: 20, height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF1A1A1A)),
+                                )
+                              : Text(
+                                  'Add ${_selectedHabits.length} Habit${_selectedHabits.length > 1 ? 's' : ''}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF1A1A1A),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C2C2E),
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
                       ],
-                    ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 15),
+                            decoration: const InputDecoration(
+                              hintText: 'What would you like to build today?',
+                              hintStyle: TextStyle(color: Color(0xFF757575), fontSize: 14),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                            ),
+                            onSubmitted: (_) => _generate(),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: GestureDetector(
+                            onTap: _generate,
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF8BA888),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.arrow_upward_rounded, color: Color(0xFF1A1A1A), size: 20),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 12),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 28, height: 28,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isSelected ? context.colors.secondary : null,
-                border: Border.all(
-                  color: isSelected ? Colors.transparent : context.colors.textPrimary.withOpacity(0.2),
-                  width: 1.5,
-                ),
-              ),
-              child: isSelected
-                ? const Icon(Icons.check, color: Colors.white, size: 16)
-                : null,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildAddButton() {
-    final count = _selectedIndices.length;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-      decoration: BoxDecoration(
-        color: context.colors.background,
-        border: Border(top: BorderSide(color: context.colors.border)),
-      ),
-      child: GestureDetector(
-        onTap: _isAddingHabits || count == 0 ? null : _addSelectedHabits,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: count > 0 ? context.colors.secondary : context.colors.cardSecondary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: count > 0 ? [
-              BoxShadow(
-                color: context.colors.secondary.withOpacity(0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+  Widget _buildUserMessage(ChatMessage msg) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: const BoxDecoration(
+                color: Color(0xFF2C2C2E),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(8),
+                ),
               ),
-            ] : [],
+              child: Text(
+                msg.text,
+                style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 15, height: 1.4),
+              ),
+            ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_isAddingHabits)
-                const SizedBox(
-                  width: 18, height: 18,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                )
-              else
-                const Icon(Icons.add_circle_outline, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                _isAddingHabits
-                  ? 'Adding habits...'
-                  : count == 0
-                    ? 'Select at least one habit'
-                    : 'Add $count Habit${count != 1 ? 's' : ''} to Dashboard',
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiMessage(ChatMessage msg) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildAiAvatar(),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (msg.isLoading)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Row(
+                      children: [
+                        _buildDot(0),
+                        const SizedBox(width: 4),
+                        _buildDot(1),
+                        const SizedBox(width: 4),
+                        _buildDot(2),
+                      ],
+                    ),
+                  )
+                else
+                  Text(
+                    msg.text,
+                    style: GoogleFonts.playfairDisplay(
+                      color: const Color(0xFFDCDCDC),
+                      fontSize: 16,
+                      height: 1.4,
+                    ),
+                  ),
+                if (msg.habits != null && msg.habits!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildBentoGrid(msg.habits!),
+                ]
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiAvatar() {
+    return AnimatedBuilder(
+      animation: _sparkController,
+      builder: (context, child) {
+        return Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                const Color(0xFFD68C7A).withOpacity(0.8 + 0.2 * _sparkController.value), // Terracotta
+                const Color(0xFF9F92C6).withOpacity(0.4 + 0.2 * _sparkController.value), // Lavender
+                const Color(0xFF1A1A1A).withOpacity(0.0),
+              ],
+              stops: const [0.2, 0.7, 1.0],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFD68C7A).withOpacity(0.3 * _sparkController.value),
+                blurRadius: 10 * _sparkController.value,
+                spreadRadius: 2 * _sparkController.value,
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  void _showLimitSheet(String message) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        decoration: BoxDecoration(
-          color: context.colors.card,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          boxShadow: const [
-            BoxShadow(color: Colors.black54, blurRadius: 40, spreadRadius: 10),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80, height: 80,
-              decoration: BoxDecoration(
-                color: context.colors.secondary.withOpacity(0.1),
-                shape: BoxShape.circle,
-                border: Border.all(color: context.colors.secondary.withOpacity(0.2)),
+  Widget _buildDot(int index) {
+    return AnimatedBuilder(
+      animation: _sparkController,
+      builder: (context, child) {
+        final delay = index * 0.3;
+        final value = (_sparkController.value - delay).clamp(0.0, 1.0);
+        return Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: const Color(0xFF8BA888).withOpacity(0.3 + 0.7 * value),
+            shape: BoxShape.circle,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBentoGrid(List<AiHabitDto> habits) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: habits.map((habit) {
+        final isSelected = _selectedHabits.contains(habit);
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedHabits.remove(habit);
+              } else {
+                if (_selectedHabits.length >= 10) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('You can only select up to 10 habits.'),
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 2),
+                    )
+                  );
+                  return;
+                }
+                _selectedHabits.add(habit);
+              }
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: habits.length == 1 ? double.infinity : (MediaQuery.of(context).size.width - 48 - 44) / 2, // ~half width minus paddings
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF8BA888).withOpacity(0.15) : const Color(0xFF252525),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? const Color(0xFF8BA888) : const Color(0xFF333333),
+                width: 1.5,
               ),
-              child: Icon(Icons.star_rounded, color: context.colors.secondary, size: 48),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Limit Reached',
-              style: TextStyle(color: context.colors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.colors.textSecondary, fontSize: 16, height: 1.5),
-            ),
-            const SizedBox(height: 32),
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PaywallScreen()),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: context.colors.secondary,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: context.colors.secondary.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(_iconFor(habit.icon), color: isSelected ? const Color(0xFF8BA888) : const Color(0xFF9F92C6), size: 24),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            final result = await Navigator.of(context).pushNamed(
+                              '/add_habit',
+                              arguments: habit,
+                            );
+                            if (result == true && mounted) {
+                              setState(() {
+                                _selectedHabits.remove(habit); // Uncheck if added individually
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Habit saved and added!'),
+                                  backgroundColor: Color(0xFF2C2C2E),
+                                  behavior: SnackBarBehavior.floating,
+                                )
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            child: const Icon(Icons.edit_outlined, color: Color(0xFF888888), size: 18),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        if (isSelected)
+                          const Icon(Icons.check_circle, color: Color(0xFF8BA888), size: 20)
+                        else
+                          const Icon(Icons.circle_outlined, color: Color(0xFF555555), size: 20),
+                      ],
                     ),
                   ],
                 ),
-                child: const Text(
-                  'Upgrade to Pro',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                const SizedBox(height: 12),
+                Text(
+                  habit.title,
+                  style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 14, fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  [
+                    if (habit.unit != null && habit.unit!.isNotEmpty && habit.unit!.toLowerCase() != 'null')
+                      '${habit.targetDays} ${habit.unit}'
+                    else
+                      '${habit.targetDays} time${habit.targetDays > 1 ? 's' : ''}',
+                    if (habit.timeOfDay != null && habit.timeOfDay!.isNotEmpty && habit.timeOfDay!.toLowerCase() != 'null' && habit.timeOfDay!.toLowerCase() != 'any time')
+                      habit.timeOfDay!
+                  ].join(' • '),
+                  style: const TextStyle(color: Color(0xFF888888), fontSize: 12),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Maybe later',
-                style: TextStyle(color: context.colors.textSecondary, fontSize: 14),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

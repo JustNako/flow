@@ -44,4 +44,18 @@ class AiHabitDto {
     if (val is String) return int.tryParse(val) ?? 0;
     return 0;
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'description': description,
+      'icon': icon,
+      'repeatType': repeatType,
+      'targetDays': targetDays,
+      'unit': unit,
+      'repeatDaysOfWeek': repeatDaysOfWeek,
+      'repeatTimesPerPeriod': repeatTimesPerPeriod,
+      'timeOfDay': timeOfDay,
+    };
+  }
 }

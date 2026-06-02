@@ -2,14 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'dashboard/dashboard_screen.dart';
-import 'habits/habits_screen.dart';
-import 'profile/profile_screen.dart';
+import 'habits/ai_generator_screen.dart';
 import 'stats/stats_screen.dart';
-import 'friends/friends_screen.dart';
+import 'habits/templates_screen.dart';
 import '../api/habit_api_service.dart';
 import '../services/update_service.dart';
 import '../services/widget_service.dart';
-import '../theme/app_theme.dart';
+
+const _kBg = Color(0xFF1A1A1A);
+const _kCard = Color(0xFF242424);
+const _kCardBorder = Color(0xFF2E2E2E);
+const _kSage = Color(0xFF8BA888);
+const _kLavender = Color(0xFF9F92C6);
+const _kGold = Color(0xFFFFD700);
+const _kTerra = Color(0xFFD68C7A);
+const _kTextSub = Color(0xFF888888);
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -20,9 +27,8 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
+  int _previousIndex = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey();
-  final GlobalKey<StatsScreenState> _statsKey = GlobalKey();
-  final GlobalKey<ProfileScreenState> _profileKey = GlobalKey();
   StreamSubscription<Uri?>? _widgetClickSubscription;
 
   late final List<Widget> _screens;
@@ -33,9 +39,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _screens = [
       DashboardScreen(key: _dashboardKey),
-      StatsScreen(key: _statsKey),
-      const FriendsScreen(),
-      ProfileScreen(key: _profileKey),
+      const AiGeneratorScreen(),
+      const StatsScreen(),
+      const TemplatesScreen(),
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -43,7 +49,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       _handleInitialWidgetClick();
     });
 
-    // Listen for widget tap events while app is open
     _widgetClickSubscription = HomeWidget.widgetClicked.listen(_handleWidgetUri);
   }
 
@@ -62,19 +67,19 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   void _onTabTapped(int index) {
-    setState(() => _currentIndex = index);
+    if (_currentIndex == index) return;
+    setState(() {
+      _previousIndex = _currentIndex;
+      _currentIndex = index;
+    });
     if (index == 0) _dashboardKey.currentState?.loadData(showLoading: false);
-    if (index == 1) _statsKey.currentState?.loadStats(showLoading: false);
-    if (index == 3) _profileKey.currentState?.loadData(showLoading: false);
   }
 
-  /// Called once on startup — handles the URI if app was launched from widget tap
   Future<void> _handleInitialWidgetClick() async {
     final uri = await HomeWidget.initiallyLaunchedFromHomeWidget();
     _handleWidgetUri(uri);
   }
 
-  /// Toggles a habit when its row is tapped on the home screen widget
   Future<void> _handleWidgetUri(Uri? uri) async {
     if (uri == null) return;
     if (uri.host != 'completehabit') return;
@@ -83,9 +88,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
     try {
       await HabitApiService.instance.toggleHabit(habitId);
-      // Switch to dashboard and refresh
-      setState(() => _currentIndex = 0);
-      // Small delay to let screen build before loading
+      setState(() {
+        _previousIndex = _currentIndex;
+        _currentIndex = 0;
+      });
       await Future.delayed(const Duration(milliseconds: 200));
       _dashboardKey.currentState?.loadData(showLoading: false);
     } catch (e) {
@@ -96,76 +102,174 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      backgroundColor: _kBg,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 400),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          final isEntering = child.key == ValueKey(_currentIndex);
+          final slideDirection = _currentIndex > _previousIndex ? 1.0 : -1.0;
+          
+          final inOffset = Tween<Offset>(begin: Offset(slideDirection, 0.0), end: Offset.zero)
+              .animate(animation);
+          final outOffset = Tween<Offset>(begin: Offset(-slideDirection, 0.0), end: Offset.zero)
+              .animate(animation);
+
+          return SlideTransition(
+            position: isEntering ? inOffset : outOffset,
+            child: FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex),
+          child: _screens[_currentIndex],
+        ),
       ),
-      floatingActionButton: Container(
-        height: 64,
-        width: 64,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFF7A55), Color(0xFFFF4848)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      bottomNavigationBar: _CustomBottomNav(
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+      ),
+    );
+  }
+}
+
+class _CustomBottomNav extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  const _CustomBottomNav({
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  Color _getColor(int index) {
+    if (index == 0) return _kSage;
+    if (index == 1) return _kLavender;
+    if (index == 2) return _kGold;
+    return _kTerra;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _kCard,
+        border: Border(top: BorderSide(color: _kCardBorder, width: 1)),
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 64,
+          child: Stack(
+            children: [
+              Row(
+                children: [
+                  _NavItem(
+                    icon: Icons.spa_rounded,
+                    label: 'Home',
+                    isSelected: currentIndex == 0,
+                    activeColor: _kSage,
+                    onTap: () => onTap(0),
+                  ),
+                  _NavItem(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    label: 'Flow AI',
+                    isSelected: currentIndex == 1,
+                    activeColor: _kLavender,
+                    onTap: () => onTap(1),
+                  ),
+                  _NavItem(
+                    icon: Icons.bar_chart_rounded,
+                    label: 'Insights',
+                    isSelected: currentIndex == 2,
+                    activeColor: _kGold,
+                    onTap: () => onTap(2),
+                  ),
+                  _NavItem(
+                    icon: Icons.grid_view_rounded,
+                    label: 'Library',
+                    isSelected: currentIndex == 3,
+                    activeColor: _kTerra,
+                    onTap: () => onTap(3),
+                  ),
+                ],
+              ),
+              // Sliding top indicator
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                top: 0,
+                left: (MediaQuery.of(context).size.width / 4) * currentIndex,
+                width: MediaQuery.of(context).size.width / 4,
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 32,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: _getColor(currentIndex),
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(3)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _getColor(currentIndex).withOpacity(0.5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFFF524A).withOpacity(0.4),
-              blurRadius: 20,
-              spreadRadius: 2,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () async {
-            final result = await Navigator.of(context).pushNamed('/templates');
-            if (result == true) {
-              _dashboardKey.currentState?.loadData(showLoading: false);
-            }
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          highlightElevation: 0,
-          child: const Icon(Icons.add, color: Colors.white, size: 32),
         ),
       ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: context.colors.background,
-          elevation: 0,
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _currentIndex,
-          selectedItemColor: context.colors.textPrimary,
-          unselectedItemColor: context.colors.textSecondary,
-          selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.8),
-          unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.8),
-          onTap: _onTabTapped,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_filled, size: 28),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_rounded, size: 28),
-              label: 'Stats',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline_rounded, size: 28),
-              label: 'Friends',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded, size: 28),
-              label: 'Profile',
-            ),
-          ],
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final Color activeColor;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.activeColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isSelected ? activeColor : _kTextSub.withOpacity(0.5);
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

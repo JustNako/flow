@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/habit.dart';
 import '../../models/habit_template.dart';
+import '../../models/ai_habit_dto.dart';
 import '../../theme/app_theme.dart';
 import '../paywall/paywall_screen.dart';
 class AddHabitScreen extends StatefulWidget {
@@ -42,8 +43,58 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         _targetController.text = args.targetDays.toString();
         _repeatType = args.repeatType;
         
-        // Find icon index
         final iconIndex = _iconOptions.indexWhere((opt) => opt.icon == args.icon);
+        if (iconIndex != -1) {
+          _selectedIconIndex = iconIndex;
+        }
+      } else if (args is AiHabitDto) {
+        _titleController.text = args.title;
+        _descriptionController.text = args.description;
+        _targetController.text = args.targetDays.toString();
+        _unitController.text = args.unit ?? '';
+        
+        int rTypeIdx = args.repeatType;
+        if (rTypeIdx >= 0 && rTypeIdx < HabitRepeatType.values.length) {
+          _repeatType = HabitRepeatType.values[rTypeIdx];
+        }
+
+        if (args.repeatDaysOfWeek != null) {
+          _daysOfWeek.addAll(args.repeatDaysOfWeek!);
+        }
+
+        if (args.repeatTimesPerPeriod != null) {
+          _timesController.text = args.repeatTimesPerPeriod.toString();
+        }
+
+        if (args.timeOfDay != null && args.timeOfDay!.toLowerCase() != 'null' && args.timeOfDay!.isNotEmpty) {
+          final timeLower = args.timeOfDay!.toLowerCase();
+          if (timeLower.contains('morning')) _selectedTime = const TimeOfDay(hour: 8, minute: 0);
+          else if (timeLower.contains('afternoon')) _selectedTime = const TimeOfDay(hour: 14, minute: 0);
+          else if (timeLower.contains('evening') || timeLower.contains('night')) _selectedTime = const TimeOfDay(hour: 20, minute: 0);
+        }
+
+        IconData findIcon(String name) {
+          switch (name) {
+            case 'fitness_center': return Icons.fitness_center;
+            case 'water_drop': return Icons.water_drop_outlined;
+            case 'book': return Icons.book_outlined;
+            case 'self_improvement': return Icons.self_improvement;
+            case 'code': return Icons.code;
+            case 'local_fire_department': return Icons.local_fire_department;
+            case 'monitor_heart': return Icons.monitor_heart_outlined;
+            case 'spa': return Icons.spa_outlined;
+            case 'directions_run': return Icons.directions_run;
+            case 'bolt': return Icons.bolt;
+            case 'directions_walk': return Icons.directions_walk;
+            case 'bedtime': return Icons.bedtime_outlined;
+            case 'restaurant': return Icons.restaurant_outlined;
+            case 'psychology': return Icons.psychology_outlined;
+            case 'savings': return Icons.savings_outlined;
+            default: return Icons.task_alt;
+          }
+        }
+        
+        final iconIndex = _iconOptions.indexWhere((opt) => opt.icon == findIcon(args.icon));
         if (iconIndex != -1) {
           _selectedIconIndex = iconIndex;
         }

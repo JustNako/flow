@@ -4,10 +4,13 @@ import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/main_screen.dart';
-import 'screens/habits/habits_screen.dart';
+import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/habits/templates_screen.dart';
 import 'screens/habits/habit_details_screen.dart';
 import 'screens/habits/add_habit_screen.dart';
+import 'screens/profile/profile_screen.dart';
+import 'screens/stats/stats_screen.dart';
+import 'screens/friends/friends_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/widget_service.dart';
 import 'services/theme_service.dart';
@@ -52,9 +55,11 @@ class MyApp extends StatelessWidget {
             '/register': (context) => const RegisterScreen(),
             '/main': (context) => const MainScreen(),
             '/templates': (context) => const TemplatesScreen(),
-            '/habits': (context) => const HabitsScreen(),
             '/habit_details': (context) => const HabitDetailsScreen(),
             '/add_habit': (context) => const AddHabitScreen(),
+            '/profile': (context) => const ProfileScreen(),
+            '/stats': (context) => const StatsScreen(),
+            '/friends': (context) => const FriendsScreen(),
           },
         );
       },
