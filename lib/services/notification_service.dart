@@ -1,4 +1,4 @@
-﻿import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +72,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         final titles = titlesStr.split(',');
         actions = [];
         for (int i = 0; i < ids.length && i < 3; i++) {
-          actions.add(AndroidNotificationAction('complete_${ids[i]}', '✅ ${titles[i]}'));
+          actions.add(AndroidNotificationAction('complete_${ids[i]}', titles[i]));
         }
       }
     }
@@ -138,7 +138,7 @@ class NotificationService {
 
     // 4. Инициализация плагина
     final iosActions = <DarwinNotificationAction>[
-      DarwinNotificationAction.plain('complete_action', '✅ Mark as Done'),
+      DarwinNotificationAction.plain('complete_action', 'Mark as Done'),
     ];
     final iosCategories = <DarwinNotificationCategory>[
       DarwinNotificationCategory('HABIT_ACTION', actions: iosActions),
@@ -183,7 +183,7 @@ class NotificationService {
           final titles = titlesStr.split(',');
           actions = [];
           for (int i = 0; i < ids.length && i < 3; i++) {
-            actions.add(AndroidNotificationAction('complete_${ids[i]}', '✅ ${titles[i]}'));
+            actions.add(AndroidNotificationAction('complete_${ids[i]}', titles[i]));
           }
         }
       }

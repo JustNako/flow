@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../services/auth_service.dart';
+import '../../services/theme_service.dart';
 import '../../api/habit_api_service.dart';
 import '../../api/api_service.dart';
 import '../../api/achievements_api_service.dart';
@@ -121,6 +123,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   int _globalStreak = 0;
   List<UserAchievementDto> _unlockedAchievements = [];
   bool _isLoading = true;
+  String _appVersion = '';
 
   @override
   void initState() {
@@ -131,6 +134,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   Future<void> loadData({bool showLoading = true}) async {
     if (showLoading) setState(() => _isLoading = true);
     try {
+      final packageInfo = await PackageInfo.fromPlatform();
       final token = await AuthService.instance.getToken();
       if (token != null) {
         final profile = await ApiService().getUserProfile(token);
@@ -144,6 +148,7 @@ class ProfileScreenState extends State<ProfileScreen> {
         }
         if (mounted) {
           setState(() {
+            _appVersion = packageInfo.version;
             _userProfile = profile;
             _totalHabits = habits.length;
             _globalStreak = streak;
@@ -527,6 +532,56 @@ class ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
+                // ── APPEARANCE Section ────────────────────────────────────────
+                _SectionLabel(label: 'APPEARANCE'),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: _kCard,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _kCardBorder),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: _kLavender.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.palette_outlined, color: _kLavender, size: 18),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              'Theme',
+                              style: GoogleFonts.inter(
+                                color: _kText,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _ThemeSegmentedControl(
+                        currentMode: ThemeService.instance.themeMode,
+                        onChanged: (mode) {
+                          ThemeService.instance.setThemeMode(mode);
+                          setState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
                 // ── SUPPORT Section ───────────────────────────────────────────
                 _SectionLabel(label: 'SUPPORT'),
                 const SizedBox(height: 10),
@@ -615,7 +670,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
                 // ── Footer ────────────────────────────────────────────────────
                 Text(
-                  'Flow v1.0 · Crafted with calm 🌿',
+                  'Flow v$_appVersion · Crafted with calm 🌿',
                   style: GoogleFonts.inter(color: _kTextSub.withOpacity(0.5), fontSize: 12),
                 ),
                 const SizedBox(height: 8),
@@ -778,3 +833,98 @@ class _SettingsRow extends StatelessWidget {
     );
   }
 }
+
+// ── Theme Segmented Control ──────────────────────────────────────────────────
+class _ThemeSegmentedControl extends StatelessWidget {
+  final ThemeMode currentMode;
+  final ValueChanged<ThemeMode> onChanged;
+
+  const _ThemeSegmentedControl({
+    required this.currentMode,
+    required this.onChanged,
+  });
+
+  static const _modes = [
+    (ThemeMode.system, Icons.brightness_auto_rounded, 'System'),
+    (ThemeMode.light, Icons.light_mode_rounded, 'Light'),
+    (ThemeMode.dark, Icons.dark_mode_rounded, 'Dark'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: _kBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final segmentWidth = constraints.maxWidth / _modes.length;
+          final selectedIndex = _modes.indexWhere((m) => m.$1 == currentMode);
+
+          return Stack(
+            children: [
+              // Animated selection pill
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                left: selectedIndex * segmentWidth + 3,
+                top: 3,
+                bottom: 3,
+                width: segmentWidth - 6,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: _kSage.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(11),
+                    border: Border.all(color: _kSage.withOpacity(0.35)),
+                  ),
+                ),
+              ),
+              // Options
+              Positioned.fill(
+                child: Row(
+                  children: _modes.map((entry) {
+                    final isSelected = entry.$1 == currentMode;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => onChanged(entry.$1),
+                        behavior: HitTestBehavior.opaque,
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 220),
+                          style: GoogleFonts.inter(
+                            color: isSelected ? _kSage : _kTextSub,
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 220),
+                                child: Icon(
+                                  entry.$2,
+                                  key: ValueKey('${entry.$3}_$isSelected'),
+                                  size: 16,
+                                  color: isSelected ? _kSage : _kTextSub,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(entry.$3),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+

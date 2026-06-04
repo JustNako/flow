@@ -34,6 +34,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
   final _offlineManager = OfflineManager.instance;
 
   List<Habit> _todayHabits = [];
+  List<Habit> _otherHabits = [];
   bool _isLoading = false;
   String? _error;
   String? _username;
@@ -80,9 +81,12 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
       final today = DateTime.now();
 
       final todayHabits = <Habit>[];
+      final otherHabits = <Habit>[];
       for (var h in habits) {
         if (h.isScheduledFor(today)) {
           todayHabits.add(h);
+        } else {
+          otherHabits.add(h);
         }
       }
 
@@ -103,8 +107,26 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
         return a.title.compareTo(b.title);
       });
 
+      otherHabits.sort((a, b) {
+        // 1. Primary sort: completed habits go to the very bottom
+        if (a.isCompletedToday != b.isCompletedToday) {
+          return a.isCompletedToday ? 1 : -1;
+        }
+        // 2. Secondary sort: chronological by timeOfDay
+        if (a.timeOfDay != null && b.timeOfDay != null) {
+          return a.timeOfDay!.compareTo(b.timeOfDay!);
+        } else if (a.timeOfDay != null) {
+          return -1;
+        } else if (b.timeOfDay != null) {
+          return 1;
+        }
+        // 3. Tertiary sort: alphabetical by title if neither has a time
+        return a.title.compareTo(b.title);
+      });
+
       setState(() {
         _todayHabits = todayHabits;
+        _otherHabits = otherHabits;
         _username = username;
       });
       
@@ -141,9 +163,33 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
             completedDays: wasCompleted ? h.completedDays - 1 : h.completedDays + 1,
           );
         }
+
+        final otherIndex = _otherHabits.indexWhere((h) => h.id == id);
+        if (otherIndex != -1) {
+          final h = _otherHabits[otherIndex];
+          final wasCompleted = h.isCompletedToday;
+          _otherHabits[otherIndex] = h.copyWith(
+            isCompletedToday: !wasCompleted,
+            completedDays: wasCompleted ? h.completedDays - 1 : h.completedDays + 1,
+          );
+        }
         
         // Silent instant re-sort
         _todayHabits.sort((a, b) {
+          if (a.isCompletedToday != b.isCompletedToday) {
+            return a.isCompletedToday ? 1 : -1;
+          }
+          if (a.timeOfDay != null && b.timeOfDay != null) {
+            return a.timeOfDay!.compareTo(b.timeOfDay!);
+          } else if (a.timeOfDay != null) {
+            return -1;
+          } else if (b.timeOfDay != null) {
+            return 1;
+          }
+          return a.title.compareTo(b.title);
+        });
+
+        _otherHabits.sort((a, b) {
           if (a.isCompletedToday != b.isCompletedToday) {
             return a.isCompletedToday ? 1 : -1;
           }
@@ -200,7 +246,10 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
 
     try {
       await _api.deleteHabit(id);
-      setState(() => _todayHabits.removeWhere((h) => h.id == id));
+      setState(() {
+        _todayHabits.removeWhere((h) => h.id == id);
+        _otherHabits.removeWhere((h) => h.id == id);
+      });
       
       int total = _todayHabits.length;
       int completed = _todayHabits.where((h) => h.isCompletedToday).length;
@@ -234,10 +283,10 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
     int completed = _todayHabits.where((h) => h.isCompletedToday).length;
     bool isAllDone = total > 0 && completed == total;
 
-    String greeting = 'Good morning 🌿';
+    String greeting = 'Good morning ';
     if (total > 0) {
-      if (isAllDone) greeting = 'Beautiful work ✨';
-      else if (completed > 0) greeting = "You're flowing 🌿";
+      if (isAllDone) greeting = 'Beautiful work ';
+      else if (completed > 0) greeting = "You're flowing ";
     }
 
     return Scaffold(
@@ -304,6 +353,21 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                       fontWeight: FontWeight.w700,
                                       height: 1.1,
                                     ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.info_outline_rounded, color: _kSage.withOpacity(0.6), size: 12),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Swipe left on a habit to view details',
+                                        style: GoogleFonts.inter(
+                                          color: _kTextSub.withOpacity(0.6),
+                                          fontSize: 11,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -427,7 +491,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                           ),
                         ),
                       )
-                    else if (_todayHabits.isEmpty)
+                    else if (_todayHabits.isEmpty && _otherHabits.isEmpty)
                       const SliverFillRemaining(
                         child: Center(
                           child: Column(
@@ -442,31 +506,94 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                           ),
                         ),
                       )
-                    else
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (ctx, i) {
-                              final habit = _todayHabits[i];
-                              return _ZenHabitCard(
-                                habit: habit,
-                                isToggling: _togglingIds.contains(habit.id),
-                                onToggle: () => _toggleHabit(habit),
-                                onDelete: () => _deleteHabit(habit),
-                                onDetails: () async {
-                                  final result = await Navigator.of(context).pushNamed(
-                                    '/habit_details',
-                                    arguments: habit,
-                                  );
-                                  if (result == true && mounted) loadData(showLoading: false);
-                                },
-                              );
-                            },
-                            childCount: _todayHabits.length,
+                    else ...[
+                      if (_todayHabits.isNotEmpty)
+                        SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (ctx, i) {
+                                final habit = _todayHabits[i];
+                                return _ZenHabitCard(
+                                  habit: habit,
+                                  isToggling: _togglingIds.contains(habit.id),
+                                  onToggle: () => _toggleHabit(habit),
+                                  onDelete: () => _deleteHabit(habit),
+                                  onDetails: () async {
+                                    final result = await Navigator.of(context).pushNamed(
+                                      '/habit_details',
+                                      arguments: habit,
+                                    );
+                                    if (result == true && mounted) loadData(showLoading: false);
+                                  },
+                                );
+                              },
+                              childCount: _todayHabits.length,
+                            ),
+                          ),
+                        )
+                      else
+                        SliverToBoxAdapter(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: _kCard.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(color: _kCardBorder),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.spa_outlined, color: _kTextSub, size: 36),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'No habits scheduled for today',
+                                  style: GoogleFonts.inter(color: _kTextSub, fontSize: 14, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+                      
+                      if (_otherHabits.isNotEmpty) ...[
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 32, 24, 12),
+                            child: Text(
+                              "Other habits",
+                              style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 22, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (ctx, i) {
+                                final habit = _otherHabits[i];
+                                return _ZenHabitCard(
+                                  habit: habit,
+                                  isToggling: _togglingIds.contains(habit.id),
+                                  onToggle: () => _toggleHabit(habit),
+                                  onDelete: () => _deleteHabit(habit),
+                                  onDetails: () async {
+                                    final result = await Navigator.of(context).pushNamed(
+                                      '/habit_details',
+                                      arguments: habit,
+                                    );
+                                    if (result == true && mounted) loadData(showLoading: false);
+                                  },
+                                );
+                              },
+                              childCount: _otherHabits.length,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: 120),
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -730,44 +857,55 @@ class _ZenHabitCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        if (habit.unit != null && habit.unit!.isNotEmpty && habit.unit!.toLowerCase() != 'null')
-                          Text('${habit.targetDays} ${habit.unit}', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kTextSub, fontSize: 13))
-                        else
-                          Text('${habit.targetDays} time${habit.targetDays > 1 ? 's' : ''}', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kTextSub, fontSize: 13)),
-                        
-                        if (habit.timeOfDay != null && habit.timeOfDay!.isNotEmpty && habit.timeOfDay!.toLowerCase() != 'null') ...[
-                          const SizedBox(width: 8),
-                          Text('|', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.1) : _kCardBorder, fontSize: 13)),
-                          const SizedBox(width: 8),
-                          Icon(Icons.access_time_rounded, size: 13, color: isDone ? _kTextSub.withOpacity(0.3) : _kSage),
-                          const SizedBox(width: 4),
-                          Text(habit.timeOfDay!, style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kSage, fontSize: 13, fontWeight: FontWeight.w600)),
-                        ],
-
-                        if (habit.completedDays > 0) ...[
-                          const SizedBox(width: 8),
-                          Text('|', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.1) : _kCardBorder, fontSize: 13)),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: _kTerra.withOpacity(isDone ? 0.05 : 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              children: [
-                                Text('🔥', style: TextStyle(fontSize: 10, color: isDone ? _kTextSub : Colors.white)),
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: habit.unit != null && habit.unit!.isNotEmpty && habit.unit!.toLowerCase() != 'null'
+                                  ? Text('${habit.targetDays} ${habit.unit}', overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kTextSub, fontSize: 13))
+                                  : Text('${habit.targetDays} time${habit.targetDays > 1 ? 's' : ''}', overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kTextSub, fontSize: 13)),
+                              ),
+                              
+                              if (habit.timeOfDay != null && habit.timeOfDay!.isNotEmpty && habit.timeOfDay!.toLowerCase() != 'null') ...[
+                                const SizedBox(width: 8),
+                                Text('|', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.1) : _kCardBorder, fontSize: 13)),
+                                const SizedBox(width: 8),
+                                Icon(Icons.access_time_rounded, size: 13, color: isDone ? _kTextSub.withOpacity(0.3) : _kSage),
                                 const SizedBox(width: 4),
-                                Text('${habit.completedDays}', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.5) : _kTerra, fontSize: 12, fontWeight: FontWeight.bold)),
+                                Flexible(child: Text(habit.timeOfDay!, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kSage, fontSize: 13, fontWeight: FontWeight.w600))),
                               ],
-                            ),
-                          )
-                        ]
+
+                              if (habit.completedDays > 0) ...[
+                                const SizedBox(width: 8),
+                                Text('|', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.1) : _kCardBorder, fontSize: 13)),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: _kTerra.withOpacity(isDone ? 0.05 : 0.15),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text('🔥', style: TextStyle(fontSize: 10, color: isDone ? _kTextSub : Colors.white)),
+                                      const SizedBox(width: 4),
+                                      Text('${habit.completedDays}', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.5) : _kTerra, fontSize: 12, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                )
+                              ]
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
+              // Visual Swipe Hint & Checkmark
+              Icon(Icons.chevron_left_rounded, color: _kTextSub.withOpacity(0.2), size: 16),
+              const SizedBox(width: 4),
               // Animated spring checkmark
               if (isToggling)
                 const SizedBox(width: 32, height: 32, child: Padding(padding: EdgeInsets.all(6), child: CircularProgressIndicator(strokeWidth: 2, color: _kSage)))

@@ -1,7 +1,14 @@
-﻿import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import '../../utils/globals.dart';
+
+const _kBg = Color(0xFF1A1A1A);
+const _kCard = Color(0xFF242424);
+const _kCardBorder = Color(0xFF2E2E2E);
+const _kSage = Color(0xFF8BA888);
+const _kLavender = Color(0xFF9F92C6);
+const _kText = Color(0xFFE8E8E8);
+const _kTextSub = Color(0xFF888888);
 
 class PaywallScreen extends StatefulWidget {
   const PaywallScreen({super.key});
@@ -10,32 +17,15 @@ class PaywallScreen extends StatefulWidget {
   State<PaywallScreen> createState() => _PaywallScreenState();
 }
 
-class _PaywallScreenState extends State<PaywallScreen>
-    with SingleTickerProviderStateMixin {
+class _PaywallScreenState extends State<PaywallScreen> {
   bool _isLoading = false;
   Offerings? _offerings;
   Package? _selectedPackage;
 
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
     _loadOfferings();
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
   }
 
   /// Fetches available subscription packages from RevenueCat.
@@ -65,54 +55,85 @@ class _PaywallScreenState extends State<PaywallScreen>
     if (_selectedPackage == null) return;
     setState(() => _isLoading = true);
     try {
-      final CustomerInfo customerInfo = await Purchases.purchasePackage(_selectedPackage!);
-      final isActive = customerInfo.entitlements.active.containsKey('pro');
+      await Purchases.purchasePackage(_selectedPackage!);
 
       if (mounted) {
         // Show success dialog regardless of entitlement status.
-        // In sandbox/test mode entitlements may not activate instantly.
         await showDialog(
             context: context,
             barrierDismissible: false,
             builder: (_) => AlertDialog(
-              backgroundColor: const Color(0xFF161A22),
+              backgroundColor: _kCard,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE8845C), Color(0xFFC96B42)],
+                      gradient: LinearGradient(
+                        colors: [_kLavender, _kSage],
                       ),
                     ),
                     child: const Icon(Icons.workspace_premium, color: Colors.white, size: 48),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Welcome to PRO! 🎉',
+                  Text('Welcome to PRO! 🎉',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                      style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('All premium features are now unlocked.',
+                  Text('All premium features are now unlocked.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 14)),
+                      style: GoogleFonts.inter(color: _kTextSub, fontSize: 14)),
                   const SizedBox(height: 24),
-                  SizedBox(
+                  Container(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE8845C),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: const LinearGradient(
+                        colors: [_kLavender, _kSage],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
                       ),
-                      onPressed: () {
-                        Navigator.of(context).pop(); // close dialog
-                        Navigator.of(context).pop(true); // close paywall, return true = purchased
-                      },
-                      child: const Text('Start using PRO →',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _kSage.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).pop(); // close dialog
+                          Navigator.of(context).pop(true); // close paywall, return true = purchased
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Start using PRO',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -122,10 +143,8 @@ class _PaywallScreenState extends State<PaywallScreen>
       }
     } on PurchasesErrorCode catch (e) {
       if (e == PurchasesErrorCode.purchaseCancelledError) {
-        // User cancelled — silently ignore
         return;
       }
-      // Show user-friendly error for all other cases
       if (mounted) _showPurchaseError(e);
     } catch (e) {
       if (mounted) {
@@ -138,39 +157,32 @@ class _PaywallScreenState extends State<PaywallScreen>
 
   void _showPurchaseError(PurchasesErrorCode code) {
     final message = switch (code) {
-      PurchasesErrorCode.purchaseNotAllowedError =>
-        'Purchases are not allowed on this device.',
-      PurchasesErrorCode.networkError =>
-        'No internet connection. Please check your network and try again.',
-      PurchasesErrorCode.paymentPendingError =>
-        'Your payment is pending. Please complete it in Google Play.',
-      PurchasesErrorCode.productAlreadyPurchasedError =>
-        'You already own this subscription!',
-      PurchasesErrorCode.storeProblemError =>
-        'Google Play is unavailable right now. Please try again later.',
-      PurchasesErrorCode.purchaseInvalidError =>
-        'The purchase could not be completed. Please try a different payment method.',
+      PurchasesErrorCode.purchaseNotAllowedError => 'Purchases are not allowed on this device.',
+      PurchasesErrorCode.networkError => 'No internet connection. Please check your network and try again.',
+      PurchasesErrorCode.paymentPendingError => 'Your payment is pending. Please complete it in Google Play.',
+      PurchasesErrorCode.productAlreadyPurchasedError => 'You already own this subscription!',
+      PurchasesErrorCode.storeProblemError => 'Google Play is unavailable right now. Please try again later.',
+      PurchasesErrorCode.purchaseInvalidError => 'The purchase could not be completed. Please try a different payment method.',
       _ => 'Payment failed. Please try again.',
     };
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF161A22),
+        backgroundColor: _kCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.error_outline, color: Color(0xFFFF5252)),
-            SizedBox(width: 8),
-            Text('Payment Failed', style: TextStyle(color: Colors.white, fontSize: 18)),
+            const Icon(Icons.error_outline, color: Color(0xFFFF5252)),
+            const SizedBox(width: 8),
+            Text('Payment Failed', style: GoogleFonts.inter(color: _kText, fontSize: 18)),
           ],
         ),
-        content: Text(message,
-            style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 14, height: 1.5)),
+        content: Text(message, style: GoogleFonts.inter(color: _kTextSub, fontSize: 14, height: 1.5)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK', style: TextStyle(color: Color(0xFFE8845C))),
+            child: Text('OK', style: GoogleFonts.inter(color: _kSage)),
           ),
         ],
       ),
@@ -180,8 +192,7 @@ class _PaywallScreenState extends State<PaywallScreen>
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message.replaceAll('Exception: ', ''),
-            style: const TextStyle(color: Colors.white)),
+        content: Text(message.replaceAll('Exception: ', ''), style: GoogleFonts.inter(color: Colors.white)),
         backgroundColor: const Color(0xFFFF5252),
       ),
     );
@@ -192,300 +203,296 @@ class _PaywallScreenState extends State<PaywallScreen>
     final packages = _offerings?.current?.availablePackages ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: _kBg,
       body: Stack(
         children: [
-          // Background Glows
+          // Ambient Glow Background
           Positioned(
-            top: -100,
-            right: -100,
+            top: -150,
+            left: 0,
+            right: 0,
             child: Container(
-              width: 300,
-              height: 300,
+              height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [
-                  const Color(0xFFE8845C).withOpacity(0.3),
-                  Colors.transparent
-                ]),
+                gradient: RadialGradient(
+                  colors: [
+                    _kLavender.withOpacity(0.12),
+                    _kSage.withOpacity(0.05),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
               ),
             ),
           ),
-          Positioned(
-            bottom: -50,
-            left: -100,
-            child: Container(
-              width: 350,
-              height: 350,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [
-                  const Color(0xFFFF512F).withOpacity(0.2),
-                  Colors.transparent
-                ]),
-              ),
-            ),
-          ),
-
+          
           SafeArea(
             child: Column(
               children: [
+                // Top Action Bar
                 Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
-                    icon: const Icon(Icons.close, color: Color(0xFF8A8F9E)),
+                    icon: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: _kCard,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _kCardBorder),
+                      ),
+                      child: const Icon(Icons.close_rounded, color: _kTextSub, size: 18),
+                    ),
                     onPressed: () => Navigator.of(context).pop(false),
                   ),
                 ),
 
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        ScaleTransition(
-                          scale: _pulseAnimation,
-                          child: Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFE8845C),
-                                  Color(0xFFC96B42)
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                        const SizedBox(height: 16),
+                        
+                        // "FLOW PRO" Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _kLavender.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: _kLavender.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star_rounded, color: _kLavender, size: 14),
+                              const SizedBox(width: 6),
+                              Text(
+                                'FLOW PRO',
+                                style: GoogleFonts.inter(
+                                  color: _kLavender,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      const Color(0xFFE8845C).withOpacity(0.5),
-                                  blurRadius: 30,
-                                  spreadRadius: 5,
-                                )
-                              ],
-                            ),
-                            child: const Icon(Icons.workspace_premium,
-                                color: Colors.white, size: 64),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 32),
-                        const Text('Habit Tracker',
-                            style: TextStyle(
-                                color: Color(0xFF8A8F9E),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 2)),
-                        const SizedBox(height: 8),
-                        const Text('Unlock PRO',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 24),
+
+                        // Title
+                        Text(
+                          'Deepen Your\nPractice',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.playfairDisplay(
+                            color: _kText,
+                            fontSize: 42,
+                            fontWeight: FontWeight.bold,
+                            height: 1.1,
+                          ),
+                        ),
                         const SizedBox(height: 16),
 
-                        // Animated Demo Chart
-                        Container(
-                          height: 120,
-                          width: double.infinity,
-                          margin:
-                              const EdgeInsets.symmetric(vertical: 20),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.03),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.05)),
+                        // Subtitle
+                        Text(
+                          'Everything you need to build habits\nthat actually last.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            color: _kTextSub,
+                            fontSize: 15,
+                            height: 1.5,
                           ),
-                          child: LineChart(
-                            LineChartData(
-                              minX: 0,
-                              maxX: 6,
-                              minY: 0,
-                              maxY: 10,
-                              lineBarsData: [
-                                LineChartBarData(
-                                  spots: const [
-                                    FlSpot(0, 3),
-                                    FlSpot(1, 7),
-                                    FlSpot(2, 4),
-                                    FlSpot(3, 8),
-                                    FlSpot(4, 5),
-                                    FlSpot(5, 9),
-                                    FlSpot(6, 7),
-                                  ],
-                                  isCurved: true,
-                                  color: const Color(0xFFE8845C),
-                                  barWidth: 4,
-                                  isStrokeCapRound: true,
-                                  dotData: const FlDotData(show: false),
-                                  belowBarData: BarAreaData(
-                                    show: true,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        const Color(0xFFE8845C)
-                                            .withOpacity(0.2),
-                                        Colors.transparent
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Bento Grid Features
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Feature 1: Unlimited Habits
+                            Expanded(
+                              child: _buildBentoFeature(
+                                icon: Icons.all_inclusive_rounded,
+                                iconColor: _kSage,
+                                title: 'Unlimited Habits',
+                                subtitle: 'Track as many habits as you want, no limits.',
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // Feature 2: AI Habit Generator
+                            Expanded(
+                              child: _buildBentoFeature(
+                                icon: Icons.auto_awesome_rounded,
+                                iconColor: _kLavender,
+                                title: 'AI Habit Generator',
+                                subtitle: '5 personalized sparks every day.',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Feature 3: AI Habit Coach
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: _kCard,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: _kLavender.withOpacity(0.15)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _kLavender.withOpacity(0.03),
+                                blurRadius: 20,
+                                spreadRadius: 5,
+                              )
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: _kLavender.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: _kLavender.withOpacity(0.2)),
+                                    ),
+                                    child: const Icon(Icons.psychology_rounded, color: _kLavender, size: 24),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          'AI Habit Coach',
+                                          style: GoogleFonts.inter(
+                                            color: _kText,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: _kLavender.withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            'NEW',
+                                            style: GoogleFonts.inter(
+                                              color: _kLavender,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ),
                                       ],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
                                     ),
                                   ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'A mindful AI that understands your patterns, offers gentle nudges, and celebrates your wins — like a coach who truly knows you.',
+                                style: GoogleFonts.inter(
+                                  color: _kTextSub,
+                                  fontSize: 13,
+                                  height: 1.5,
                                 ),
-                              ],
-                              titlesData:
-                                  const FlTitlesData(show: false),
-                              gridData: const FlGridData(show: false),
-                              borderData: FlBorderData(show: false),
-                            ),
-                            duration: const Duration(milliseconds: 1500),
-                            curve: Curves.elasticOut,
+                              ),
+                              const SizedBox(height: 20),
+                              _buildCoachListItem('Daily personalized check-ins'),
+                              const SizedBox(height: 12),
+                              _buildCoachListItem('Pattern recognition & insights'),
+                              const SizedBox(height: 12),
+                              _buildCoachListItem('Adaptive streaks & gentle reminders'),
+                            ],
                           ),
                         ),
+                        const SizedBox(height: 40),
 
-                        const Text(
-                          'Take your habits to the next level with unlimited access to all features.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Color(0xFF8A8F9E),
-                              fontSize: 15,
-                              height: 1.5),
+                        // Subscription Tiers
+                        if (_isLoading && packages.isEmpty)
+                          const Center(child: CircularProgressIndicator(color: _kSage))
+                        else if (packages.isEmpty)
+                          Text('Plans unavailable. Please try again.', style: GoogleFonts.inter(color: _kTextSub))
+                        else
+                          Column(
+                            children: packages.map((pkg) => _buildPlanOption(pkg, packages)).toList(),
+                          ),
+
+                        const SizedBox(height: 24),
+
+                        // Main Subscribe Button
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            gradient: const LinearGradient(
+                              colors: [_kLavender, _kSage],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _kSage.withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: (_isLoading || _selectedPackage == null) ? null : _purchaseSelectedPackage,
+                              borderRadius: BorderRadius.circular(24),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          width: 24, height: 24,
+                                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                      : Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(Icons.bolt_rounded, color: Colors.white, size: 20),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Unlock Flow Pro',
+                                              style: GoogleFonts.inter(
+                                                color: Colors.white,
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-
-                        const SizedBox(height: 32),
-
-                        _buildFeatureRow(Icons.all_inclusive,
-                            'Unlimited Habits',
-                            'Create as many habits as you want.'),
-                        const SizedBox(height: 20),
-                        _buildFeatureRow(Icons.query_stats,
-                            'Advanced Analytics',
-                            'Access monthly & weekly progress charts.'),
-                        const SizedBox(height: 20),
-                        _buildFeatureRow(
-                            Icons.auto_awesome,
-                            'AI Habit Generator',
-                            'Create personalized routines in seconds using AI.',
-                            highlight: true),
-                        const SizedBox(height: 20),
-                        _buildFeatureRow(
-                            Icons.psychology,
-                            'AI Habit Coach',
-                            'Get personalized weekly insights powered by AI.'),
-
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Cancel anytime. No commitment.',
+                          style: GoogleFonts.inter(
+                            color: _kTextSub.withOpacity(0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
                       ],
                     ),
                   ),
-                ),
-
-                // Subscription Selection Section
-                Container(
-                  padding:
-                      const EdgeInsets.fromLTRB(24, 24, 24, 32),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161A22),
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(32)),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, -5))
-                    ],
-                  ),
-                  child: _isLoading && packages.isEmpty
-                      ? const Center(
-                          child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child:
-                              CircularProgressIndicator(color: Color(0xFFE8845C)),
-                        ))
-                      : Column(
-                          children: [
-                            if (packages.isEmpty)
-                              const Text('Plans unavailable. Please try again.',
-                                  style: TextStyle(color: Color(0xFF8A8F9E)))
-                            else
-                              Wrap(
-                                spacing: 16,
-                                runSpacing: 12,
-                                children: packages.map((pkg) {
-                                  // Determine a badge for the best-value plan
-                                  final badge = pkg.packageType ==
-                                          PackageType.annual
-                                      ? 'BEST VALUE'
-                                      : null;
-                                  return SizedBox(
-                                    width:
-                                        (MediaQuery.of(context).size.width -
-                                                64) /
-                                            2,
-                                    child: _buildPlanCard(pkg, badge: badge),
-                                  );
-                                }).toList(),
-                              ),
-                            const SizedBox(height: 24),
-
-                            // Purchase Button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: ElevatedButton(
-                                onPressed: (_isLoading || _selectedPackage == null)
-                                    ? null
-                                    : _purchaseSelectedPackage,
-                                style: ElevatedButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16)),
-                                  elevation: 0,
-                                ),
-                                child: Ink(
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(colors: [
-                                      Color(0xFFE8845C),
-                                      Color(0xFFC96B42)
-                                    ]),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                          color: const Color(0xFFE8845C)
-                                              .withOpacity(0.4),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 5))
-                                    ],
-                                  ),
-                                  child: Container(
-                                    alignment: Alignment.center,
-                                    child: _isLoading
-                                        ? const SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2))
-                                        : Text(
-                                            _selectedPackage != null
-                                                ? 'Subscribe – ${_selectedPackage!.storeProduct.priceString}'
-                                                : 'Subscribe',
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            const Text('Cancel anytime in Google Play settings',
-                                style: TextStyle(
-                                    color: Color(0xFF4A4E5A), fontSize: 12)),
-                          ],
-                        ),
                 ),
               ],
             ),
@@ -495,21 +502,111 @@ class _PaywallScreenState extends State<PaywallScreen>
     );
   }
 
-  Widget _buildPlanCard(Package pkg, {String? badge}) {
+  Widget _buildBentoFeature({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _kCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: iconColor.withOpacity(0.2)),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              color: _kText,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: GoogleFonts.inter(
+              color: _kTextSub,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoachListItem(String text) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _kLavender.withOpacity(0.15),
+          ),
+          child: const Icon(Icons.check_rounded, color: _kLavender, size: 12),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              color: _kTextSub,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlanOption(Package pkg, List<Package> allPackages) {
     final isSelected = _selectedPackage?.identifier == pkg.identifier;
     final product = pkg.storeProduct;
 
-    // Human-readable period label
     String period;
+    String? subtitle;
+    String? badge;
+
     switch (pkg.packageType) {
       case PackageType.monthly:
         period = 'Monthly';
+        subtitle = 'per month';
         break;
       case PackageType.annual:
-        period = 'Yearly';
+        period = 'Annual';
+        subtitle = 'billed ${product.priceString}/yr';
+        
+        // Dynamically calculate savings compared to monthly plan
+        final monthlyPkg = allPackages.where((p) => p.packageType == PackageType.monthly).firstOrNull;
+        if (monthlyPkg != null && monthlyPkg.storeProduct.price > 0) {
+          final annualPrice = product.price;
+          final monthlyPrice = monthlyPkg.storeProduct.price;
+          final yearlyCostWithMonthly = monthlyPrice * 12;
+          if (annualPrice < yearlyCostWithMonthly) {
+            final savings = ((1 - (annualPrice / yearlyCostWithMonthly)) * 100).round();
+            badge = 'Save $savings%';
+          }
+        }
         break;
       case PackageType.weekly:
         period = 'Weekly';
+        subtitle = 'per week';
         break;
       default:
         period = product.title;
@@ -519,143 +616,93 @@ class _PaywallScreenState extends State<PaywallScreen>
       onTap: () => setState(() => _selectedPackage = pkg),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFFE8845C).withOpacity(0.1)
-              : Colors.white.withOpacity(0.02),
+          color: isSelected ? _kCard : _kBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFFE8845C)
-                : Colors.white.withOpacity(0.05),
-            width: isSelected ? 2 : 1,
+            color: isSelected ? _kLavender : _kCardBorder,
+            width: isSelected ? 1.5 : 1,
           ),
         ),
-        child: Stack(
-          clipBehavior: Clip.none,
+        child: Row(
           children: [
-            Column(
-              children: [
-                Text(period,
-                    style: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : const Color(0xFF8A8F9E),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                Text(product.priceString,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
-              ],
-            ),
-            if (badge != null)
-              Positioned(
-                top: -26,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [
-                        Color(0xFF00E676),
-                        Color(0xFF00C853)
-                      ]),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(badge,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold)),
-                  ),
+            // Radio Button
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? _kLavender : _kTextSub.withOpacity(0.3),
+                  width: isSelected ? 6 : 1.5,
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureRow(IconData icon, String title, String subtitle,
-      {bool highlight = false}) {
-    return Container(
-      padding: highlight ? const EdgeInsets.all(16) : EdgeInsets.zero,
-      decoration: highlight
-          ? BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: const Color(0xFFE8845C).withOpacity(0.5)),
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFFE8845C).withOpacity(0.08),
-                  const Color(0xFFC96B42).withOpacity(0.05)
+            ),
+            const SizedBox(width: 16),
+            
+            // Plan Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 10,
+                    runSpacing: 4,
+                    children: [
+                      Text(
+                        period,
+                        style: GoogleFonts.inter(
+                          color: _kText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (badge != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _kLavender.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            badge,
+                            style: GoogleFonts.inter(
+                              color: _kLavender,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.inter(
+                        color: _kTextSub,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ],
               ),
-            )
-          : null,
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: highlight
-                  ? const Color(0xFFE8845C).withOpacity(0.25)
-                  : const Color(0xFFE8845C).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: const Color(0xFFE8845C), size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(title,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600)),
-                    if (highlight) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [
-                            Color(0xFFE8845C),
-                            Color(0xFFC96B42)
-                          ]),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text('NEW',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1)),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(subtitle,
-                    style: const TextStyle(
-                        color: Color(0xFF8A8F9E),
-                        fontSize: 13,
-                        height: 1.4)),
-              ],
+            
+            // Price
+            Text(
+              product.priceString,
+              style: GoogleFonts.inter(
+                color: _kText,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

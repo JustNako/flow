@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/habit.dart';
 import '../models/ai_habit_dto.dart';
+import '../models/ai_insights_response.dart';
 import 'api_service.dart';
 import '../services/auth_service.dart';
 
@@ -242,7 +243,7 @@ class HabitApiService {
 
   // ─── GET /habits/ai-insights ──────────────────────────────────────────────
 
-  Future<List<String>> getAiInsights() async {
+  Future<AiInsightsResponse> getAiInsights() async {
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/habits/ai-insights'),
@@ -250,8 +251,7 @@ class HabitApiService {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as List<dynamic>;
-        return data.map((e) => e.toString()).toList();
+        return AiInsightsResponse.fromJson(jsonDecode(response.body));
       }
       
       if (response.statusCode == 403) {

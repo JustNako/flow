@@ -105,7 +105,7 @@ class ShareService {
                         children: [
                           pw.Text("COACH'S INSIGHT", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey800)),
                           pw.SizedBox(height: 8),
-                          pw.Text(aiInsight, style: const pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic)),
+                          pw.Text(aiInsight, style: pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic)),
                         ],
                       ),
                     ),

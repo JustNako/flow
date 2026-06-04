@@ -1,10 +1,21 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/habit.dart';
 import '../../services/local_database.dart';
 import '../../services/sync_service.dart';
 import '../../theme/app_theme.dart';
+
+const _kBg = Color(0xFF1A1A1A);
+const _kCard = Color(0xFF242424);
+const _kCardBorder = Color(0xFF2E2E2E);
+const _kSage = Color(0xFF8BA888);
+const _kLavender = Color(0xFF9F92C6);
+const _kTerra = Color(0xFFD68C7A);
+const _kText = Color(0xFFE8E8E8);
+const _kTextSub = Color(0xFF888888);
 
 class HabitDetailsScreen extends StatefulWidget {
   const HabitDetailsScreen({super.key});
@@ -13,8 +24,7 @@ class HabitDetailsScreen extends StatefulWidget {
   State<HabitDetailsScreen> createState() => _HabitDetailsScreenState();
 }
 
-class _HabitDetailsScreenState extends State<HabitDetailsScreen>
-    with SingleTickerProviderStateMixin {
+class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
   final _api = HabitApiService.instance;
 
   late Habit _habit;
@@ -28,13 +38,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
   List<Map<String, dynamic>> _heatmap = [];
   bool _loadingStats = true;
 
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
+  int _selectedTab = 0;
 
   @override
   void didChangeDependencies() {
@@ -44,12 +48,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
       _loadAllData();
       _initialized = true;
     }
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadAllData() async {
@@ -76,11 +74,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
 
   Future<void> _toggleHabit() async {
     if (_habit.id == null || _isToggling) return;
-    
+
     final wasCompleted = _habit.isCompletedToday;
     int newCompletedDays = wasCompleted ? _habit.completedDays - 1 : _habit.completedDays + 1;
     if (newCompletedDays < 0) newCompletedDays = 0;
-    
+
     final originalHabit = _habit;
 
     setState(() {
@@ -106,16 +104,16 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
 
   Future<void> _toggleVisibility() async {
     if (_habit.id == null) return;
-    
+
     final wasPublic = _habit.isPublic;
-    
+
     setState(() {
       _habit = _habit.copyWith(isPublic: !wasPublic);
     });
 
     try {
       await _api.toggleVisibility(_habit.id!);
-      
+
       // Update local db
       final localHabit = await LocalDatabase.instance.getHabit(_habit.id!);
       if (localHabit != null) {
@@ -126,6 +124,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
         ));
         SyncService.instance.sync(); // Trigger background sync
       }
+      _showSnack(_habit.isPublic ? 'Habit is now visible to friends' : 'Habit is now private');
     } catch (e) {
       if (mounted) {
         setState(() => _habit = _habit.copyWith(isPublic: wasPublic));
@@ -138,21 +137,21 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.colors.card,
+        backgroundColor: _kCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Delete Habit?', style: TextStyle(color: context.colors.textPrimary, fontSize: 18)),
+        title: Text('Delete Habit?', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.bold)),
         content: Text(
           'This will permanently delete the habit and all its history.',
-          style: TextStyle(color: context.colors.textSecondary, fontSize: 14, height: 1.5),
+          style: GoogleFonts.inter(color: _kTextSub, fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel', style: TextStyle(color: context.colors.textSecondary)),
+            child: Text('Cancel', style: GoogleFonts.inter(color: _kTextSub)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete', style: TextStyle(color: Color(0xFFFF5252), fontWeight: FontWeight.w600)),
+            child: Text('Delete', style: GoogleFonts.inter(color: _kTerra, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -174,7 +173,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
 
   Future<void> _updateNotes(String newNotes) async {
     if (_habit.id == null) return;
-    
+
     final oldNotes = _habit.notes;
     setState(() {
       _habit = _habit.copyWith(notes: newNotes);
@@ -193,50 +192,23 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
 
   void _showSnack(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: isError ? Colors.red.shade700 : const Color(0xFF1F3A2E),
+      content: Text(msg, style: GoogleFonts.inter(color: isError ? Colors.white : Colors.black)),
+      backgroundColor: isError ? _kTerra : _kSage,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ));
   }
 
-  // ─── Helpers ────────────────────────────────────────────────────────────────
-  static const List<List<Color>> _gradients = [
-    [Color(0xFF00B4DB), Color(0xFF0083B0)],
-    [Color(0xFFFF512F), Color(0xFFDD2476)],
-    [Color(0xFFE8845C), Color(0xFFC96B42)],
-    [Color(0xFF4776E6), Color(0xFFC96B42)],
-    [Color(0xFF11998E), Color(0xFF38EF7D)],
-    [Color(0xFFFFB75E), Color(0xFFED8F03)],
-  ];
-
-  LinearGradient get _gradient {
-    final colors = _gradients[_habit.title.length % _gradients.length];
-    return LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight);
-  }
-
-  IconData get _icon {
-    final l = _habit.title.toLowerCase();
-    if (l.contains('water')) return Icons.water_drop_outlined;
-    if (l.contains('workout') || l.contains('gym')) return Icons.fitness_center;
-    if (l.contains('read') || l.contains('book')) return Icons.book_outlined;
-    if (l.contains('sleep') || l.contains('rest')) return Icons.nights_stay_outlined;
-    if (l.contains('code') || l.contains('program')) return Icons.code;
-    if (l.contains('meditat') || l.contains('mind')) return Icons.self_improvement;
-    if (l.contains('run') || l.contains('walk')) return Icons.directions_run;
-    return Icons.task_alt;
-  }
-
   String get _repeatLabel {
     switch (_habit.repeatType) {
-      case HabitRepeatType.everyDay: return 'Every day';
+      case HabitRepeatType.everyDay: return 'Daily';
       case HabitRepeatType.specificDaysOfWeek:
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         final sel = _habit.repeatDaysOfWeek?.map((d) => days[d % 7]).join(', ') ?? '';
-        return sel.isEmpty ? 'Specific days of week' : sel;
+        return sel.isEmpty ? 'Weekly' : sel;
       case HabitRepeatType.specificDaysOfMonth:
         final dStr = _habit.repeatDaysOfMonth?.join(', ') ?? '';
-        return dStr.isEmpty ? 'Specific days of month' : 'Each month: $dStr';
+        return dStr.isEmpty ? 'Monthly' : 'Each month: $dStr';
       case HabitRepeatType.xTimesPerPeriod:
         final t = _habit.repeatTimesPerPeriod ?? '?';
         final p = _habit.repeatPeriod == HabitRepeatPeriod.week ? 'week' : 'month';
@@ -244,334 +216,21 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      body: _isDeleting
-          ? Center(child: CircularProgressIndicator(color: context.colors.primary))
-          : NestedScrollView(
-              headerSliverBuilder: (_, __) => [_buildSliverAppBar()],
-              body: Column(
-                children: [
-                  _buildTabBar(),
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [_buildOverviewTab(), _buildHistoryTab()],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  // ─── Sliver AppBar ─────────────────────────────────────────────────────────
-  Widget _buildSliverAppBar() {
-    final isDone = _habit.isCompletedToday;
-    return SliverAppBar(
-      expandedHeight: 280,
-      floating: false,
-      pinned: true,
-      backgroundColor: context.colors.background,
-      elevation: 0,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.delete_outline, color: context.colors.danger),
-          onPressed: _deleteHabit,
-          tooltip: 'Delete',
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        collapseMode: CollapseMode.parallax,
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                _gradient.colors.first.withOpacity(0.2),
-                context.colors.background,
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      // Icon
-                      Container(
-                        width: 64, height: 64,
-                        decoration: BoxDecoration(
-                          gradient: _gradient,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(color: _gradient.colors.first.withOpacity(0.4),
-                                blurRadius: 16, offset: const Offset(0, 4))
-                          ],
-                        ),
-                        child: Icon(_icon, color: Colors.white, size: 32),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(_habit.title,
-                              style: TextStyle(color: context.colors.textPrimary, fontSize: 22,
-                                  fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(Icons.repeat, size: 13, color: _gradient.colors.first),
-                                const SizedBox(width: 4),
-                                Text(_repeatLabel,
-                                  style: TextStyle(color: _gradient.colors.first, fontSize: 13)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  // Quick stats row
-                  Row(
-                    children: [
-                      _quickStat(_loadingStats ? '…' : '$_streak', 'Streak', Icons.local_fire_department,
-                          const Color(0xFFFF7A55)),
-                      const SizedBox(width: 12),
-                      _quickStat('${_habit.completedDays}', 'Completed', Icons.check_circle_outline,
-                          const Color(0xFF00E676)),
-                      const SizedBox(width: 12),
-                      _quickStat(
-                        _habit.targetDays > 0 ? '${_habit.targetDays}' : '∞',
-                        'Target', Icons.flag_outlined, const Color(0xFFC96B42)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _quickStat(String value, String label, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(height: 6),
-            Text(value,
-              style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold, height: 1)),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 11)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── TabBar ────────────────────────────────────────────────────────────────
-  Widget _buildTabBar() {
-    return Container(
-      color: context.colors.background,
-      child: TabBar(
-        controller: _tabController,
-        indicatorColor: _gradient.colors.first,
-        indicatorWeight: 2,
-        labelColor: context.colors.textPrimary,
-        unselectedLabelColor: context.colors.textSecondary,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        tabs: const [
-          Tab(text: 'Overview'),
-          Tab(text: 'History'),
-        ],
-      ),
-    );
-  }
-
-  // ─── Overview Tab ──────────────────────────────────────────────────────────
-  Widget _buildOverviewTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildToggleButton(),
-          const SizedBox(height: 16),
-          _buildVisibilityToggle(),
-          const SizedBox(height: 20),
-          if (_habit.description?.isNotEmpty == true) ...[
-            _buildInfoCard(Icons.notes_outlined, 'About this Habit', _habit.description!),
-            const SizedBox(height: 16),
-          ],
-          _buildInfoCard(
-            Icons.edit_note_outlined,
-            'Personal Notes',
-            _habit.notes?.isEmpty ?? true ? 'Tap to add notes...' : _habit.notes!,
-            onTap: () => _showEditNotesDialog(),
-          ),
-          const SizedBox(height: 16),
-          _buildScheduleCard(),
-          const SizedBox(height: 16),
-          _buildProgressCard(),
-          if (_heatmap.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            _buildHeatmapCard(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ─── Mark as Done Button ───────────────────────────────────────────────────
-  Widget _buildToggleButton() {
-    final isDone = _habit.isCompletedToday;
-    return GestureDetector(
-      onTap: _toggleHabit,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          color: isDone ? context.colors.success.withOpacity(0.1) : null,
-          gradient: isDone ? null : LinearGradient(colors: _gradient.colors),
-          border: isDone ? Border.all(color: context.colors.success.withOpacity(0.3)) : null,
-          boxShadow: isDone ? [] : [
-            BoxShadow(color: _gradient.colors.first.withOpacity(0.4),
-                blurRadius: 20, offset: const Offset(0, 6))
-          ],
-        ),
-        alignment: Alignment.center,
-        child: _isToggling
-            ? const SizedBox(width: 24, height: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: isDone ? context.colors.success : Colors.white, size: 22,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    isDone ? 'Completed Today ✓' : 'Mark as Done',
-                    style: TextStyle(
-                      color: isDone ? context.colors.success : Colors.white,
-                      fontSize: 16, fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  // ─── Visibility Toggle ─────────────────────────────────────────────────────
-  Widget _buildVisibilityToggle() {
-    return _card(
-      child: Row(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _habit.isPublic
-                  ? context.colors.success.withOpacity(0.15)
-                  : context.colors.textSecondary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              _habit.isPublic ? Icons.people_outline : Icons.lock_outline,
-              color: _habit.isPublic ? context.colors.success : context.colors.textSecondary,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _habit.isPublic ? 'Visible to Friends' : 'Private',
-                  style: TextStyle(
-                    color: _habit.isPublic ? context.colors.textPrimary : context.colors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _habit.isPublic
-                      ? 'Friends can see this habit'
-                      : 'Only you can see this habit',
-                  style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: _habit.isPublic,
-            onChanged: (v) => _toggleVisibility(),
-            activeColor: context.colors.success,
-            inactiveThumbColor: context.colors.textSecondary,
-            inactiveTrackColor: context.colors.cardSecondary,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Info Card (Description/Notes) ────────────────────────────────────────
-  Widget _buildInfoCard(IconData icon, String title, String content, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: _card(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _cardTitle(icon, title),
-                if (onTap != null) ...[
-                  const Spacer(),
-                  const Icon(Icons.edit_outlined, color: Color(0xFF8A8F9E), size: 16),
-                ],
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              content,
-              style: TextStyle(
-                color: content.contains('Tap to add') ? context.colors.textSecondary.withOpacity(0.6) : context.colors.textPrimary,
-                fontSize: 14,
-                height: 1.6,
-                fontStyle: content.contains('Tap to add') ? FontStyle.italic : FontStyle.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  bool _isDateCompleted(DateTime date) {
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    for (final entry in _heatmap) {
+      final entryDateStr = entry['date'] as String?;
+      if (entryDateStr != null) {
+        try {
+          final parsed = DateTime.parse(entryDateStr);
+          final parsedOnly = DateTime(parsed.year, parsed.month, parsed.day);
+          if (dateOnly.isAtSameMomentAs(parsedOnly)) {
+            return (entry['value'] as int?) == 1;
+          }
+        } catch (_) {}
+      }
+    }
+    return false;
   }
 
   void _showEditNotesDialog() {
@@ -579,347 +238,1100 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.colors.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Personal Notes', style: TextStyle(color: context.colors.textPrimary, fontSize: 18)),
+        backgroundColor: _kCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('Personal Notes', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.bold)),
         content: TextField(
           controller: controller,
           maxLines: 5,
-          style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
+          style: GoogleFonts.inter(color: _kText, fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Enter your notes here...',
-            hintStyle: TextStyle(color: context.colors.textSecondary.withOpacity(0.6)),
+            hintStyle: GoogleFonts.inter(color: _kTextSub.withValues(alpha: 0.5)),
             filled: true,
-            fillColor: context.colors.background,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            fillColor: _kBg,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: TextStyle(color: context.colors.textSecondary)),
+            child: Text('Cancel', style: GoogleFonts.inter(color: _kTextSub)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _updateNotes(controller.text.trim());
             },
-            child: const Text('Save', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold)),
+            child: Text('Save', style: GoogleFonts.inter(color: _kSage, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-  // ─── Schedule Card ─────────────────────────────────────────────────────────
-  Widget _buildScheduleCard() {
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _cardTitle(Icons.schedule_outlined, 'Schedule'),
-          const SizedBox(height: 16),
-          _scheduleRow(Icons.repeat, 'Frequency', _repeatLabel),
-          if (_habit.targetDays > 0) ...[
-            const SizedBox(height: 10),
-            _scheduleRow(Icons.flag_outlined, 'Daily Goal', '${_habit.targetDays} ${_habit.unit ?? ''}'.trim() + ' / day'),
-          ],
-          if (_habit.repeatType == HabitRepeatType.specificDaysOfWeek &&
-              (_habit.repeatDaysOfWeek?.isNotEmpty ?? false)) ...[
-            const SizedBox(height: 16),
-            _buildDayChips(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _scheduleRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: context.colors.textSecondary, size: 18),
-        const SizedBox(width: 10),
-        Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 14)),
-        const Spacer(),
-        Text(value, style: TextStyle(color: context.colors.textPrimary, fontSize: 14,
-            fontWeight: FontWeight.w500)),
-      ],
-    );
-  }
-
-  Widget _buildDayChips() {
-    const labels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(7, (i) {
-        final d = (i + 1) % 7;
-        final isActive = _habit.repeatDaysOfWeek?.contains(d) ?? false;
-        return Container(
-          width: 38, height: 38,
-          decoration: BoxDecoration(
-            color: isActive ? _gradient.colors.first : context.colors.iconBg,
-            borderRadius: BorderRadius.circular(10),
+  void _showMoreMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: const BoxDecoration(
+          color: _kCard,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(28),
+            topRight: Radius.circular(28),
           ),
-          child: Center(
-            child: Text(labels[i],
-              style: TextStyle(
-                color: isActive ? Colors.white : context.colors.textSecondary,
-                fontSize: 12, fontWeight: FontWeight.w600,
-              )),
-          ),
-        );
-      }),
-    );
-  }
-
-  // ─── Progress Card ─────────────────────────────────────────────────────────
-  Widget _buildProgressCard() {
-    final completed = _habit.completedDays;
-    final target = _habit.targetDays;
-    final progress = target > 0 ? (completed / target).clamp(0.0, 1.0) : 0.0;
-
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _cardTitle(Icons.bar_chart_rounded, 'Progress'),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              // Large circular stat
-              SizedBox(
-                width: 80, height: 80,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 80, height: 80,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 7,
-                        backgroundColor: context.colors.textSecondary.withOpacity(0.1),
-                        valueColor: AlwaysStoppedAnimation(_gradient.colors.first),
-                        strokeCap: StrokeCap.round,
-                      ),
-                    ),
-                    Text('${(progress * 100).toInt()}%',
-                      style: TextStyle(color: context.colors.textPrimary, fontSize: 16,
-                          fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: Column(
-                  children: [
-                    _progressStatRow('Completed Days', '$completed'),
-                    const SizedBox(height: 8),
-                    _progressStatRow('Daily Target', target > 0 ? '${target} ${_habit.unit ?? ''}' : '—'),
-                    const SizedBox(height: 8),
-                    _progressStatRow('Current Streak',
-                        _loadingStats ? '…' : '$_streak days 🔥'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _progressStatRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
-        Text(value, style: TextStyle(color: context.colors.textPrimary, fontSize: 13,
-            fontWeight: FontWeight.w500)),
-      ],
-    );
-  }
-
-  // ─── Heatmap ───────────────────────────────────────────────────────────────
-  Widget _buildHeatmapCard() {
-    // Show last 35 days
-    final recent = _heatmap.length > 35 ? _heatmap.sublist(_heatmap.length - 35) : _heatmap;
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _cardTitle(Icons.grid_view, 'Activity (Last 5 Weeks)'),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: recent.map((entry) {
-              final isCompleted = (entry['value'] as int?) == 1;
-              final dateStr = entry['date'] as String? ?? '';
-              DateTime? date;
-              try { date = DateTime.parse(dateStr); } catch (_) {}
-              return Tooltip(
-                message: date != null ? DateFormat('MMM d').format(date) : dateStr,
-                child: Container(
-                  width: 32, height: 32,
-                  decoration: BoxDecoration(
-                    color: isCompleted ? _gradient.colors.first : context.colors.iconBg,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: isCompleted ? [
-                      BoxShadow(color: _gradient.colors.first.withOpacity(0.4),
-                          blurRadius: 6, offset: const Offset(0, 2))
-                    ] : [],
-                  ),
-                  child: isCompleted
-                      ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(width: 12, height: 12,
-                decoration: BoxDecoration(color: context.colors.iconBg,
-                    borderRadius: BorderRadius.circular(3))),
-              const SizedBox(width: 6),
-              Text('Skipped', style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
-              const SizedBox(width: 16),
-              Container(width: 12, height: 12,
-                decoration: BoxDecoration(
-                    gradient: _gradient, borderRadius: BorderRadius.circular(3))),
-              const SizedBox(width: 6),
-              Text('Completed', style: TextStyle(color: context.colors.textSecondary, fontSize: 12)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── History Tab ───────────────────────────────────────────────────────────
-  Widget _buildHistoryTab() {
-    if (_loadingStats) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFFF512F)));
-    }
-
-    if (_heatmap.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.history, color: context.colors.textSecondary.withOpacity(0.4), size: 56),
-            const SizedBox(height: 16),
-            Text('No history yet', style: TextStyle(color: context.colors.textSecondary, fontSize: 16)),
-            const SizedBox(height: 8),
-            Text('Start completing this habit to see your history!',
-              style: TextStyle(color: context.colors.textSecondary.withOpacity(0.6), fontSize: 13),
-              textAlign: TextAlign.center),
-          ],
         ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: _kCardBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: Icon(
+                  _habit.isPublic ? Icons.lock_outline : Icons.people_outline,
+                  color: _kText,
+                ),
+                title: Text(
+                  _habit.isPublic ? 'Make Private' : 'Make Visible to Friends',
+                  style: GoogleFonts.inter(color: _kText, fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _toggleVisibility();
+                },
+              ),
+              const Divider(color: _kCardBorder),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: _kTerra,
+                ),
+                title: Text(
+                  'Delete Habit',
+                  style: GoogleFonts.inter(color: _kTerra, fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _deleteHabit();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isDeleting) {
+      return const Scaffold(
+        backgroundColor: _kBg,
+        body: Center(child: CircularProgressIndicator(color: _kSage)),
       );
     }
 
-    // Show entries in reverse order (newest first)
-    final entries = _heatmap.reversed.toList();
+    final targetUnit = _habit.targetDays > 0 ? '${_habit.targetDays} ${_habit.unit ?? ''}'.trim() : '';
+    final repeatLabel = _repeatLabel;
+    final timeLabel = _habit.timeOfDay ?? 'Anytime';
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-      itemCount: entries.length,
-      separatorBuilder: (_, __) => Divider(color: context.colors.border, height: 1),
-      itemBuilder: (_, i) {
-        final entry = entries[i];
-        final isCompleted = (entry['value'] as int?) == 1;
-        final dateStr = entry['date'] as String? ?? '';
-        DateTime? date;
-        try { date = DateTime.parse(dateStr); } catch (_) {}
+    // Subtitle string
+    final subtitleElements = [
+      if (targetUnit.isNotEmpty) targetUnit,
+      repeatLabel,
+      timeLabel
+    ];
+    final subtitle = subtitleElements.join(' · ');
 
-        final isToday = date != null &&
-            date.year == DateTime.now().year &&
-            date.month == DateTime.now().month &&
-            date.day == DateTime.now().day;
+    return Scaffold(
+      backgroundColor: _kBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom App Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: _kCard,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.chevron_left_rounded, color: _kText, size: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: _kSage.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.water_drop_rounded, color: _kSage, size: 16),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _habit.title,
+                                style: GoogleFonts.playfairDisplay(
+                                  color: _kText,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.inter(
+                            color: _kTextSub,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  GestureDetector(
+                    onTap: _showMoreMenu,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: _kCard,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.more_horiz_rounded, color: _kText, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 40, height: 40,
+            // Segmented Control
+            _buildSegmentedControl(),
+
+            // Screen Content
+            Expanded(
+              child: _loadingStats
+                  ? const Center(child: CircularProgressIndicator(color: _kSage))
+                  : _selectedTab == 0
+                      ? _buildOverviewTab()
+                      : _buildHistoryTab(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSegmentedControl() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _kCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTab = 0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isCompleted ? const Color(0xFF1F3A2E) : const Color(0xFF3A1F26),
+                  color: _selectedTab == 0 ? _kCardBorder : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  isCompleted ? Icons.check : Icons.close,
-                  color: isCompleted ? const Color(0xFF00E676) : const Color(0xFFFF5252),
-                  size: 20,
+                alignment: Alignment.center,
+                child: Text(
+                  'Overview',
+                  style: GoogleFonts.inter(
+                    color: _selectedTab == 0 ? _kText : _kTextSub,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTab = 1),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: _selectedTab == 1 ? _kCardBorder : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  'History',
+                  style: GoogleFonts.inter(
+                    color: _selectedTab == 1 ? _kText : _kTextSub,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewTab() {
+    final completionRate = (_stats?['completionRate'] as num?)?.toDouble() ?? 0.0;
+    final currentStreak = (_stats?['currentStreak'] as num?)?.toInt() ?? _streak;
+    final longestStreak = (_stats?['longestStreak'] as num?)?.toInt() ?? _streak;
+    final completedDaysCount = (_stats?['completedDays'] as num?)?.toInt() ?? _habit.completedDays;
+
+    final today = DateTime.now();
+    // Sunday starts week in index 0
+    final daysSinceSunday = today.weekday % 7;
+    final currentSunday = today.subtract(Duration(days: daysSinceSunday));
+    final startSunday = currentSunday.subtract(const Duration(days: 28));
+    final gridDates = List.generate(35, (index) => startSunday.add(Duration(days: index)));
+
+    // Calculate dynamic monthly rate based on heatmap
+    int monthlyRate = 0;
+    if (_heatmap.isNotEmpty) {
+      final completedInHeatmap = _heatmap.where((e) => (e['value'] as int?) == 1).length;
+      monthlyRate = ((completedInHeatmap / _heatmap.length) * 100).toInt();
+    } else {
+      monthlyRate = completionRate.toInt();
+    }
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Column(
+        children: [
+          // Bento Row 1
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Circular Progress Card
+              Expanded(
+                flex: 11,
+                child: Container(
+                  height: 180,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: _kCard,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: _kCardBorder),
+                  ),
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          height: 120,
+                          child: CustomPaint(
+                            painter: _GradientCircularProgressPainter(
+                              progress: completionRate / 100,
+                              trackColor: _kCardBorder,
+                              gradientColors: const [_kSage, _kLavender],
+                              strokeWidth: 10,
+                            ),
+                          ),
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${completionRate.toInt()}%',
+                              style: GoogleFonts.playfairDisplay(
+                                color: _kText,
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'this week',
+                              style: GoogleFonts.inter(
+                                color: _kTextSub,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
+              // Streaks Column
               Expanded(
+                flex: 9,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          isCompleted ? 'Completed' : 'Skipped',
-                          style: TextStyle(
-                            color: isCompleted ? const Color(0xFF00E676) : const Color(0xFFFF5252),
-                            fontSize: 15, fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (isToday) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: _gradient.colors.first.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text('Today',
-                              style: TextStyle(color: _gradient.colors.first, fontSize: 11,
-                                  fontWeight: FontWeight.w600)),
-                          ),
-                        ],
-                      ],
+                    _buildBentoSmallCard(
+                      icon: Icons.whatshot_rounded,
+                      iconColor: _kTerra,
+                      value: '$currentStreak days',
+                      label: 'Current streak',
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      date != null ? DateFormat('EEEE, MMMM d, yyyy').format(date) : dateStr,
-                      style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+                    const SizedBox(height: 12),
+                    _buildBentoSmallCard(
+                      icon: Icons.workspace_premium_rounded,
+                      iconColor: _kLavender,
+                      value: '$longestStreak days',
+                      label: 'Best streak',
                     ),
                   ],
                 ),
               ),
             ],
           ),
-        );
-      },
-    );
-  }
+          const SizedBox(height: 16),
 
-  // ─── Shared Widgets ────────────────────────────────────────────────────────
-  Widget _card({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.colors.border),
+          // Bento Row 2 (Monthly Rate & Total Done)
+          Row(
+            children: [
+              Expanded(
+                child: _buildBentoStatsRowCard(
+                  icon: Icons.trending_up_rounded,
+                  iconColor: _kSage,
+                  value: '$monthlyRate%',
+                  label: 'This month',
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildBentoStatsRowCard(
+                  icon: Icons.track_changes_rounded,
+                  iconColor: _kLavender,
+                  value: '$completedDaysCount times',
+                  label: 'Total done',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Bento Row 3: Activity Grid (GitHub style)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _kCard,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: _kCardBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ACTIVITY',
+                      style: GoogleFonts.inter(
+                        color: _kTextSub,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          'Less',
+                          style: GoogleFonts.inter(color: _kTextSub, fontSize: 10),
+                        ),
+                        const SizedBox(width: 4),
+                        _buildLegendSquare(_kCardBorder),
+                        const SizedBox(width: 3),
+                        _buildLegendSquare(_kSage.withValues(alpha: 0.3)),
+                        const SizedBox(width: 3),
+                        _buildLegendSquare(_kSage.withValues(alpha: 0.6)),
+                        const SizedBox(width: 3),
+                        _buildLegendSquare(_kSage),
+                        const SizedBox(width: 4),
+                        Text(
+                          'More',
+                          style: GoogleFonts.inter(color: _kTextSub, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Labels column
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildWeekDayLabel(''),  // Sun
+                        _buildWeekDayLabel('M'), // Mon
+                        _buildWeekDayLabel(''),  // Tue
+                        _buildWeekDayLabel('W'), // Wed
+                        _buildWeekDayLabel(''),  // Thu
+                        _buildWeekDayLabel('F'), // Fri
+                        _buildWeekDayLabel(''),  // Sat
+                      ],
+                    ),
+                    const SizedBox(width: 8),
+                    // 5 Columns
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(5, (colIndex) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(7, (rowIndex) {
+                              final dateIndex = colIndex * 7 + rowIndex;
+                              final date = gridDates[dateIndex];
+                              final isCompleted = _isDateCompleted(date);
+                              final isFuture = date.isAfter(today);
+
+                              Color cellColor;
+                              if (isFuture) {
+                                cellColor = Colors.transparent;
+                              } else if (isCompleted) {
+                                cellColor = _kSage;
+                              } else {
+                                cellColor = _kCardBorder;
+                              }
+
+                              return Tooltip(
+                                message: DateFormat('EEEE, MMM d, yyyy').format(date),
+                                child: Container(
+                                  width: 22,
+                                  height: 22,
+                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: cellColor,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: isFuture ? null : Border.all(color: _kCardBorder.withValues(alpha: 0.3)),
+                                  ),
+                                ),
+                              );
+                            }),
+                          );
+                        }),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Bento Row 4: Personal Notes
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _kCard,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: _kCardBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'PERSONAL NOTE',
+                      style: GoogleFonts.inter(
+                        color: _kTextSub,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _showEditNotesDialog,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _kCardBorder,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Tap to edit',
+                          style: GoogleFonts.inter(
+                            color: _kLavender,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _habit.notes?.isNotEmpty == true
+                      ? _habit.notes!
+                      : 'Morning sessions hit different. Try to keep it before 8am for maximum focus.',
+                  style: GoogleFonts.inter(
+                    color: _kText,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Bento Row 5: Huge Mark as Done Button
+          GestureDetector(
+            onTap: _toggleHabit,
+            child: Container(
+              height: 56,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: _habit.isCompletedToday ? _kCard : _kSage,
+                borderRadius: BorderRadius.circular(28),
+                border: _habit.isCompletedToday ? Border.all(color: _kCardBorder) : null,
+              ),
+              alignment: Alignment.center,
+              child: _isToggling
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_rounded,
+                          color: _habit.isCompletedToday ? _kSage : Colors.black,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _habit.isCompletedToday ? 'Completed Today' : 'Mark as Done',
+                          style: GoogleFonts.inter(
+                            color: _habit.isCompletedToday ? _kText : Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ],
       ),
-      child: child,
     );
   }
 
-  Widget _cardTitle(IconData icon, String title) {
-    return Row(
-      children: [
-        Icon(icon, color: _gradient.colors.first, size: 18),
-        const SizedBox(width: 8),
-        Text(title,
-          style: TextStyle(color: context.colors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
-      ],
+  Widget _buildBentoSmallCard({
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required String label,
+  }) {
+    return Container(
+      height: 84,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: _kCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  value,
+                  style: GoogleFonts.playfairDisplay(
+                    color: _kText,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: _kTextSub,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildBentoStatsRowCard({
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: _kCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: GoogleFonts.playfairDisplay(
+                    color: _kText,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: _kTextSub,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendSquare(Color color) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(2.5),
+      ),
+    );
+  }
+
+  Widget _buildWeekDayLabel(String label) {
+    return SizedBox(
+      height: 30, // matches square height (22) + vertical padding (8)
+      child: Center(
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            color: _kTextSub,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryTab() {
+    final currentStreak = (_stats?['currentStreak'] as num?)?.toInt() ?? _streak;
+    final longestStreak = (_stats?['longestStreak'] as num?)?.toInt() ?? _streak;
+
+    final now = DateTime.now();
+    final monthName = DateFormat('MMMM yyyy').format(now);
+    final daysInMonthSoFar = now.day;
+
+    int completedInMonth = 0;
+    for (final entry in _heatmap) {
+      final dateStr = entry['date'] as String?;
+      if (dateStr != null) {
+        try {
+          final date = DateTime.parse(dateStr);
+          if (date.year == now.year && date.month == now.month && (entry['value'] as int?) == 1) {
+            completedInMonth++;
+          }
+        } catch (_) {}
+      }
+    }
+    // Fallback if heatmap doesn't have current month logs
+    if (completedInMonth == 0 && _heatmap.isEmpty) {
+      completedInMonth = _habit.completedDays;
+    }
+
+    final successRateInMonth = daysInMonthSoFar == 0
+        ? 0
+        : ((completedInMonth / daysInMonthSoFar) * 100).toInt();
+
+    // Show entries in reverse chronological order (newest first)
+    final entries = _heatmap.reversed.toList();
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Column(
+        children: [
+          // June 2026 Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                monthName,
+                style: GoogleFonts.playfairDisplay(
+                  color: _kText,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _kSage.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$completedInMonth / $daysInMonthSoFar days',
+                      style: GoogleFonts.inter(
+                        color: _kSage,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _kCardBorder,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$successRateInMonth%',
+                      style: GoogleFonts.inter(
+                        color: _kTextSub,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Streak Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: const Color(0xFF261D15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF3D2714)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _kTerra.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.whatshot_rounded, color: _kTerra, size: 20),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$currentStreak-day streak 🔥',
+                        style: GoogleFonts.inter(
+                          color: _kTerra,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Keep it up — best is $longestStreak days',
+                        style: GoogleFonts.inter(
+                          color: _kTextSub,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Log List Bento Box
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _kCard,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: _kCardBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'LOG',
+                  style: GoogleFonts.inter(
+                    color: _kTextSub,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (entries.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: Column(
+                        children: [
+                          Icon(Icons.history_rounded, color: _kTextSub.withValues(alpha: 0.3), size: 40),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No logs yet. Mark the habit completed to start tracking!',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(color: _kTextSub, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: entries.length > 15 ? 15 : entries.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (_, i) {
+                      final entry = entries[i];
+                      final isCompleted = (entry['value'] as int?) == 1;
+                      final dateStr = entry['date'] as String? ?? '';
+                      DateTime? date;
+                      try { date = DateTime.parse(dateStr); } catch (_) {}
+
+                      final isToday = date != null &&
+                          date.year == DateTime.now().year &&
+                          date.month == DateTime.now().month &&
+                          date.day == DateTime.now().day;
+
+                      final dayLabel = isToday
+                          ? 'Today'
+                          : (date != null ? DateFormat('E').format(date) : '');
+                      final dateLabel = date != null ? DateFormat('MMM d').format(date) : dateStr;
+
+                      return _buildHistoryLogItem(
+                        day: dayLabel,
+                        date: dateLabel,
+                        status: isCompleted ? 'Completed' : 'Missed',
+                        isCompleted: isCompleted,
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryLogItem({
+    required String day,
+    required String date,
+    required String status,
+    required bool isCompleted,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: _kBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: Row(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                day,
+                style: GoogleFonts.inter(
+                  color: isCompleted ? _kSage : _kTextSub,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                date,
+                style: GoogleFonts.inter(
+                  color: _kTextSub,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 24),
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: isCompleted ? _kSage : _kTextSub,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  status,
+                  style: GoogleFonts.inter(
+                    color: isCompleted ? _kText : _kTextSub,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isCompleted)
+            const Icon(
+              Icons.check_rounded,
+              color: _kSage,
+              size: 18,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GradientCircularProgressPainter extends CustomPainter {
+  final double progress;
+  final Color trackColor;
+  final List<Color> gradientColors;
+  final double strokeWidth;
+
+  const _GradientCircularProgressPainter({
+    required this.progress,
+    required this.trackColor,
+    required this.gradientColors,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (math.min(size.width, size.height) - strokeWidth) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Track
+    final trackPaint = Paint()
+      ..color = trackColor
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+    canvas.drawCircle(center, radius, trackPaint);
+
+    // Progress
+    if (progress > 0) {
+      final sweepAngle = 2 * math.pi * progress.clamp(0.0, 1.0);
+      final gradient = SweepGradient(
+        startAngle: -math.pi / 2,
+        endAngle: -math.pi / 2 + 2 * math.pi,
+        colors: gradientColors,
+      );
+
+      final progressPaint = Paint()
+        ..shader = gradient.createShader(rect)
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+
+      canvas.drawArc(
+        rect,
+        -math.pi / 2,
+        sweepAngle,
+        false,
+        progressPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GradientCircularProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.trackColor != trackColor ||
+        oldDelegate.strokeWidth != strokeWidth;
   }
 }

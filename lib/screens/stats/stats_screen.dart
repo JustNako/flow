@@ -1,10 +1,11 @@
-import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../api/habit_api_service.dart';
-import 'monthly_recap_screen.dart';
+import '../../models/ai_insights_response.dart';
+import 'package:share_plus/share_plus.dart';
 
 const _kBg = Color(0xFF1A1A1A);
 const _kCard = Color(0xFF242424);
@@ -29,7 +30,9 @@ class _StatsScreenState extends State<StatsScreen> {
   String? _error;
   
   Map<String, dynamic>? _stats;
-  List<String>? _aiInsights;
+  AiInsightsResponse? _aiInsights;
+  String? _aiInsightsError;
+  bool _aiInsightsLoading = false;
   bool _isWeekly = false;
 
   @override
@@ -43,16 +46,60 @@ class _StatsScreenState extends State<StatsScreen> {
     try {
       final stats = await _api.getGlobalStats();
       if (mounted) setState(() => _stats = stats);
-      
-      if (_stats?['isPro'] == true && _aiInsights == null) {
-        final insights = await _api.getAiInsights();
-        if (mounted) setState(() => _aiInsights = insights);
+
+      if (_stats?['isPro'] == true) {
+        _loadAiInsights();
       }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadAiInsights() async {
+    if (_aiInsightsLoading) return;
+    setState(() {
+      _aiInsightsLoading = true;
+      _aiInsightsError = null;
+    });
+    try {
+      final insights = await _api.getAiInsights();
+      if (mounted) {
+        setState(() {
+          _aiInsights = insights;
+          _aiInsightsError = insights.isPersonalized
+              ? null
+              : (insights.message ?? 'Personalized AI is temporarily unavailable.');
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _aiInsightsError = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _aiInsightsLoading = false);
+    }
+  }
+
+  void _showMonthlyRecapSheet(BuildContext context, double completionRate) {
+    final now = DateTime.now();
+    final monthName = DateFormat('MMMM yyyy').format(now);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => _MonthlyRecapSheet(
+        api: _api,
+        year: now.year,
+        month: now.month,
+        monthName: monthName,
+        completionRate: completionRate,
+      ),
+    );
   }
 
   @override
@@ -440,12 +487,47 @@ class _StatsScreenState extends State<StatsScreen> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        Text(
-                          _aiInsights != null && _aiInsights!.isNotEmpty
-                              ? _aiInsights!.first
-                              : 'Breathing exercises show 91% adherence — your highest performing habit. Consistency is your superpower. 🌿',
-                          style: const TextStyle(color: _kTextSub, fontSize: 14, height: 1.6),
-                        ),
+                        if (_aiInsightsLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: _kLavender),
+                              ),
+                            ),
+                          )
+                        else if (_aiInsightsError != null)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Personalized analysis unavailable',
+                                style: TextStyle(color: _kTerra, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _aiInsightsError!,
+                                style: const TextStyle(color: _kTextSub, fontSize: 13, height: 1.5),
+                              ),
+                              const SizedBox(height: 8),
+                              GestureDetector(
+                                onTap: _loadAiInsights,
+                                child: const Text(
+                                  'Tap to retry',
+                                  style: TextStyle(color: _kLavender, fontSize: 13, fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          Text(
+                            _aiInsights != null && _aiInsights!.insights.isNotEmpty
+                                ? _aiInsights!.insights.first
+                                : 'Your personalized insights will appear here once we have enough data from the past week.',
+                            style: const TextStyle(color: _kTextSub, fontSize: 14, height: 1.6),
+                          ),
                         const SizedBox(height: 20),
                         GestureDetector(
                           onTap: () {
@@ -473,15 +555,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
                 // Monthly Recap CTA
                 GestureDetector(
-                  onTap: () {
-                    final now = DateTime.now();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MonthlyRecapScreen(year: now.year, month: now.month),
-                      ),
-                    );
-                  },
+                  onTap: () => _showMonthlyRecapSheet(context, completionRate),
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -645,6 +719,533 @@ class _BentoCard extends StatelessWidget {
         border: Border.all(color: _kCardBorder),
       ),
       child: child,
+    );
+  }
+}
+
+class _MonthlyRecapSheet extends StatefulWidget {
+  final HabitApiService api;
+  final int year;
+  final int month;
+  final String monthName;
+  final double completionRate;
+
+  const _MonthlyRecapSheet({
+    required this.api,
+    required this.year,
+    required this.month,
+    required this.monthName,
+    required this.completionRate,
+  });
+
+  @override
+  State<_MonthlyRecapSheet> createState() => _MonthlyRecapSheetState();
+}
+
+class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
+  bool _isLoading = true;
+  String? _error;
+  Map<String, dynamic>? _recapData;
+  bool _isSharing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecap();
+  }
+
+  Future<void> _fetchRecap() async {
+    try {
+      final data = await widget.api.getMonthlyRecap(widget.year, widget.month);
+      setState(() {
+        _recapData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _shareRecap(bool copyToClipboard) async {
+    if (_isSharing) return;
+    setState(() => _isSharing = true);
+
+    try {
+      final totalRate = (_recapData?['totalCompletionRate'] as num?)?.toInt() ?? widget.completionRate.toInt();
+      final bestHabit = _recapData?['bestHabit'] as String? ?? 'None';
+      final summaries = (_recapData?['habitSummaries'] as List<dynamic>? ?? []);
+      final bestStreak = summaries.fold<int>(0, (prev, s) {
+        final v = ((s as Map<String, dynamic>)['bestStreak'] as num?)?.toInt() ?? 0;
+        return v > prev ? v : prev;
+      });
+
+      String archetypeTitle;
+      String archetypeDesc;
+      if (totalRate >= 85) {
+        archetypeTitle = 'DISCIPLINE MACHINE';
+        archetypeDesc = 'You kept showing up even on difficult days.';
+      } else if (totalRate >= 60 && bestStreak > 10) {
+        archetypeTitle = 'MOMENTUM BUILDER';
+        archetypeDesc = 'You know how to keep a chain going.';
+      } else if (totalRate >= 40) {
+        archetypeTitle = 'THE CONSISTENT ONE';
+        archetypeDesc = 'Slow and steady wins the race.';
+      } else {
+        archetypeTitle = 'COMEBACK HERO';
+        archetypeDesc = 'Every great journey starts with a single step.';
+      }
+
+      final link = await widget.api.shareMonthlyRecap(
+        year: widget.year,
+        month: widget.month,
+        totalRate: totalRate,
+        bestStreak: bestStreak,
+        bestHabit: bestHabit,
+        archetypeTitle: archetypeTitle,
+        archetypeDesc: archetypeDesc,
+      );
+
+      if (copyToClipboard) {
+        await Clipboard.setData(ClipboardData(text: link));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Recap link copied to clipboard! 📋'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        await Share.share(
+          "I crushed my habits this month! See my interactive recap: $link",
+          subject: "My ${widget.monthName} Recap",
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share recap: $e'),
+            backgroundColor: _kTerra,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _kBg,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag Handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: _kCardBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'MONTHLY RECAP',
+                    style: GoogleFonts.inter(
+                      color: _kTextSub,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(Icons.close_rounded, color: _kTextSub, size: 22),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  widget.monthName,
+                  style: GoogleFonts.playfairDisplay(
+                    color: _kText,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: CircularProgressIndicator(color: _kGold),
+                  ),
+                )
+              else if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.error_outline_rounded, color: _kTerra, size: 40),
+                      const SizedBox(height: 12),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: _kTextSub, fontSize: 14),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _isLoading = true;
+                            _error = null;
+                          });
+                          _fetchRecap();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _kCard,
+                          foregroundColor: _kText,
+                        ),
+                        child: const Text('Retry'),
+                      )
+                    ],
+                  ),
+                )
+              else
+                ..._buildRecapContent(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildRecapContent() {
+    final totalRate = (_recapData?['totalCompletionRate'] as num?)?.toInt() ?? widget.completionRate.toInt();
+    final bestHabit = _recapData?['bestHabit'] as String? ?? 'None';
+    final completedDays = (_recapData?['completedDaysCount'] as num?)?.toInt() ?? 0;
+    final summaries = (_recapData?['habitSummaries'] as List<dynamic>? ?? []);
+    final bestStreak = summaries.fold<int>(0, (prev, s) {
+      final v = ((s as Map<String, dynamic>)['bestStreak'] as num?)?.toInt() ?? 0;
+      return v > prev ? v : prev;
+    });
+    final aiInsight = _recapData?['aiInsight'] as String?;
+
+    String archetypeTitle;
+    String archetypeDesc;
+    Color archetypeColor;
+    if (totalRate >= 85) {
+      archetypeTitle = 'DISCIPLINE MACHINE';
+      archetypeDesc = 'You kept showing up even on difficult days.';
+      archetypeColor = _kGold;
+    } else if (totalRate >= 60 && bestStreak > 10) {
+      archetypeTitle = 'MOMENTUM BUILDER';
+      archetypeDesc = 'You know how to keep a chain going.';
+      archetypeColor = _kLavender;
+    } else if (totalRate >= 40) {
+      archetypeTitle = 'THE CONSISTENT ONE';
+      archetypeDesc = 'Slow and steady wins the race.';
+      archetypeColor = _kSage;
+    } else {
+      archetypeTitle = 'COMEBACK HERO';
+      archetypeDesc = 'Every great journey starts with a single step.';
+      archetypeColor = _kTerra;
+    }
+
+    return [
+      // Circular Indicator & Archetype Badge
+      Center(
+        child: Column(
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 130,
+                  height: 130,
+                  child: CircularProgressIndicator(
+                    value: totalRate / 100,
+                    strokeWidth: 10,
+                    color: archetypeColor,
+                    backgroundColor: _kCardBorder,
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$totalRate%',
+                      style: GoogleFonts.playfairDisplay(
+                        color: _kText,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Success Rate',
+                      style: TextStyle(color: _kTextSub, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: archetypeColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: archetypeColor.withOpacity(0.3)),
+              ),
+              child: Text(
+                archetypeTitle,
+                style: TextStyle(
+                  color: archetypeColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                archetypeDesc,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: _kTextSub, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 32),
+
+      // Stats Grid (Bento style)
+      Row(
+        children: [
+          Expanded(
+            child: _BentoStatCard(
+              title: 'BEST STREAK',
+              value: '$bestStreak days',
+              icon: Icons.local_fire_department_rounded,
+              iconColor: _kTerra,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _BentoStatCard(
+              title: 'BEST HABIT',
+              value: bestHabit,
+              icon: Icons.star_rounded,
+              iconColor: _kGold,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      _BentoStatCard(
+        title: 'COMPLETIONS',
+        value: '$completedDays habit logs completed',
+        icon: Icons.check_circle_rounded,
+        iconColor: _kSage,
+        isFullWidth: true,
+      ),
+      const SizedBox(height: 20),
+
+      // AI Insight if present
+      if (aiInsight != null && aiInsight.isNotEmpty) ...[
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: _kCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _kCardBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: _kLavender.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.auto_awesome_rounded, color: _kLavender, size: 16),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'AI INSIGHT',
+                    style: GoogleFonts.inter(
+                      color: _kLavender,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                aiInsight,
+                style: const TextStyle(color: _kText, fontSize: 13, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+
+      // Actions
+      Row(
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: 54,
+              child: ElevatedButton(
+                onPressed: _isSharing ? null : () => _shareRecap(false),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _kGold,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: _isSharing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.share_rounded, size: 18),
+                          SizedBox(width: 8),
+                          Text(
+                            'Share Link',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 54,
+            height: 54,
+            child: TextButton(
+              onPressed: _isSharing ? null : () => _shareRecap(true),
+              style: TextButton.styleFrom(
+                backgroundColor: _kCard,
+                foregroundColor: _kText,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: _kCardBorder),
+                ),
+              ),
+              child: const Icon(Icons.copy_rounded, size: 20),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 20),
+    ];
+  }
+}
+
+class _BentoStatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color iconColor;
+  final bool isFullWidth;
+
+  const _BentoStatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.iconColor,
+    this.isFullWidth = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: isFullWidth ? double.infinity : null,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: _kCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    color: _kTextSub,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: GoogleFonts.playfairDisplay(
+              color: _kText,
+              fontSize: isFullWidth ? 18 : 16,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
