@@ -8,18 +8,6 @@ import '../../models/ai_habit_dto.dart';
 import '../../theme/app_theme.dart';
 import '../paywall/paywall_screen.dart';
 
-// ─── Premium palette constants ──────────────────────────────────────────────
-const _kBgDark = Color(0xFF1A1A1A);
-const _kCardBg = Color(0xFF232323);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSageGreen = Color(0xFF9CAFA3);
-const _kSageGreenDark = Color(0xFF7A8B7E);
-const _kLavender = Color(0xFFC4B5E3);
-const _kTerracotta = Color(0xFFE07A5F);
-const _kTextPrimary = Colors.white;
-const _kTextSecondary = Color(0xFF8A8F9E);
-const _kTextMuted = Color(0xFF5A5E6A);
-
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
 
@@ -28,6 +16,16 @@ class AddHabitScreen extends StatefulWidget {
 }
 
 class _AddHabitScreenState extends State<AddHabitScreen> {
+  Color get _kBgDark => context.colors.background;
+  Color get _kCardBg => context.colors.card;
+  Color get _kCardBorder => context.colors.border;
+  Color get _kSageGreen => context.colors.sage;
+  Color get _kSageGreenDark => context.colors.sage.withOpacity(0.85);
+  Color get _kLavender => context.colors.lavender;
+  Color get _kTerracotta => context.colors.terracotta;
+  Color get _kTextPrimary => context.colors.textPrimary;
+  Color get _kTextSecondary => context.colors.textSecondary;
+  Color get _kTextMuted => context.colors.textSecondary.withOpacity(0.65);
   final _formKey = GlobalKey<FormState>();
   final _api = HabitApiService.instance;
   final _titleController = TextEditingController();
@@ -279,7 +277,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 border:
                     Border.all(color: _kTerracotta.withOpacity(0.2)),
               ),
-              child: const Icon(Icons.star_rounded,
+              child: Icon(Icons.star_rounded,
                   color: _kTerracotta, size: 48),
             ),
             const SizedBox(height: 24),
@@ -309,7 +307,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     colors: [_kSageGreen, _kSageGreenDark],
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -355,9 +353,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       isScrollControlled: true,
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: _kCardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -717,7 +715,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: context.colors.card, width: 2),
                     ),
-                    child: const Icon(Icons.check, color: _kBgDark, size: 10),
+                    child: Icon(Icons.check, color: _kBgDark, size: 10),
                   ),
                 ),
               ],
@@ -754,11 +752,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
               child: Theme(
                 data: ThemeData.dark().copyWith(
-                  colorScheme: const ColorScheme.dark(
-                    primary: _kSageGreen,
-                    onPrimary: _kBgDark,
-                    surface: _kCardBg,
-                    onSurface: _kTextPrimary,
+                  colorScheme: ColorScheme.dark(
+                    primary: context.colors.primary,
+                    onPrimary: context.colors.background,
+                    surface: context.colors.card,
+                    onSurface: context.colors.textPrimary,
                   ),
                 ),
                 child: child!,
@@ -805,10 +803,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             if (_selectedTime != null)
               GestureDetector(
                 onTap: () => setState(() => _selectedTime = null),
-                child: const Icon(Icons.close_rounded, color: _kTextSecondary, size: 20),
+                child: Icon(Icons.close_rounded, color: _kTextSecondary, size: 20),
               )
             else
-              const Icon(Icons.chevron_right_rounded, color: _kTextMuted, size: 22),
+              Icon(Icons.chevron_right_rounded, color: _kTextMuted, size: 22),
           ],
         ),
       ),
@@ -1251,7 +1249,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       width: double.infinity,
       height: 60,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [_kSageGreen, _kSageGreenDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1276,7 +1274,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           highlightColor: Colors.white.withOpacity(0.1),
           child: Center(
             child: _isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(

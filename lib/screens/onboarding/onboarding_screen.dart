@@ -1,4 +1,5 @@
-import 'dart:ui';
+﻿import 'dart:ui';
+import '../../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,7 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late Animation<double> _floatAnimation;
 
   // Colors based on premium palette
-  final Color bgDark = const Color(0xFF1A1A1A); // Matte charcoal-dark
+  Color get bgDark => context.colors.background; // Matte charcoal-dark
   
   @override
   void initState() {
@@ -42,7 +43,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      emoji: '🌱',
+      emoji: '??',
       title: 'The Welcome',
       subtitle: 'Find your flow state',
       description:
@@ -51,7 +52,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: const Color(0xFFC4B5E3),
     ),
     _OnboardingPage(
-      emoji: '🧠',
+      emoji: '??',
       title: 'Your AI Guide',
       subtitle: 'Personalized bento insights',
       description:
@@ -60,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: const Color(0xFF9CAFA3),
     ),
     _OnboardingPage(
-      emoji: '🌿',
+      emoji: '??',
       title: 'No Pressure Stats',
       subtitle: 'Forgiving analytics',
       description:
@@ -69,7 +70,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: const Color(0xFFE07A5F),
     ),
     _OnboardingPage(
-      emoji: '🤝',
+      emoji: '??',
       title: 'Empathetic Friends',
       subtitle: 'Supportive social circle',
       description:
@@ -78,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: const Color(0xFFC4B5E3),
     ),
     _OnboardingPage(
-      emoji: '📱',
+      emoji: '??',
       title: 'Interactive Widgets',
       subtitle: 'Seamless tracking',
       description:
@@ -168,7 +169,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     child: TextButton(
                       onPressed: _finish,
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.white.withOpacity(0.5),
+                        foregroundColor: context.colors.textPrimary.withOpacity(0.5),
                         textStyle: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
@@ -210,7 +211,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               borderRadius: BorderRadius.circular(8),
                               color: isActive
                                   ? page.accentColor
-                                  : Colors.white.withOpacity(0.15),
+                                  : context.colors.textPrimary.withOpacity(0.15),
                             ),
                           );
                         }),
@@ -241,16 +242,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           child: InkWell(
                             onTap: _nextPage,
                             borderRadius: BorderRadius.circular(32),
-                            splashColor: Colors.white.withOpacity(0.2),
-                            highlightColor: Colors.white.withOpacity(0.1),
+                            splashColor: context.colors.textPrimary.withOpacity(0.2),
+                            highlightColor: context.colors.textPrimary.withOpacity(0.1),
                             child: Container(
                               alignment: Alignment.center,
                               child: Text(
                                 _currentPage == _pages.length - 1
-                                    ? "Step into Flow ✨"
+                                    ? "Step into Flow ?"
                                     : 'Continue',
                                 style: GoogleFonts.inter(
-                                  color: const Color(0xFF1A1A1A), // Dark text on light button for premium feel
+                                  color: context.colors.background, // Dark text on light button for premium feel
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,
@@ -269,7 +270,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           child: Text(
                             'Already have an account? Sign in',
                             style: GoogleFonts.inter(
-                              color: Colors.white.withOpacity(0.4),
+                              color: context.colors.textPrimary.withOpacity(0.4),
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -314,10 +315,10 @@ class _PageContent extends StatelessWidget {
                     width: 160,
                     height: 160,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: context.colors.textPrimary.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(40),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
+                        color: context.colors.textPrimary.withOpacity(0.1),
                         width: 1.5,
                       ),
                       boxShadow: [
@@ -346,7 +347,7 @@ class _PageContent extends StatelessWidget {
             page.title,
             textAlign: TextAlign.center,
             style: GoogleFonts.playfairDisplay(
-              color: Colors.white,
+              color: context.colors.textPrimary,
               fontSize: 38,
               fontWeight: FontWeight.w700,
               height: 1.1,
@@ -373,7 +374,7 @@ class _PageContent extends StatelessWidget {
             page.description,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: Colors.white.withOpacity(0.6),
+              color: context.colors.textPrimary.withOpacity(0.6),
               fontSize: 16,
               height: 1.6,
               fontWeight: FontWeight.w400,

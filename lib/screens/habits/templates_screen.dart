@@ -7,14 +7,8 @@ import 'ai_generator_screen.dart';
 import '../paywall/paywall_screen.dart';
 
 // ── Zen palette (always dark regardless of system theme) ──────────────────────
-const _kBg         = Color(0xFF1A1A1A);
-const _kCard       = Color(0xFF242424);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSage       = Color(0xFF8BA888); // sage green
-const _kTerra      = Color(0xFFD68C7A); // muted terracotta
-const _kLavender   = Color(0xFF9F92C6); // soft lavender
-const _kText       = Color(0xFFE8E8E8);
-const _kTextSub    = Color(0xFF888888);
+import 'package:flutter/services.dart';
+import '../../theme/app_theme.dart';
 
 class TemplatesScreen extends StatefulWidget {
   const TemplatesScreen({super.key});
@@ -94,7 +88,7 @@ class _TemplatesScreenState extends State<TemplatesScreen>
     final filtered = _filtered;
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -107,12 +101,12 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back_ios_new,
-                          color: _kText, size: 18),
+                      icon: Icon(Icons.arrow_back_ios_new,
+                          color: context.colors.textPrimary, size: 18),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,17 +114,17 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                           Text(
                             'Library',
                             style: GoogleFonts.playfairDisplay(
-                              color: _kText,
+                              color: context.colors.textPrimary,
                               fontSize: 28,
                               fontWeight: FontWeight.w700,
                               height: 1.1,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          const Text(
+                          SizedBox(height: 2),
+                          Text(
                             'Build your practice',
                             style: TextStyle(
-                              color: _kTextSub,
+                              color: context.colors.textSecondary,
                               fontSize: 13,
                             ),
                           ),
@@ -149,20 +143,20 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: _kCard,
+                    color: context.colors.card,
                     borderRadius: BorderRadius.circular(50),
-                    border: Border.all(color: _kCardBorder),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: TextField(
                     style:
-                        const TextStyle(color: _kText, fontSize: 14),
+                        TextStyle(color: context.colors.textPrimary, fontSize: 14),
                     onChanged: (v) => setState(() => _searchQuery = v),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Search habits & templates...',
                       hintStyle:
-                          TextStyle(color: _kTextSub, fontSize: 14),
+                          TextStyle(color: context.colors.textSecondary, fontSize: 14),
                       prefixIcon: Icon(Icons.search_rounded,
-                          color: _kTextSub, size: 20),
+                          color: context.colors.textSecondary, size: 20),
                       border: InputBorder.none,
                       contentPadding:
                           EdgeInsets.symmetric(horizontal: 0, vertical: 14),
@@ -209,7 +203,7 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     // Scratch card – smaller, clean
                     Expanded(
                       flex: 4,
@@ -241,16 +235,16 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                     Text(
                       'Browse by category',
                       style: GoogleFonts.playfairDisplay(
-                        color: _kText,
+                        color: context.colors.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const Spacer(),
-                    const Text(
+                    Text(
                       'See all',
                       style: TextStyle(
-                          color: _kSage,
+                          color: context.colors.sage,
                           fontSize: 13,
                           fontWeight: FontWeight.w500),
                     ),
@@ -269,13 +263,13 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 60),
                   child: Column(
                     children: [
-                      const Icon(Icons.search_off_rounded,
-                          color: _kTextSub, size: 48),
-                      const SizedBox(height: 16),
+                      Icon(Icons.search_off_rounded,
+                          color: context.colors.textSecondary, size: 48),
+                      SizedBox(height: 16),
                       Text(
                         'No templates found',
                         style: GoogleFonts.playfairDisplay(
-                          color: _kTextSub,
+                          color: context.colors.textSecondary,
                           fontSize: 18,
                         ),
                       ),
@@ -349,20 +343,20 @@ class _AiCard extends StatelessWidget {
         builder: (_, child) => Container(
           height: 200,
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
+            color: context.colors.cardSecondary,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: _kTerra.withOpacity(0.25 + 0.15 * glowAnim.value),
+              color: context.colors.terracotta.withOpacity(0.25 + 0.15 * glowAnim.value),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: _kTerra.withOpacity(0.15 * glowAnim.value),
+                color: context.colors.terracotta.withOpacity(0.15 * glowAnim.value),
                 blurRadius: 24,
                 spreadRadius: 4,
               ),
               BoxShadow(
-                color: _kLavender.withOpacity(0.08 * glowAnim.value),
+                color: context.colors.lavender.withOpacity(0.08 * glowAnim.value),
                 blurRadius: 32,
                 spreadRadius: 8,
               ),
@@ -384,7 +378,7 @@ class _AiCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(colors: [
-                          _kTerra.withOpacity(0.25 * glowAnim.value),
+                          context.colors.terracotta.withOpacity(0.25 * glowAnim.value),
                           Colors.transparent,
                         ]),
                       ),
@@ -403,7 +397,7 @@ class _AiCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(colors: [
-                          _kLavender.withOpacity(0.18 * glowAnim.value),
+                          context.colors.lavender.withOpacity(0.18 * glowAnim.value),
                           Colors.transparent,
                         ]),
                       ),
@@ -421,10 +415,10 @@ class _AiCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _kSage.withOpacity(0.18),
+                          color: context.colors.sage.withOpacity(0.18),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: _kSage.withOpacity(0.3), width: 1),
+                              color: context.colors.sage.withOpacity(0.3), width: 1),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -432,16 +426,16 @@ class _AiCard extends StatelessWidget {
                             Container(
                               width: 6,
                               height: 6,
-                              decoration: const BoxDecoration(
-                                color: _kSage,
+                              decoration: BoxDecoration(
+                                color: context.colors.sage,
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            const Text(
+                            SizedBox(width: 6),
+                            Text(
                               'AI Powered',
                               style: TextStyle(
-                                color: _kSage,
+                                color: context.colors.sage,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -453,18 +447,18 @@ class _AiCard extends StatelessWidget {
                       Text(
                         'Generate\nwith AI',
                         style: GoogleFonts.playfairDisplay(
-                          color: _kText,
+                          color: context.colors.textPrimary,
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
                           height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
+                      SizedBox(height: 6),
+                      Text(
                         'Personalized just for you',
-                        style: TextStyle(color: _kTextSub, fontSize: 12),
+                        style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
                       ),
-                      const SizedBox(height: 14),
+                      SizedBox(height: 14),
                       Row(
                         children: [
                           // Generation counter pill
@@ -474,14 +468,14 @@ class _AiCard extends StatelessWidget {
                                   horizontal: 9, vertical: 4),
                               decoration: BoxDecoration(
                                 color: (remaining > 0
-                                        ? _kSage
-                                        : const Color(0xFFD68C7A))
+                                        ? context.colors.sage
+                                        : context.colors.terracotta)
                                     .withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: (remaining > 0
-                                          ? _kSage
-                                          : const Color(0xFFD68C7A))
+                                          ? context.colors.sage
+                                          : context.colors.terracotta)
                                       .withOpacity(0.3),
                                 ),
                               ),
@@ -489,8 +483,8 @@ class _AiCard extends StatelessWidget {
                                 '$remaining/$totalLimit',
                                 style: TextStyle(
                                   color: remaining > 0
-                                      ? _kSage
-                                      : const Color(0xFFD68C7A),
+                                      ? context.colors.sage
+                                      : context.colors.terracotta,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -501,13 +495,13 @@ class _AiCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _kTerra.withOpacity(0.15),
+                              color: context.colors.terracotta.withOpacity(0.15),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: _kTerra.withOpacity(0.35), width: 1),
+                                  color: context.colors.terracotta.withOpacity(0.35), width: 1),
                             ),
-                            child: const Icon(Icons.arrow_forward_rounded,
-                                color: _kTerra, size: 16),
+                            child: Icon(Icons.arrow_forward_rounded,
+                                color: context.colors.terracotta, size: 16),
                           ),
                         ],
                       ),
@@ -535,9 +529,9 @@ class _ScratchCard extends StatelessWidget {
       child: Container(
         height: 200,
         decoration: BoxDecoration(
-          color: _kCard,
+          color: context.colors.card,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: _kCardBorder),
+          border: Border.all(color: context.colors.border),
         ),
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -546,28 +540,28 @@ class _ScratchCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _kLavender.withOpacity(0.12),
+                color: context.colors.lavender.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                    color: _kLavender.withOpacity(0.2), width: 1),
+                    color: context.colors.lavender.withOpacity(0.2), width: 1),
               ),
-              child: const Icon(Icons.add_rounded,
-                  color: _kLavender, size: 20),
+              child: Icon(Icons.add_rounded,
+                  color: context.colors.lavender, size: 20),
             ),
             const Spacer(),
             Text(
               'Start\nfresh',
               style: GoogleFonts.playfairDisplay(
-                color: _kText,
+                color: context.colors.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 height: 1.2,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
+            SizedBox(height: 6),
+            Text(
               'Blank canvas',
-              style: TextStyle(color: _kTextSub, fontSize: 12),
+              style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
             ),
           ],
         ),
@@ -589,9 +583,9 @@ class _CategoryCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: _kCard,
+          color: context.colors.card,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: _kCardBorder),
+          border: Border.all(color: context.colors.border),
         ),
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -611,24 +605,24 @@ class _CategoryCard extends StatelessWidget {
             const Spacer(),
             Text(
               category.name,
-              style: const TextStyle(
-                color: _kText,
+              style: TextStyle(
+                color: context.colors.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Row(
               children: [
                 Text(
                   '${category.templates.length} templates',
-                  style: const TextStyle(color: _kTextSub, fontSize: 12),
+                  style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
                 ),
                 const Spacer(),
-                const Icon(Icons.chevron_right_rounded,
-                    color: _kTextSub, size: 16),
+                Icon(Icons.chevron_right_rounded,
+                    color: context.colors.textSecondary, size: 16),
               ],
             ),
           ],
@@ -651,9 +645,9 @@ class _CategorySheet extends StatelessWidget {
       maxChildSize: 0.93,
       builder: (_, ctrl) => Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: context.colors.cardSecondary,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border.all(color: _kCardBorder),
+          border: Border.all(color: context.colors.border),
         ),
         child: Column(
           children: [
@@ -664,7 +658,7 @@ class _CategorySheet extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: _kCardBorder,
+                  color: context.colors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -684,36 +678,36 @@ class _CategorySheet extends StatelessWidget {
                     child: Icon(category.icon,
                         color: category.color, size: 22),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: 14),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         category.name,
                         style: GoogleFonts.playfairDisplay(
-                          color: _kText,
+                          color: context.colors.textPrimary,
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
                         '${category.templates.length} templates',
-                        style: const TextStyle(
-                            color: _kTextSub, fontSize: 12),
+                        style: TextStyle(
+                            color: context.colors.textSecondary, fontSize: 12),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const Divider(color: _kCardBorder, height: 1),
+            Divider(color: context.colors.border, height: 1),
             // Template list
             Expanded(
               child: ListView.separated(
                 controller: ctrl,
                 padding: const EdgeInsets.all(16),
                 itemCount: category.templates.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, __) => SizedBox(height: 10),
                 itemBuilder: (ctx, i) {
                   final t = category.templates[i];
                   return GestureDetector(
@@ -730,9 +724,9 @@ class _CategorySheet extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: _kCard,
+                        color: context.colors.card,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: _kCardBorder),
+                        border: Border.all(color: context.colors.border),
                       ),
                       child: Row(
                         children: [
@@ -745,24 +739,24 @@ class _CategorySheet extends StatelessWidget {
                             child: Icon(t.icon,
                                 color: category.color, size: 22),
                           ),
-                          const SizedBox(width: 14),
+                          SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   t.title,
-                                  style: const TextStyle(
-                                    color: _kText,
+                                  style: TextStyle(
+                                    color: context.colors.textPrimary,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const SizedBox(height: 3),
+                                SizedBox(height: 3),
                                 Text(
                                   t.description,
-                                  style: const TextStyle(
-                                      color: _kTextSub, fontSize: 13),
+                                  style: TextStyle(
+                                      color: context.colors.textSecondary, fontSize: 13),
                                 ),
                               ],
                             ),
@@ -770,13 +764,13 @@ class _CategorySheet extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _kSage.withOpacity(0.12),
+                              color: context.colors.sage.withOpacity(0.12),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: _kSage.withOpacity(0.25)),
+                                  color: context.colors.sage.withOpacity(0.25)),
                             ),
-                            child: const Icon(Icons.add_rounded,
-                                color: _kSage, size: 16),
+                            child: Icon(Icons.add_rounded,
+                                color: context.colors.sage, size: 16),
                           ),
                         ],
                       ),

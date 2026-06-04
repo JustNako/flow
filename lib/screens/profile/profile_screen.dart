@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -10,17 +10,11 @@ import '../../api/achievements_api_service.dart';
 import '../../widgets/notification_settings_sheet.dart';
 import '../../widgets/account_settings_sheet.dart';
 import '../paywall/paywall_screen.dart';
+import '../../theme/app_theme.dart';
 import 'achievements_screen.dart';
 
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSage = Color(0xFF8BA888);
-const _kLavender = Color(0xFF9F92C6);
-const _kTerra = Color(0xFFD68C7A);
+// Gold is not in AppColors so we keep it as a constant
 const _kGold = Color(0xFFFFD700);
-const _kText = Color(0xFFE8E8E8);
-const _kTextSub = Color(0xFF888888);
 
 // ─── Delete Account Dialog ───────────────────────────────────────────────────
 class _DeleteAccountDialog extends StatefulWidget {
@@ -42,15 +36,16 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return AlertDialog(
-      backgroundColor: _kCard,
+      backgroundColor: colors.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       title: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: _kTerra, size: 28),
-          const SizedBox(width: 12),
+          Icon(Icons.warning_amber_rounded, color: colors.terracotta, size: 28),
+          SizedBox(width: 12),
           Text('Delete Account',
-              style: GoogleFonts.inter(color: _kText, fontSize: 18, fontWeight: FontWeight.bold)),
+              style: GoogleFonts.inter(color: colors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
         ],
       ),
       content: Column(
@@ -59,31 +54,31 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
         children: [
           Text(
             'This action is permanent and cannot be undone. All your habits and data will be deleted.',
-            style: GoogleFonts.inter(color: _kTextSub, fontSize: 14, height: 1.5),
+            style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14, height: 1.5),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text('Enter your password to confirm:',
-              style: GoogleFonts.inter(color: _kText, fontSize: 14)),
-          const SizedBox(height: 12),
+              style: GoogleFonts.inter(color: colors.textPrimary, fontSize: 14)),
+          SizedBox(height: 12),
           TextField(
             controller: _passwordController,
             obscureText: _obscureText,
-            style: GoogleFonts.inter(color: _kText),
+            style: GoogleFonts.inter(color: colors.textPrimary),
             decoration: InputDecoration(
               hintText: 'Your password',
-              hintStyle: GoogleFonts.inter(color: _kTextSub),
+              hintStyle: GoogleFonts.inter(color: colors.textSecondary),
               filled: true,
-              fillColor: _kBg,
+              fillColor: colors.background,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _kTerra, width: 1.5)),
+                  borderSide: BorderSide(color: colors.terracotta, width: 1.5)),
               suffixIcon: IconButton(
                 icon: Icon(
                     _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    color: _kTextSub),
+                    color: colors.textSecondary),
                 onPressed: () => setState(() => _obscureText = !_obscureText),
               ),
             ),
@@ -93,7 +88,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
       actions: [
         TextButton(
             onPressed: () => Navigator.of(context).pop(null),
-            child: Text('Cancel', style: GoogleFonts.inter(color: _kTextSub, fontSize: 15))),
+            child: Text('Cancel', style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 15))),
         TextButton(
           onPressed: () {
             final password = _passwordController.text.trim();
@@ -101,7 +96,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
             Navigator.of(context).pop(password);
           },
           child: Text('Delete',
-              style: GoogleFonts.inter(color: _kTerra, fontSize: 15, fontWeight: FontWeight.w600)),
+              style: GoogleFonts.inter(color: colors.terracotta, fontSize: 15, fontWeight: FontWeight.w600)),
         ),
       ],
     );
@@ -185,7 +180,7 @@ class ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: _kTerra,
+          backgroundColor: context.colors.terracotta,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ));
@@ -198,7 +193,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   void _showPrivacyBottomSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: _kCard,
+      backgroundColor: context.colors.card,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (ctx) => Padding(
@@ -211,14 +206,14 @@ class ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 width: 40, height: 4,
                 decoration:
-                    BoxDecoration(color: _kCardBorder, borderRadius: BorderRadius.circular(2)),
+                    BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text('Privacy & Security',
                 style: GoogleFonts.playfairDisplay(
-                    color: _kText, fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
+                    color: context.colors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 24),
             GestureDetector(
               onTap: () async {
                 await Navigator.of(ctx).maybePop();
@@ -227,39 +222,39 @@ class ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: _kTerra.withOpacity(0.08),
+                  color: context.colors.terracotta.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _kTerra.withOpacity(0.2)),
+                  border: Border.all(color: context.colors.terracotta.withOpacity(0.2)),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                          color: _kTerra.withOpacity(0.15),
+                          color: context.colors.terracotta.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12)),
-                      child: const Icon(Icons.delete_forever_outlined, color: _kTerra, size: 22),
+                      child: Icon(Icons.delete_forever_outlined, color: context.colors.terracotta, size: 22),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Delete Account',
                               style: GoogleFonts.inter(
-                                  color: _kTerra, fontSize: 15, fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 4),
+                                  color: context.colors.terracotta, fontSize: 15, fontWeight: FontWeight.w600)),
+                          SizedBox(height: 4),
                           Text('Permanently delete your account and all data',
-                              style: GoogleFonts.inter(color: _kTextSub, fontSize: 12)),
+                              style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 12)),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: _kTerra, size: 20),
+                    Icon(Icons.chevron_right, color: context.colors.terracotta, size: 20),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
           ],
         ),
       ),
@@ -288,9 +283,9 @@ class ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: _kBg,
-        body: Center(child: CircularProgressIndicator(color: _kSage)),
+      return Scaffold(
+        backgroundColor: context.colors.background,
+        body: Center(child: CircularProgressIndicator(color: context.colors.sage)),
       );
     }
 
@@ -305,12 +300,12 @@ class ProfileScreenState extends State<ProfileScreen> {
         : '?';
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: loadData,
-          color: _kSage,
-          backgroundColor: _kCard,
+          color: context.colors.sage,
+          backgroundColor: context.colors.card,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
             padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
@@ -348,15 +343,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                       width: 26,
                       height: 26,
                       decoration: BoxDecoration(
-                        color: _kSage,
+                        color: context.colors.sage,
                         shape: BoxShape.circle,
-                        border: Border.all(color: _kBg, width: 2),
+                        border: Border.all(color: context.colors.background, width: 2),
                       ),
                       child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // ── Name + PRO badge ──────────────────────────────────────────
                 Row(
@@ -365,10 +360,10 @@ class ProfileScreenState extends State<ProfileScreen> {
                     Text(
                       userName,
                       style: GoogleFonts.playfairDisplay(
-                          color: _kText, fontSize: 22, fontWeight: FontWeight.w700),
+                          color: context.colors.textPrimary, fontSize: 22, fontWeight: FontWeight.w700),
                     ),
                     if (isPro) ...[
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
@@ -380,7 +375,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.bolt_rounded, color: _kGold, size: 12),
-                            const SizedBox(width: 3),
+                            SizedBox(width: 3),
                             Text('PRO',
                                 style: GoogleFonts.inter(
                                     color: _kGold,
@@ -393,34 +388,34 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
 
                 // ── Email ─────────────────────────────────────────────────────
                 Text(email,
-                    style: GoogleFonts.inter(color: _kTextSub, fontSize: 14)),
-                const SizedBox(height: 12),
+                    style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 14)),
+                SizedBox(height: 12),
 
                 // ── Member since pill ──────────────────────────────────────────
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _kCard,
+                    color: context.colors.card,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _kCardBorder),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.eco_outlined, color: _kSage, size: 14),
-                      const SizedBox(width: 6),
+                      Icon(Icons.eco_outlined, color: context.colors.sage, size: 14),
+                      SizedBox(width: 6),
                       Text(
                         'Member since $joinedAtStr',
-                        style: GoogleFonts.inter(color: _kTextSub, fontSize: 12),
+                        style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 12),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
 
                 // ── Bento Stat Cards ──────────────────────────────────────────
                 Row(
@@ -430,20 +425,20 @@ class ProfileScreenState extends State<ProfileScreen> {
                         emoji: '🧘‍♀️',
                         value: '$_totalHabits',
                         label: 'Total Habits',
-                        accentColor: _kSage,
+                        accentColor: context.colors.sage,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: _BentoStatCard(
                         emoji: '🔥',
                         value: '${_globalStreak}d',
                         label: 'Current Streak',
-                        accentColor: _kTerra,
+                        accentColor: context.colors.terracotta,
                         isHighlighted: true,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: GestureDetector(
                         onTap: () => Navigator.push(
@@ -463,16 +458,16 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
 
                 // ── ACCOUNT Section ───────────────────────────────────────────
                 _SectionLabel(label: 'ACCOUNT'),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
-                    color: _kCard,
+                    color: context.colors.card,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _kCardBorder),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Column(
                     children: [
@@ -484,13 +479,13 @@ class ProfileScreenState extends State<ProfileScreen> {
                             ? Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: _kSage.withOpacity(0.15),
+                                  color: context.colors.sage.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: _kSage.withOpacity(0.3)),
+                                  border: Border.all(color: context.colors.sage.withOpacity(0.3)),
                                 ),
                                 child: Text('ACTIVE',
                                     style: GoogleFonts.inter(
-                                        color: _kSage,
+                                        color: context.colors.sage,
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 0.5)),
@@ -515,14 +510,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                       _Divider(),
                       _SettingsRow(
                         icon: Icons.tune_rounded,
-                        iconColor: _kLavender,
+                        iconColor: context.colors.lavender,
                         title: 'Account Settings',
                         onTap: _showAccountSettings,
                       ),
                       _Divider(),
                       _SettingsRow(
                         icon: Icons.shield_outlined,
-                        iconColor: _kTextSub,
+                        iconColor: context.colors.textSecondary,
                         title: 'Privacy & Security',
                         onTap: _showPrivacyBottomSheet,
                         isLast: true,
@@ -530,17 +525,17 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
 
                 // ── APPEARANCE Section ────────────────────────────────────────
                 _SectionLabel(label: 'APPEARANCE'),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: _kCard,
+                    color: context.colors.card,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _kCardBorder),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,17 +546,17 @@ class ProfileScreenState extends State<ProfileScreen> {
                             width: 34,
                             height: 34,
                             decoration: BoxDecoration(
-                              color: _kLavender.withOpacity(0.12),
+                              color: context.colors.lavender.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(Icons.palette_outlined, color: _kLavender, size: 18),
+                            child: Icon(Icons.palette_outlined, color: context.colors.lavender, size: 18),
                           ),
-                          const SizedBox(width: 14),
+                          SizedBox(width: 14),
                           Expanded(
                             child: Text(
                               'Theme',
                               style: GoogleFonts.inter(
-                                color: _kText,
+                                color: context.colors.textPrimary,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -569,7 +564,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _ThemeSegmentedControl(
                         currentMode: ThemeService.instance.themeMode,
                         onChanged: (mode) {
@@ -580,40 +575,40 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
 
                 // ── SUPPORT Section ───────────────────────────────────────────
                 _SectionLabel(label: 'SUPPORT'),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
-                    color: _kCard,
+                    color: context.colors.card,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _kCardBorder),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Column(
                     children: [
                       _SettingsRow(
                         icon: Icons.notifications_none_rounded,
-                        iconColor: _kSage,
+                        iconColor: context.colors.sage,
                         title: 'Daily Reminders',
                         onTap: _showDailyReminders,
                       ),
                       _Divider(),
                       _SettingsRow(
                         icon: Icons.help_outline_rounded,
-                        iconColor: _kTerra,
+                        iconColor: context.colors.terracotta,
                         title: 'Help & FAQ',
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Coming soon! 🌿',
-                                  style: GoogleFonts.inter(color: _kText)),
-                              backgroundColor: _kCard,
+                                  style: GoogleFonts.inter(color: context.colors.textPrimary)),
+                              backgroundColor: context.colors.card,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  side: const BorderSide(color: _kCardBorder)),
+                                  side: BorderSide(color: context.colors.border)),
                             ),
                           );
                         },
@@ -622,7 +617,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
 
                 // ── Log out ───────────────────────────────────────────────────
                 GestureDetector(
@@ -639,41 +634,41 @@ class ProfileScreenState extends State<ProfileScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     decoration: BoxDecoration(
-                      color: _kCard,
+                      color: context.colors.card,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: _kTerra.withOpacity(0.25)),
+                      border: Border.all(color: context.colors.terracotta.withOpacity(0.25)),
                     ),
                     child: _isDeletingAccount
-                        ? const Center(
+                        ? Center(
                             child: SizedBox(
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                  color: _kTerra, strokeWidth: 2),
+                                  color: context.colors.terracotta, strokeWidth: 2),
                             ),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.logout_rounded, color: _kTerra, size: 20),
-                              const SizedBox(width: 10),
+                              Icon(Icons.logout_rounded, color: context.colors.terracotta, size: 20),
+                              SizedBox(width: 10),
                               Text('Log out',
                                   style: GoogleFonts.inter(
-                                      color: _kTerra,
+                                      color: context.colors.terracotta,
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500)),
                             ],
                           ),
                   ),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
 
                 // ── Footer ────────────────────────────────────────────────────
                 Text(
                   'Flow v$_appVersion · Crafted with calm 🌿',
-                  style: GoogleFonts.inter(color: _kTextSub.withOpacity(0.5), fontSize: 12),
+                  style: GoogleFonts.inter(color: context.colors.textSecondary.withOpacity(0.5), fontSize: 12),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
               ],
             ),
           ),
@@ -704,31 +699,31 @@ class _BentoStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       decoration: BoxDecoration(
-        color: isHighlighted ? _kTerra.withOpacity(0.08) : _kCard,
+        color: isHighlighted ? context.colors.terracotta.withOpacity(0.08) : context.colors.card,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isHighlighted ? _kTerra.withOpacity(0.3) : _kCardBorder,
+          color: isHighlighted ? context.colors.terracotta.withOpacity(0.3) : context.colors.border,
         ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(emoji, style: const TextStyle(fontSize: 26)),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             value,
             style: GoogleFonts.playfairDisplay(
-              color: _kText,
+              color: context.colors.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
               height: 1.0,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             label,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(color: _kTextSub, fontSize: 11, height: 1.3),
+            style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 11, height: 1.3),
           ),
         ],
       ),
@@ -749,7 +744,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         label,
         style: GoogleFonts.inter(
-          color: _kTextSub,
+          color: context.colors.textSecondary,
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.5,
@@ -763,10 +758,10 @@ class _SectionLabel extends StatelessWidget {
 class _Divider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       thickness: 1,
-      color: _kCardBorder,
+      color: context.colors.border,
       indent: 56,
     );
   }
@@ -813,19 +808,19 @@ class _SettingsRow extends StatelessWidget {
                 ),
                 child: Icon(icon, color: iconColor, size: 18),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Text(
                   title,
                   style: GoogleFonts.inter(
-                    color: _kText,
+                    color: context.colors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
               trailing ??
-                  const Icon(Icons.chevron_right_rounded, color: _kTextSub, size: 20),
+                  Icon(Icons.chevron_right_rounded, color: context.colors.textSecondary, size: 20),
             ],
           ),
         ),
@@ -855,9 +850,9 @@ class _ThemeSegmentedControl extends StatelessWidget {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: _kBg,
+        color: context.colors.background,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: context.colors.border),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -876,9 +871,9 @@ class _ThemeSegmentedControl extends StatelessWidget {
                 width: segmentWidth - 6,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: _kSage.withOpacity(0.18),
+                    color: context.colors.sage.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(11),
-                    border: Border.all(color: _kSage.withOpacity(0.35)),
+                    border: Border.all(color: context.colors.sage.withOpacity(0.35)),
                   ),
                 ),
               ),
@@ -894,7 +889,7 @@ class _ThemeSegmentedControl extends StatelessWidget {
                         child: AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 220),
                           style: GoogleFonts.inter(
-                            color: isSelected ? _kSage : _kTextSub,
+                            color: isSelected ? context.colors.sage : context.colors.textSecondary,
                             fontSize: 13,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                           ),
@@ -907,10 +902,10 @@ class _ThemeSegmentedControl extends StatelessWidget {
                                   entry.$2,
                                   key: ValueKey('${entry.$3}_$isSelected'),
                                   size: 16,
-                                  color: isSelected ? _kSage : _kTextSub,
+                                  color: isSelected ? context.colors.sage : context.colors.textSecondary,
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text(entry.$3),
                             ],
                           ),

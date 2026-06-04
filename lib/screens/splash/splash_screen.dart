@@ -1,5 +1,6 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -135,7 +136,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     final onboarded = prefs.getBool('onboarded') ?? false;
     final token = await AuthService.instance.getToken();
     
-    // If logged in, sync widget data in background (don't await — fire and forget)
+    // If logged in, sync widget data in background (don't await ? fire and forget)
     if (token != null) {
       WidgetService.updateWidget();
     }
@@ -188,7 +189,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0D14),
+      backgroundColor: context.colors.background,
       body: Stack(
         children: [
           // Premium subtle background gradients
@@ -200,7 +201,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFE8845C).withOpacity(0.08),
+                color: context.colors.terracotta.withOpacity(0.08),
                 backgroundBlendMode: BlendMode.screen,
               ),
             ),
@@ -213,7 +214,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFC96B42).withOpacity(0.08),
+                color: context.colors.terracotta.withOpacity(0.08),
                 backgroundBlendMode: BlendMode.screen,
               ),
             ),
@@ -247,7 +248,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFE8845C).withOpacity(0.15),
+                      color: context.colors.terracotta.withOpacity(0.15),
                       blurRadius: 35,
                       spreadRadius: 8,
                     ),
@@ -266,13 +267,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             const SizedBox(height: 32),
             
             // App Name
-            const Text(
+            Text(
               'FLOW',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 4,
-                color: Colors.white,
+                color: context.colors.textPrimary,
               ),
             ),
             
@@ -286,7 +287,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 width: 160,
                 child: LinearProgressIndicator(
                   value: _progress,
-                  backgroundColor: const Color(0xFF161920),
+                  backgroundColor: context.colors.card,
                   valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE8845C)),
                 ),
               ),
@@ -337,18 +338,18 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             
             const SizedBox(height: 32),
             
-            const Text(
+            Text(
               'Update Required',
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: context.colors.textPrimary,
               ),
             ),
             
             const SizedBox(height: 16),
             
-            const Text(
+            Text(
               'Your version of Flow is no longer supported.\nPlease update to continue building premium habits.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -362,11 +363,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE8845C),
+                backgroundColor: context.colors.terracotta,
                 padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 5,
-                shadowColor: const Color(0xFFE8845C).withOpacity(0.4),
+                shadowColor: context.colors.terracotta.withOpacity(0.4),
               ),
               onPressed: () async {
                 // Launch app store URL
@@ -375,10 +376,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   // In premium apps we use standard plugins
                 }
               },
-              child: const Text(
+              child: Text(
                 'Update Now',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.colors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),

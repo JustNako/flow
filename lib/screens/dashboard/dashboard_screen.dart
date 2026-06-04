@@ -10,16 +10,9 @@ import '../../services/auth_service.dart';
 import '../../services/offline_manager.dart';
 import '../../services/update_service.dart';
 import '../../services/widget_service.dart';
+import '../../theme/app_theme.dart';
 
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSage = Color(0xFF8BA888);
-const _kTerra = Color(0xFFD68C7A);
-const _kLavender = Color(0xFF9F92C6);
 const _kGold = Color(0xFFFFD700);
-const _kText = Color(0xFFE8E8E8);
-const _kTextSub = Color(0xFF888888);
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -216,7 +209,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString().replaceFirst('Exception: ', '')}'), backgroundColor: _kTerra, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text('Error: ${e.toString().replaceFirst('Exception: ', '')}'), backgroundColor: context.colors.terracotta, behavior: SnackBarBehavior.floating),
         );
       }
     } finally {
@@ -231,13 +224,13 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _kCard,
+        backgroundColor: context.colors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Delete habit?', style: TextStyle(color: _kText)),
-        content: Text('"${habit.title}" will be permanently deleted.', style: const TextStyle(color: _kTextSub)),
+        title: Text('Delete habit?', style: TextStyle(color: context.colors.textPrimary)),
+        content: Text('"${habit.title}" will be permanently deleted.', style: TextStyle(color: context.colors.textSecondary)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel', style: TextStyle(color: _kTextSub))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: _kTerra))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Cancel', style: TextStyle(color: context.colors.textSecondary))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('Delete', style: TextStyle(color: context.colors.terracotta))),
         ],
       ),
     );
@@ -263,7 +256,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString().replaceFirst('Exception: ', '')}'), backgroundColor: _kTerra, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text('Error: ${e.toString().replaceFirst('Exception: ', '')}'), backgroundColor: context.colors.terracotta, behavior: SnackBarBehavior.floating),
         );
       }
     }
@@ -290,7 +283,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
     }
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -298,8 +291,8 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
             Expanded(
               child: RefreshIndicator(
                 onRefresh: loadData,
-                color: _kSage,
-                backgroundColor: _kCard,
+                color: context.colors.sage,
+                backgroundColor: context.colors.card,
                 child: CustomScrollView(
                   physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   slivers: [
@@ -318,7 +311,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                     children: [
                                       Text(
                                         DateFormat('EEE, MMM d').format(DateTime.now()).toUpperCase(),
-                                        style: const TextStyle(color: _kTextSub, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.2),
+                                        style: TextStyle(color: context.colors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.2),
                                       ),
                                       GestureDetector(
                                         onTap: () {
@@ -330,39 +323,39 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                         },
                                         child: Container(
                                           padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(color: _kCard, shape: BoxShape.circle, border: Border.all(color: _kCardBorder)),
-                                          child: const Icon(Icons.apps_rounded, color: _kTextSub, size: 20),
+                                          decoration: BoxDecoration(color: context.colors.card, shape: BoxShape.circle, border: Border.all(color: context.colors.border)),
+                                          child: Icon(Icons.apps_rounded, color: context.colors.textSecondary, size: 20),
                                         ),
                                       )
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
+                                  SizedBox(height: 8),
                                   AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 500),
                                     child: Text(
                                       greeting,
                                       key: ValueKey(greeting),
-                                      style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 32, fontWeight: FontWeight.w700, height: 1.1),
+                                      style: GoogleFonts.playfairDisplay(color: context.colors.textPrimary, fontSize: 32, fontWeight: FontWeight.w700, height: 1.1),
                                     ),
                                   ),
                                   Text(
                                     '${_username ?? 'there'}.',
                                     style: GoogleFonts.playfairDisplay(
-                                      color: isAllDone ? _kSage.withOpacity(0.5) : _kTextSub,
+                                      color: isAllDone ? context.colors.sage.withOpacity(0.5) : context.colors.textSecondary,
                                       fontSize: 32,
                                       fontWeight: FontWeight.w700,
                                       height: 1.1,
                                     ),
                                   ),
-                                  const SizedBox(height: 14),
+                                  SizedBox(height: 14),
                                   Row(
                                     children: [
-                                      Icon(Icons.info_outline_rounded, color: _kSage.withOpacity(0.6), size: 12),
-                                      const SizedBox(width: 6),
+                                      Icon(Icons.info_outline_rounded, color: context.colors.sage.withOpacity(0.6), size: 12),
+                                      SizedBox(width: 6),
                                       Text(
                                         'Swipe left on a habit to view details',
                                         style: GoogleFonts.inter(
-                                          color: _kTextSub.withOpacity(0.6),
+                                          color: context.colors.textSecondary.withOpacity(0.6),
                                           fontSize: 11,
                                           fontStyle: FontStyle.italic,
                                         ),
@@ -372,13 +365,13 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            SizedBox(width: 16),
                             // Thin animated ring
                             AnimatedBuilder(
                               animation: _progressAnimation,
                               builder: (context, child) {
                                 final val = _progressAnimation.value;
-                                Color ringColor = Color.lerp(_kLavender, _kSage, val)!;
+                                Color ringColor = Color.lerp(context.colors.lavender, context.colors.sage, val)!;
                                 if (val > 0.99) ringColor = _kGold;
 
                                 return SizedBox(
@@ -390,7 +383,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                       SizedBox(
                                         width: 72,
                                         height: 72,
-                                        child: CircularProgressIndicator(value: 1.0, strokeWidth: 1.5, color: _kCardBorder),
+                                        child: CircularProgressIndicator(value: 1.0, strokeWidth: 1.5, color: context.colors.border),
                                       ),
                                       SizedBox(
                                         width: 72,
@@ -410,7 +403,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                           builder: (context, scale, child) {
                                             return Transform.scale(
                                               scale: scale,
-                                              child: const Text('✨', style: TextStyle(fontSize: 24)),
+                                              child: Text('✨', style: TextStyle(fontSize: 24)),
                                             );
                                           },
                                         )
@@ -418,9 +411,9 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                         Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Text('$completed', style: const TextStyle(color: _kText, fontSize: 18, fontWeight: FontWeight.bold, height: 1.0)),
-                                            const Text('of', style: TextStyle(color: _kTextSub, fontSize: 10, height: 1.0)),
-                                            Text('$total', style: const TextStyle(color: _kTextSub, fontSize: 10, height: 1.0)),
+                                            Text('$completed', style: TextStyle(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold, height: 1.0)),
+                                            Text('of', style: TextStyle(color: context.colors.textSecondary, fontSize: 10, height: 1.0)),
+                                            Text('$total', style: TextStyle(color: context.colors.textSecondary, fontSize: 10, height: 1.0)),
                                           ],
                                         ),
                                     ],
@@ -440,13 +433,13 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                           children: [
                             Text(
                               "Today's habits",
-                              style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 22, fontWeight: FontWeight.w600),
+                              style: GoogleFonts.playfairDisplay(color: context.colors.textPrimary, fontSize: 22, fontWeight: FontWeight.w600),
                             ),
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 500),
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: isAllDone ? _kGold.withOpacity(0.15) : _kCardBorder.withOpacity(0.5),
+                                color: isAllDone ? _kGold.withOpacity(0.15) : context.colors.border.withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(20),
                                 border: isAllDone ? Border.all(color: _kGold.withOpacity(0.3)) : null,
                                 boxShadow: isAllDone ? [BoxShadow(color: _kGold.withOpacity(0.2), blurRadius: 10)] : [],
@@ -458,14 +451,14 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                     width: 6,
                                     height: 6,
                                     decoration: BoxDecoration(
-                                      color: isAllDone ? _kGold : _kTextSub,
+                                      color: isAllDone ? _kGold : context.colors.textSecondary,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
+                                  SizedBox(width: 6),
                                   Text(
                                     '$completed of $total',
-                                    style: TextStyle(color: isAllDone ? _kGold : _kTextSub, fontSize: 11, fontWeight: isAllDone ? FontWeight.bold : FontWeight.normal),
+                                    style: TextStyle(color: isAllDone ? _kGold : context.colors.textSecondary, fontSize: 11, fontWeight: isAllDone ? FontWeight.bold : FontWeight.normal),
                                   ),
                                 ],
                               ),
@@ -476,32 +469,32 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                     ),
                     const SliverToBoxAdapter(child: SizedBox(height: 12)),
                     if (_isLoading)
-                      const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: _kSage)))
+                      SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: context.colors.sage)))
                     else if (_error != null)
                       SliverFillRemaining(
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error_outline, color: _kTerra, size: 48),
-                              const SizedBox(height: 16),
-                              Text(_error!, style: const TextStyle(color: _kTextSub)),
-                              TextButton.icon(onPressed: loadData, icon: const Icon(Icons.refresh, color: _kSage), label: const Text('Retry', style: TextStyle(color: _kSage))),
+                              Icon(Icons.error_outline, color: context.colors.terracotta, size: 48),
+                              SizedBox(height: 16),
+                              Text(_error!, style: TextStyle(color: context.colors.textSecondary)),
+                              TextButton.icon(onPressed: loadData, icon: Icon(Icons.refresh, color: context.colors.sage), label: Text('Retry', style: TextStyle(color: context.colors.sage))),
                             ],
                           ),
                         ),
                       )
                     else if (_todayHabits.isEmpty && _otherHabits.isEmpty)
-                      const SliverFillRemaining(
+                      SliverFillRemaining(
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.spa_outlined, color: _kTextSub, size: 64),
+                              Icon(Icons.spa_outlined, color: context.colors.textSecondary, size: 64),
                               SizedBox(height: 16),
-                              Text('No habits today', style: TextStyle(color: _kText, fontSize: 18)),
+                              Text('No habits today', style: TextStyle(color: context.colors.textPrimary, fontSize: 18)),
                               SizedBox(height: 8),
-                              Text('Enjoy your day or add a new habit', style: TextStyle(color: _kTextSub)),
+                              Text('Enjoy your day or add a new habit', style: TextStyle(color: context.colors.textSecondary)),
                             ],
                           ),
                         ),
@@ -538,17 +531,17 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                             margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: _kCard.withOpacity(0.5),
+                              color: context.colors.card.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(22),
-                              border: Border.all(color: _kCardBorder),
+                              border: Border.all(color: context.colors.border),
                             ),
                             child: Column(
                               children: [
-                                const Icon(Icons.spa_outlined, color: _kTextSub, size: 36),
-                                const SizedBox(height: 8),
+                                Icon(Icons.spa_outlined, color: context.colors.textSecondary, size: 36),
+                                SizedBox(height: 8),
                                 Text(
                                   'No habits scheduled for today',
-                                  style: GoogleFonts.inter(color: _kTextSub, fontSize: 14, fontWeight: FontWeight.w500),
+                                  style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 14, fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -561,7 +554,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                             padding: const EdgeInsets.fromLTRB(24, 32, 24, 12),
                             child: Text(
                               "Other habits",
-                              style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 22, fontWeight: FontWeight.w600),
+                              style: GoogleFonts.playfairDisplay(color: context.colors.textPrimary, fontSize: 22, fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -611,11 +604,11 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
       stream: _offlineManager.connectionStatus,
       builder: (context, snapshot) {
         final status = snapshot.data;
-        if (status == null || status == ConnectionStatus.connected) return const SizedBox.shrink();
+        if (status == null || status == ConnectionStatus.connected) return SizedBox.shrink();
         final (color, icon, text) = switch (status) {
-          ConnectionStatus.disconnected => (_kTerra, Icons.wifi_off, 'Offline mode — changes will sync when connected'),
-          ConnectionStatus.syncing => (_kLavender, Icons.sync, 'Syncing...'),
-          _ => (_kSage, Icons.wifi, 'Online'),
+          ConnectionStatus.disconnected => (context.colors.terracotta, Icons.wifi_off, 'Offline mode — changes will sync when connected'),
+          ConnectionStatus.syncing => (context.colors.lavender, Icons.sync, 'Syncing...'),
+          _ => (context.colors.sage, Icons.wifi, 'Online'),
         };
         return Container(
           color: color.withOpacity(0.15),
@@ -623,7 +616,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
           child: Row(
             children: [
               Icon(icon, color: color, size: 16),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(child: Text(text, style: TextStyle(color: color, fontSize: 12))),
             ],
           ),
@@ -681,19 +674,15 @@ class _FloatingAddButtonState extends State<_FloatingAddButton> with SingleTicke
               height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [_kSage, _kLavender],
+                gradient: LinearGradient(
+                  colors: [context.colors.sage, context.colors.lavender],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [
-                  BoxShadow(color: _kLavender.withOpacity(0.4), blurRadius: 30, spreadRadius: 4 + (_anim.value * 6), offset: const Offset(0, 10)),
-                  BoxShadow(color: _kSage.withOpacity(0.3), blurRadius: 20, spreadRadius: 2 + (_anim.value * 4), offset: const Offset(0, 5)),
-                ],
               ),
               child: Transform.rotate(
                 angle: rotate,
-                child: const Icon(Icons.add_rounded, color: _kBg, size: 32),
+                child: Icon(Icons.add_rounded, color: context.colors.background, size: 32),
               ),
             ),
           );
@@ -734,12 +723,12 @@ class _ZenHabitCard extends StatelessWidget {
     return Icons.spa_rounded;
   }
 
-  Color _getDynamicColor(String title) {
+  Color _getDynamicColor(BuildContext context, String title) {
     final lower = title.toLowerCase();
     if (lower.contains('water') || lower.contains('read')) return const Color(0xFF64B5F6);
-    if (lower.contains('meditat') || lower.contains('walk')) return _kSage;
-    if (lower.contains('journal') || lower.contains('sleep')) return _kLavender;
-    if (lower.contains('workout') || lower.contains('run')) return _kTerra;
+    if (lower.contains('meditat') || lower.contains('walk')) return context.colors.sage;
+    if (lower.contains('journal') || lower.contains('sleep')) return context.colors.lavender;
+    if (lower.contains('workout') || lower.contains('run')) return context.colors.terracotta;
     return const Color(0xFFFFB74D);
   }
 
@@ -747,7 +736,7 @@ class _ZenHabitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDone = habit.isCompletedToday;
     final iconData = _getDynamicIcon(habit.title);
-    final iconColor = _getDynamicColor(habit.title);
+    final iconColor = _getDynamicColor(context, habit.title);
 
     return Dismissible(
       key: Key(habit.id ?? habit.title),
@@ -757,16 +746,16 @@ class _ZenHabitCard extends StatelessWidget {
         padding: const EdgeInsets.only(right: 24),
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: _kLavender.withOpacity(0.15),
+          color: context.colors.lavender.withOpacity(0.15),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: _kLavender.withOpacity(0.3)),
+          border: Border.all(color: context.colors.lavender.withOpacity(0.3)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bar_chart_rounded, color: _kLavender),
-            const SizedBox(height: 4),
-            Text('Details', style: TextStyle(color: _kLavender, fontSize: 11, fontWeight: FontWeight.w600)),
+            Icon(Icons.bar_chart_rounded, color: context.colors.lavender),
+            SizedBox(height: 4),
+            Text('Details', style: TextStyle(color: context.colors.lavender, fontSize: 11, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -783,15 +772,15 @@ class _ZenHabitCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: isDone ? _kCard.withOpacity(0.5) : _kCard,
+            color: isDone ? context.colors.card.withOpacity(0.5) : context.colors.card,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: isDone ? _kSage.withOpacity(0.5) : _kCardBorder,
+              color: isDone ? context.colors.sage.withOpacity(0.5) : context.colors.border,
               width: 1.5,
             ),
             boxShadow: isDone ? [
               BoxShadow(
-                color: _kSage.withOpacity(0.1),
+                color: context.colors.sage.withOpacity(0.1),
                 blurRadius: 20,
                 spreadRadius: 2,
               )
@@ -807,8 +796,8 @@ class _ZenHabitCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      isDone ? _kSage.withOpacity(0.2) : const Color(0xFF333333),
-                      isDone ? _kSage.withOpacity(0.05) : const Color(0xFF222222),
+                      isDone ? context.colors.sage.withOpacity(0.2) : const Color(0xFF333333),
+                      isDone ? context.colors.sage.withOpacity(0.05) : const Color(0xFF222222),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -830,12 +819,12 @@ class _ZenHabitCard extends StatelessWidget {
                 child: Center(
                   child: Icon(
                     iconData,
-                    color: isDone ? _kSage : iconColor.withOpacity(0.8),
+                    color: isDone ? context.colors.sage : iconColor.withOpacity(0.8),
                     size: 24,
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               // Text and Streaks
               Expanded(
                 child: Column(
@@ -844,17 +833,17 @@ class _ZenHabitCard extends StatelessWidget {
                     AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 300),
                       style: TextStyle(
-                        color: isDone ? _kTextSub.withOpacity(0.6) : _kText,
+                        color: isDone ? context.colors.textSecondary.withOpacity(0.6) : context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         decoration: isDone ? TextDecoration.lineThrough : null,
-                        decorationColor: _kSage.withOpacity(0.5),
+                        decorationColor: context.colors.sage.withOpacity(0.5),
                         decorationThickness: 2,
                         fontFamily: GoogleFonts.inter().fontFamily,
                       ),
                       child: Text(habit.title),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Row(
                       children: [
                         Flexible(
@@ -862,35 +851,35 @@ class _ZenHabitCard extends StatelessWidget {
                             children: [
                               Flexible(
                                 child: habit.unit != null && habit.unit!.isNotEmpty && habit.unit!.toLowerCase() != 'null'
-                                  ? Text('${habit.targetDays} ${habit.unit}', overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kTextSub, fontSize: 13))
-                                  : Text('${habit.targetDays} time${habit.targetDays > 1 ? 's' : ''}', overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kTextSub, fontSize: 13)),
+                                  ? Text('${habit.targetDays} ${habit.unit}', overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.textSecondary, fontSize: 13))
+                                  : Text('${habit.targetDays} time${habit.targetDays > 1 ? 's' : ''}', overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.textSecondary, fontSize: 13)),
                               ),
                               
                               if (habit.timeOfDay != null && habit.timeOfDay!.isNotEmpty && habit.timeOfDay!.toLowerCase() != 'null') ...[
-                                const SizedBox(width: 8),
-                                Text('|', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.1) : _kCardBorder, fontSize: 13)),
-                                const SizedBox(width: 8),
-                                Icon(Icons.access_time_rounded, size: 13, color: isDone ? _kTextSub.withOpacity(0.3) : _kSage),
-                                const SizedBox(width: 4),
-                                Flexible(child: Text(habit.timeOfDay!, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.3) : _kSage, fontSize: 13, fontWeight: FontWeight.w600))),
+                                SizedBox(width: 8),
+                                Text('|', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.1) : context.colors.border, fontSize: 13)),
+                                SizedBox(width: 8),
+                                Icon(Icons.access_time_rounded, size: 13, color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.sage),
+                                SizedBox(width: 4),
+                                Flexible(child: Text(habit.timeOfDay!, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.sage, fontSize: 13, fontWeight: FontWeight.w600))),
                               ],
 
                               if (habit.completedDays > 0) ...[
-                                const SizedBox(width: 8),
-                                Text('|', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.1) : _kCardBorder, fontSize: 13)),
-                                const SizedBox(width: 8),
+                                SizedBox(width: 8),
+                                Text('|', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.1) : context.colors.border, fontSize: 13)),
+                                SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: _kTerra.withOpacity(isDone ? 0.05 : 0.15),
+                                    color: context.colors.terracotta.withOpacity(isDone ? 0.05 : 0.15),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text('🔥', style: TextStyle(fontSize: 10, color: isDone ? _kTextSub : Colors.white)),
-                                      const SizedBox(width: 4),
-                                      Text('${habit.completedDays}', style: TextStyle(color: isDone ? _kTextSub.withOpacity(0.5) : _kTerra, fontSize: 12, fontWeight: FontWeight.bold)),
+                                      Text('🔥', style: TextStyle(fontSize: 10, color: isDone ? context.colors.textSecondary : Colors.white)),
+                                      SizedBox(width: 4),
+                                      Text('${habit.completedDays}', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.5) : context.colors.terracotta, fontSize: 12, fontWeight: FontWeight.bold)),
                                     ],
                                   ),
                                 )
@@ -904,11 +893,11 @@ class _ZenHabitCard extends StatelessWidget {
                 ),
               ),
               // Visual Swipe Hint & Checkmark
-              Icon(Icons.chevron_left_rounded, color: _kTextSub.withOpacity(0.2), size: 16),
-              const SizedBox(width: 4),
+              Icon(Icons.chevron_left_rounded, color: context.colors.textSecondary.withOpacity(0.2), size: 16),
+              SizedBox(width: 4),
               // Animated spring checkmark
               if (isToggling)
-                const SizedBox(width: 32, height: 32, child: Padding(padding: EdgeInsets.all(6), child: CircularProgressIndicator(strokeWidth: 2, color: _kSage)))
+                SizedBox(width: 32, height: 32, child: Padding(padding: EdgeInsets.all(6), child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.sage)))
               else
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0.0, end: isDone ? 1.0 : 0.0),
@@ -920,15 +909,15 @@ class _ZenHabitCard extends StatelessWidget {
                       height: 32,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color.lerp(Colors.transparent, _kSage.withOpacity(0.15), val),
+                        color: Color.lerp(Colors.transparent, context.colors.sage.withOpacity(0.15), val),
                         border: Border.all(
-                          color: Color.lerp(_kTextSub.withOpacity(0.3), _kSage, val)!,
+                          color: Color.lerp(context.colors.textSecondary.withOpacity(0.3), context.colors.sage, val)!,
                           width: 2,
                         ),
                       ),
                       child: Transform.scale(
                         scale: val,
-                        child: const Icon(Icons.check_rounded, color: _kSage, size: 20),
+                        child: Icon(Icons.check_rounded, color: context.colors.sage, size: 20),
                       ),
                     );
                   },
@@ -950,8 +939,8 @@ class _FlowMenuSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-      decoration: const BoxDecoration(
-        color: _kBg,
+      decoration: BoxDecoration(
+        color: context.colors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SafeArea(
@@ -965,41 +954,41 @@ class _FlowMenuSheet extends StatelessWidget {
                 width: 48,
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 24),
-                decoration: BoxDecoration(color: _kCardBorder, borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: context.colors.border, borderRadius: BorderRadius.circular(2)),
               ),
             ),
             Text(
               'Menu',
-              style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 24, fontWeight: FontWeight.bold),
+              style: GoogleFonts.playfairDisplay(color: context.colors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             _MenuTile(
               icon: Icons.person_outline_rounded,
               title: 'Profile',
               subtitle: 'Account settings and preferences',
-              color: _kSage,
+              color: context.colors.sage,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/profile');
               },
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             _MenuTile(
               icon: Icons.bar_chart_rounded,
               title: 'Statistics',
               subtitle: 'Detailed insights on your progress',
-              color: _kLavender,
+              color: context.colors.lavender,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/stats');
               },
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             _MenuTile(
               icon: Icons.people_outline_rounded,
               title: 'Friends',
               subtitle: 'Stay connected and motivated together',
-              color: _kTerra,
+              color: context.colors.terracotta,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/friends');
@@ -1034,9 +1023,9 @@ class _MenuTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _kCard,
+          color: context.colors.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _kCardBorder),
+          border: Border.all(color: context.colors.border),
         ),
         child: Row(
           children: [
@@ -1048,18 +1037,18 @@ class _MenuTile extends StatelessWidget {
               ),
               child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: _kText, fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(color: _kTextSub, fontSize: 13)),
+                  Text(title, style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
+                  SizedBox(height: 4),
+                  Text(subtitle, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: _kTextSub),
+            Icon(Icons.chevron_right_rounded, color: context.colors.textSecondary),
           ],
         ),
       ),

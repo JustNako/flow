@@ -8,15 +8,7 @@ import 'habits/templates_screen.dart';
 import '../api/habit_api_service.dart';
 import '../services/update_service.dart';
 import '../services/widget_service.dart';
-
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSage = Color(0xFF8BA888);
-const _kLavender = Color(0xFF9F92C6);
-const _kGold = Color(0xFFFFD700);
-const _kTerra = Color(0xFFD68C7A);
-const _kTextSub = Color(0xFF888888);
+import '../theme/app_theme.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -102,7 +94,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: context.colors.background,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         switchInCurve: Curves.easeOutCubic,
@@ -146,19 +138,19 @@ class _CustomBottomNav extends StatelessWidget {
     required this.onTap,
   });
 
-  Color _getColor(int index) {
-    if (index == 0) return _kSage;
-    if (index == 1) return _kLavender;
-    if (index == 2) return _kGold;
-    return _kTerra;
+  Color _getColor(int index, BuildContext context) {
+    if (index == 0) return context.colors.sage;
+    if (index == 1) return context.colors.lavender;
+    if (index == 2) return context.colors.gold;
+    return context.colors.terracotta;
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: _kCard,
-        border: Border(top: BorderSide(color: _kCardBorder, width: 1)),
+      decoration: BoxDecoration(
+        color: context.colors.card,
+        border: Border(top: BorderSide(color: context.colors.border, width: 1)),
       ),
       child: SafeArea(
         child: SizedBox(
@@ -171,28 +163,28 @@ class _CustomBottomNav extends StatelessWidget {
                     icon: Icons.spa_rounded,
                     label: 'Home',
                     isSelected: currentIndex == 0,
-                    activeColor: _kSage,
+                    activeColor: context.colors.sage,
                     onTap: () => onTap(0),
                   ),
                   _NavItem(
                     icon: Icons.chat_bubble_outline_rounded,
                     label: 'Flow AI',
                     isSelected: currentIndex == 1,
-                    activeColor: _kLavender,
+                    activeColor: context.colors.lavender,
                     onTap: () => onTap(1),
                   ),
                   _NavItem(
                     icon: Icons.bar_chart_rounded,
                     label: 'Insights',
                     isSelected: currentIndex == 2,
-                    activeColor: _kGold,
+                    activeColor: context.colors.gold,
                     onTap: () => onTap(2),
                   ),
                   _NavItem(
                     icon: Icons.grid_view_rounded,
                     label: 'Library',
                     isSelected: currentIndex == 3,
-                    activeColor: _kTerra,
+                    activeColor: context.colors.terracotta,
                     onTap: () => onTap(3),
                   ),
                 ],
@@ -210,11 +202,11 @@ class _CustomBottomNav extends StatelessWidget {
                     width: 32,
                     height: 3,
                     decoration: BoxDecoration(
-                      color: _getColor(currentIndex),
+                      color: _getColor(currentIndex, context),
                       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(3)),
                       boxShadow: [
                         BoxShadow(
-                          color: _getColor(currentIndex).withOpacity(0.5),
+                          color: _getColor(currentIndex, context).withOpacity(0.5),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         )
@@ -248,7 +240,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? activeColor : _kTextSub.withOpacity(0.5);
+    final color = isSelected ? activeColor : context.colors.textSecondary.withOpacity(0.5);
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,

@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSage = Color(0xFF8BA888);
-const _kLavender = Color(0xFF9F92C6);
-const _kText = Color(0xFFE8E8E8);
-const _kTextSub = Color(0xFF888888);
+import '../../theme/app_theme.dart';
 
 class PaywallScreen extends StatefulWidget {
   const PaywallScreen({super.key});
@@ -58,22 +51,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
       await Purchases.purchasePackage(_selectedPackage!);
 
       if (mounted) {
+        final colors = context.colors;
         // Show success dialog regardless of entitlement status.
         await showDialog(
             context: context,
             barrierDismissible: false,
             builder: (_) => AlertDialog(
-              backgroundColor: _kCard,
+              backgroundColor: colors.card,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [_kLavender, _kSage],
+                        colors: [colors.lavender, colors.sage],
                       ),
                     ),
                     child: const Icon(Icons.workspace_premium, color: Colors.white, size: 48),
@@ -81,24 +75,24 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   const SizedBox(height: 20),
                   Text('Welcome to PRO! 🎉',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 24, fontWeight: FontWeight.bold)),
+                      style: GoogleFonts.playfairDisplay(color: colors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Text('All premium features are now unlocked.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(color: _kTextSub, fontSize: 14)),
+                      style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14)),
                   const SizedBox(height: 24),
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      gradient: const LinearGradient(
-                        colors: [_kLavender, _kSage],
+                      gradient: LinearGradient(
+                        colors: [colors.lavender, colors.sage],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: _kSage.withOpacity(0.3),
+                          color: colors.sage.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
@@ -156,6 +150,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   void _showPurchaseError(PurchasesErrorCode code) {
+    final colors = context.colors;
     final message = switch (code) {
       PurchasesErrorCode.purchaseNotAllowedError => 'Purchases are not allowed on this device.',
       PurchasesErrorCode.networkError => 'No internet connection. Please check your network and try again.',
@@ -169,20 +164,20 @@ class _PaywallScreenState extends State<PaywallScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _kCard,
+        backgroundColor: colors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.error_outline, color: Color(0xFFFF5252)),
+            Icon(Icons.error_outline, color: colors.danger),
             const SizedBox(width: 8),
-            Text('Payment Failed', style: GoogleFonts.inter(color: _kText, fontSize: 18)),
+            Text('Payment Failed', style: GoogleFonts.inter(color: colors.textPrimary, fontSize: 18)),
           ],
         ),
-        content: Text(message, style: GoogleFonts.inter(color: _kTextSub, fontSize: 14, height: 1.5)),
+        content: Text(message, style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14, height: 1.5)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('OK', style: GoogleFonts.inter(color: _kSage)),
+            child: Text('OK', style: GoogleFonts.inter(color: colors.sage)),
           ),
         ],
       ),
@@ -190,10 +185,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   void _showError(String message) {
+    final colors = context.colors;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message.replaceAll('Exception: ', ''), style: GoogleFonts.inter(color: Colors.white)),
-        backgroundColor: const Color(0xFFFF5252),
+        backgroundColor: colors.danger,
       ),
     );
   }
@@ -201,9 +197,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   Widget build(BuildContext context) {
     final packages = _offerings?.current?.availablePackages ?? [];
+    final colors = context.colors;
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: colors.background,
       body: Stack(
         children: [
           // Ambient Glow Background
@@ -217,8 +214,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    _kLavender.withOpacity(0.12),
-                    _kSage.withOpacity(0.05),
+                    colors.lavender.withValues(alpha: 0.12),
+                    colors.sage.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.5, 1.0],
@@ -237,11 +234,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     icon: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: _kCard,
+                        color: colors.card,
                         shape: BoxShape.circle,
-                        border: Border.all(color: _kCardBorder),
+                        border: Border.all(color: colors.border),
                       ),
-                      child: const Icon(Icons.close_rounded, color: _kTextSub, size: 18),
+                      child: Icon(Icons.close_rounded, color: colors.textSecondary, size: 18),
                     ),
                     onPressed: () => Navigator.of(context).pop(false),
                   ),
@@ -260,19 +257,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: _kLavender.withOpacity(0.1),
+                            color: colors.lavender.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: _kLavender.withOpacity(0.2)),
+                            border: Border.all(color: colors.lavender.withValues(alpha: 0.2)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star_rounded, color: _kLavender, size: 14),
+                              Icon(Icons.star_rounded, color: colors.lavender, size: 14),
                               const SizedBox(width: 6),
                               Text(
                                 'FLOW PRO',
                                 style: GoogleFonts.inter(
-                                  color: _kLavender,
+                                  color: colors.lavender,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,
@@ -288,7 +285,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           'Deepen Your\nPractice',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.playfairDisplay(
-                            color: _kText,
+                            color: colors.textPrimary,
                             fontSize: 42,
                             fontWeight: FontWeight.bold,
                             height: 1.1,
@@ -301,7 +298,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           'Everything you need to build habits\nthat actually last.',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
-                            color: _kTextSub,
+                            color: colors.textSecondary,
                             fontSize: 15,
                             height: 1.5,
                           ),
@@ -312,23 +309,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Feature 1: Unlimited Habits
                             Expanded(
                               child: _buildBentoFeature(
                                 icon: Icons.all_inclusive_rounded,
-                                iconColor: _kSage,
+                                iconColor: colors.sage,
                                 title: 'Unlimited Habits',
                                 subtitle: 'Track as many habits as you want, no limits.',
+                                colors: colors,
                               ),
                             ),
                             const SizedBox(width: 16),
-                            // Feature 2: AI Habit Generator
                             Expanded(
                               child: _buildBentoFeature(
                                 icon: Icons.auto_awesome_rounded,
-                                iconColor: _kLavender,
+                                iconColor: colors.lavender,
                                 title: 'AI Habit Generator',
                                 subtitle: '5 personalized sparks every day.',
+                                colors: colors,
                               ),
                             ),
                           ],
@@ -339,12 +336,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: _kCard,
+                            color: colors.card,
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: _kLavender.withOpacity(0.15)),
+                            border: Border.all(color: colors.lavender.withValues(alpha: 0.15)),
                             boxShadow: [
                               BoxShadow(
-                                color: _kLavender.withOpacity(0.03),
+                                color: colors.lavender.withValues(alpha: 0.03),
                                 blurRadius: 20,
                                 spreadRadius: 5,
                               )
@@ -358,11 +355,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: _kLavender.withOpacity(0.1),
+                                      color: colors.lavender.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(color: _kLavender.withOpacity(0.2)),
+                                      border: Border.all(color: colors.lavender.withValues(alpha: 0.2)),
                                     ),
-                                    child: const Icon(Icons.psychology_rounded, color: _kLavender, size: 24),
+                                    child: Icon(Icons.psychology_rounded, color: colors.lavender, size: 24),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
@@ -371,7 +368,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                         Text(
                                           'AI Habit Coach',
                                           style: GoogleFonts.inter(
-                                            color: _kText,
+                                            color: colors.textPrimary,
                                             fontSize: 18,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -380,13 +377,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                           decoration: BoxDecoration(
-                                            color: _kLavender.withOpacity(0.15),
+                                            color: colors.lavender.withValues(alpha: 0.15),
                                             borderRadius: BorderRadius.circular(6),
                                           ),
                                           child: Text(
                                             'NEW',
                                             style: GoogleFonts.inter(
-                                              color: _kLavender,
+                                              color: colors.lavender,
                                               fontSize: 9,
                                               fontWeight: FontWeight.w800,
                                               letterSpacing: 0.5,
@@ -402,17 +399,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
                               Text(
                                 'A mindful AI that understands your patterns, offers gentle nudges, and celebrates your wins — like a coach who truly knows you.',
                                 style: GoogleFonts.inter(
-                                  color: _kTextSub,
+                                  color: colors.textSecondary,
                                   fontSize: 13,
                                   height: 1.5,
                                 ),
                               ),
                               const SizedBox(height: 20),
-                              _buildCoachListItem('Daily personalized check-ins'),
+                              _buildCoachListItem('Daily personalized check-ins', colors),
                               const SizedBox(height: 12),
-                              _buildCoachListItem('Pattern recognition & insights'),
+                              _buildCoachListItem('Pattern recognition & insights', colors),
                               const SizedBox(height: 12),
-                              _buildCoachListItem('Adaptive streaks & gentle reminders'),
+                              _buildCoachListItem('Adaptive streaks & gentle reminders', colors),
                             ],
                           ),
                         ),
@@ -420,12 +417,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
                         // Subscription Tiers
                         if (_isLoading && packages.isEmpty)
-                          const Center(child: CircularProgressIndicator(color: _kSage))
+                          Center(child: CircularProgressIndicator(color: colors.sage))
                         else if (packages.isEmpty)
-                          Text('Plans unavailable. Please try again.', style: GoogleFonts.inter(color: _kTextSub))
+                          Text('Plans unavailable. Please try again.', style: GoogleFonts.inter(color: colors.textSecondary))
                         else
                           Column(
-                            children: packages.map((pkg) => _buildPlanOption(pkg, packages)).toList(),
+                            children: packages.map((pkg) => _buildPlanOption(pkg, packages, colors)).toList(),
                           ),
 
                         const SizedBox(height: 24),
@@ -435,14 +432,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           width: double.infinity,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(24),
-                            gradient: const LinearGradient(
-                              colors: [_kLavender, _kSage],
+                            gradient: LinearGradient(
+                              colors: [colors.lavender, colors.sage],
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: _kSage.withOpacity(0.3),
+                                color: colors.sage.withValues(alpha: 0.3),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -485,7 +482,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         Text(
                           'Cancel anytime. No commitment.',
                           style: GoogleFonts.inter(
-                            color: _kTextSub.withOpacity(0.5),
+                            color: colors.textSecondary.withValues(alpha: 0.5),
                             fontSize: 12,
                           ),
                         ),
@@ -507,13 +504,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
     required Color iconColor,
     required String title,
     required String subtitle,
+    required AppColors colors,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _kCard,
+        color: colors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,9 +519,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: iconColor.withOpacity(0.2)),
+              border: Border.all(color: iconColor.withValues(alpha: 0.2)),
             ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
@@ -531,7 +529,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           Text(
             title,
             style: GoogleFonts.inter(
-              color: _kText,
+              color: colors.textPrimary,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -540,7 +538,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           Text(
             subtitle,
             style: GoogleFonts.inter(
-              color: _kTextSub,
+              color: colors.textSecondary,
               fontSize: 12,
               height: 1.4,
             ),
@@ -550,23 +548,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
 
-  Widget _buildCoachListItem(String text) {
+  Widget _buildCoachListItem(String text, AppColors colors) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _kLavender.withOpacity(0.15),
+            color: colors.lavender.withValues(alpha: 0.15),
           ),
-          child: const Icon(Icons.check_rounded, color: _kLavender, size: 12),
+          child: Icon(Icons.check_rounded, color: colors.lavender, size: 12),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
             style: GoogleFonts.inter(
-              color: _kTextSub,
+              color: colors.textSecondary,
               fontSize: 13,
             ),
           ),
@@ -575,7 +573,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
 
-  Widget _buildPlanOption(Package pkg, List<Package> allPackages) {
+  Widget _buildPlanOption(Package pkg, List<Package> allPackages, AppColors colors) {
     final isSelected = _selectedPackage?.identifier == pkg.identifier;
     final product = pkg.storeProduct;
 
@@ -619,10 +617,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: isSelected ? _kCard : _kBg,
+          color: isSelected ? colors.card : colors.background,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? _kLavender : _kCardBorder,
+            color: isSelected ? colors.lavender : colors.border,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -635,7 +633,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? _kLavender : _kTextSub.withOpacity(0.3),
+                  color: isSelected ? colors.lavender : colors.textSecondary.withValues(alpha: 0.3),
                   width: isSelected ? 6 : 1.5,
                 ),
               ),
@@ -655,7 +653,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       Text(
                         period,
                         style: GoogleFonts.inter(
-                          color: _kText,
+                          color: colors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -664,13 +662,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: _kLavender.withOpacity(0.15),
+                            color: colors.lavender.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             badge,
                             style: GoogleFonts.inter(
-                              color: _kLavender,
+                              color: colors.lavender,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -683,7 +681,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     Text(
                       subtitle,
                       style: GoogleFonts.inter(
-                        color: _kTextSub,
+                        color: colors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -696,7 +694,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             Text(
               product.priceString,
               style: GoogleFonts.inter(
-                color: _kText,
+                color: colors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),

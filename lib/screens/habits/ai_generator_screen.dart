@@ -7,6 +7,7 @@ import '../../models/habit.dart';
 import '../paywall/paywall_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../theme/app_theme.dart';
 
 class ChatMessage {
   final String text;
@@ -268,11 +269,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(children: [
-              const Icon(Icons.check_circle, color: Color(0xFF8BA888)),
+              Icon(Icons.check_circle, color: context.colors.sage),
               const SizedBox(width: 8),
               Text('$addedCount habit${addedCount != 1 ? 's' : ''} added!'),
             ]),
-            backgroundColor: const Color(0xFF2C2C2E),
+            backgroundColor: context.colors.card,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -321,18 +322,18 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
     final double bottomPadding = MediaQuery.of(context).padding.bottom;
     
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A), // Soft dark background
+      backgroundColor: context.colors.background, // Soft dark background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFFE0E0E0), size: 20),
+          icon: Icon(Icons.arrow_back_ios_new, color: context.colors.textPrimary, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Flow AI',
           style: GoogleFonts.playfairDisplay(
-            color: const Color(0xFFE0E0E0),
+            color: context.colors.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
@@ -344,7 +345,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
               padding: const EdgeInsets.only(right: 16),
               child: Text(
                 '$_remaining/$_totalLimit left${_isPro ? ' • PRO' : ''}',
-                style: const TextStyle(color: Color(0xFF8BA888), fontSize: 13, fontWeight: FontWeight.bold),
+                style: TextStyle(color: context.colors.sage, fontSize: 13, fontWeight: FontWeight.bold),
               ),
             ),
           )
@@ -373,9 +374,9 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFF1A1A1A).withOpacity(0.0),
-                    const Color(0xFF1A1A1A).withOpacity(0.9),
-                    const Color(0xFF1A1A1A),
+                    context.colors.background.withOpacity(0.0),
+                    context.colors.background.withOpacity(0.9),
+                    context.colors.background,
                   ],
                 ),
               ),
@@ -391,25 +392,25 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF8BA888), // Sage green
+                            color: context.colors.sage, // Sage green
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF8BA888).withOpacity(0.3),
+                                color: context.colors.sage.withOpacity(0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: _isAddingHabits
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20, height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF1A1A1A)),
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.background),
                                 )
                               : Text(
                                   'Add ${_selectedHabits.length} Habit${_selectedHabits.length > 1 ? 's' : ''}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF1A1A1A),
+                                  style: TextStyle(
+                                    color: context.colors.background,
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -419,7 +420,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                     ),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2C2C2E),
+                      color: context.colors.card,
                       borderRadius: BorderRadius.circular(50),
                       boxShadow: [
                         BoxShadow(
@@ -435,12 +436,12 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                           child: TextField(
                             controller: _controller,
                             focusNode: _focusNode,
-                            style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 15),
-                            decoration: const InputDecoration(
+                            style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
+                            decoration: InputDecoration(
                               hintText: 'What would you like to build today?',
-                              hintStyle: TextStyle(color: Color(0xFF757575), fontSize: 14),
+                              hintStyle: TextStyle(color: context.colors.textSecondary, fontSize: 14),
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                             ),
                             onSubmitted: (_) => _generate(),
                           ),
@@ -451,11 +452,11 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                             onTap: _generate,
                             child: Container(
                               padding: const EdgeInsets.all(10),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF8BA888),
+                              decoration: BoxDecoration(
+                                color: context.colors.sage,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.arrow_upward_rounded, color: Color(0xFF1A1A1A), size: 20),
+                              child: Icon(Icons.arrow_upward_rounded, color: context.colors.background, size: 20),
                             ),
                           ),
                         ),
@@ -481,9 +482,9 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: const BoxDecoration(
-                color: Color(0xFF2C2C2E),
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: context.colors.card,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
                   bottomLeft: Radius.circular(24),
@@ -492,7 +493,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
               ),
               child: Text(
                 msg.text,
-                style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 15, height: 1.4),
+                style: TextStyle(color: context.colors.textPrimary, fontSize: 15, height: 1.4),
               ),
             ),
           ),
@@ -530,7 +531,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                   Text(
                     msg.text,
                     style: GoogleFonts.playfairDisplay(
-                      color: const Color(0xFFDCDCDC),
+                      color: context.colors.textPrimary,
                       fontSize: 16,
                       height: 1.4,
                     ),
@@ -558,15 +559,15 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                const Color(0xFFD68C7A).withOpacity(0.8 + 0.2 * _sparkController.value), // Terracotta
-                const Color(0xFF9F92C6).withOpacity(0.4 + 0.2 * _sparkController.value), // Lavender
-                const Color(0xFF1A1A1A).withOpacity(0.0),
+                context.colors.terracotta.withOpacity(0.8 + 0.2 * _sparkController.value), // Terracotta
+                context.colors.lavender.withOpacity(0.4 + 0.2 * _sparkController.value), // Lavender
+                context.colors.background.withOpacity(0.0),
               ],
               stops: const [0.2, 0.7, 1.0],
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFD68C7A).withOpacity(0.3 * _sparkController.value),
+                color: context.colors.terracotta.withOpacity(0.3 * _sparkController.value),
                 blurRadius: 10 * _sparkController.value,
                 spreadRadius: 2 * _sparkController.value,
               ),
@@ -587,7 +588,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
           width: 6,
           height: 6,
           decoration: BoxDecoration(
-            color: const Color(0xFF8BA888).withOpacity(0.3 + 0.7 * value),
+            color: context.colors.sage.withOpacity(0.3 + 0.7 * value),
             shape: BoxShape.circle,
           ),
         );
@@ -626,10 +627,10 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
             width: habits.length == 1 ? double.infinity : (MediaQuery.of(context).size.width - 48 - 44) / 2, // ~half width minus paddings
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF8BA888).withOpacity(0.15) : const Color(0xFF252525),
+              color: isSelected ? context.colors.sage.withOpacity(0.15) : context.colors.card,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSelected ? const Color(0xFF8BA888) : const Color(0xFF333333),
+                color: isSelected ? context.colors.sage : context.colors.border,
                 width: 1.5,
               ),
             ),
@@ -639,7 +640,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(_iconFor(habit.icon), color: isSelected ? const Color(0xFF8BA888) : const Color(0xFF9F92C6), size: 24),
+                    Icon(_iconFor(habit.icon), color: isSelected ? context.colors.sage : context.colors.lavender, size: 24),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -654,9 +655,9 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                                 _selectedHabits.remove(habit); // Uncheck if added individually
                               });
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Habit saved and added!'),
-                                  backgroundColor: Color(0xFF2C2C2E),
+                                SnackBar(
+                                  content: const Text('Habit saved and added!'),
+                                  backgroundColor: context.colors.card,
                                   behavior: SnackBarBehavior.floating,
                                 )
                               );
@@ -664,14 +665,14 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                           },
                           child: Container(
                             padding: const EdgeInsets.all(4),
-                            child: const Icon(Icons.edit_outlined, color: Color(0xFF888888), size: 18),
+                            child: Icon(Icons.edit_outlined, color: context.colors.textSecondary, size: 18),
                           ),
                         ),
                         const SizedBox(width: 4),
                         if (isSelected)
-                          const Icon(Icons.check_circle, color: Color(0xFF8BA888), size: 20)
+                          Icon(Icons.check_circle, color: context.colors.sage, size: 20)
                         else
-                          const Icon(Icons.circle_outlined, color: Color(0xFF555555), size: 20),
+                          Icon(Icons.circle_outlined, color: context.colors.border, size: 20),
                       ],
                     ),
                   ],
@@ -679,7 +680,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                 const SizedBox(height: 12),
                 Text(
                   habit.title,
-                  style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 14, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: context.colors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -693,7 +694,7 @@ class _AiGeneratorScreenState extends State<AiGeneratorScreen> with TickerProvid
                     if (habit.timeOfDay != null && habit.timeOfDay!.isNotEmpty && habit.timeOfDay!.toLowerCase() != 'null' && habit.timeOfDay!.toLowerCase() != 'any time')
                       habit.timeOfDay!
                   ].join(' • '),
-                  style: const TextStyle(color: Color(0xFF888888), fontSize: 12),
+                  style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
                 ),
               ],
             ),

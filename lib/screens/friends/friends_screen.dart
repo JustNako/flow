@@ -2,15 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../api/friends_api_service.dart';
-
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSage = Color(0xFF8BA888);
-const _kLavender = Color(0xFF9F92C6);
-const _kTerra = Color(0xFFD68C7A);
-const _kText = Color(0xFFE8E8E8);
-const _kTextSub = Color(0xFF888888);
+import '../../theme/app_theme.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
@@ -20,6 +12,14 @@ class FriendsScreen extends StatefulWidget {
 }
 
 class _FriendsScreenState extends State<FriendsScreen> {
+  Color get _kBg => context.colors.background;
+  Color get _kCard => context.colors.card;
+  Color get _kCardBorder => context.colors.border;
+  Color get _kSage => context.colors.sage;
+  Color get _kLavender => context.colors.lavender;
+  Color get _kTerra => context.colors.terracotta;
+  Color get _kText => context.colors.textPrimary;
+  Color get _kTextSub => context.colors.textSecondary;
   final _api = FriendsApiService();
   final _codeController = TextEditingController();
 
@@ -117,7 +117,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       backgroundColor: _kBg,
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: _kSage))
+            ? Center(child: CircularProgressIndicator(color: _kSage))
             : RefreshIndicator(
                 onRefresh: _load,
                 color: _kSage,
@@ -163,7 +163,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                 Container(
                                   width: 6,
                                   height: 6,
-                                  decoration: const BoxDecoration(
+                                  decoration: BoxDecoration(
                                     color: _kSage,
                                     shape: BoxShape.circle,
                                   ),
@@ -171,7 +171,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                 const SizedBox(width: 8),
                                 Text(
                                   '${_friends.length} friends',
-                                  style: const TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500),
+                                  style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -212,7 +212,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                             const SizedBox(width: 8),
                             Text(
                               '${_requests.length} PERSON WANTS TO JOIN YOUR FLOW',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: _kLavender,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -265,9 +265,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
         children: [
           Row(
             children: [
-              Container(width: 6, height: 6, decoration: const BoxDecoration(color: _kSage, shape: BoxShape.circle)),
+              Container(width: 6, height: 6, decoration: BoxDecoration(color: _kSage, shape: BoxShape.circle)),
               const SizedBox(width: 8),
-              const Text('YOUR INVITE', style: TextStyle(color: _kSage, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+              Text('YOUR INVITE', style: TextStyle(color: _kSage, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
             ],
           ),
           const SizedBox(height: 24),
@@ -282,7 +282,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Share with someone you\ncare about',
             style: TextStyle(color: _kTextSub, fontSize: 12, height: 1.4),
           ),
@@ -306,9 +306,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.copy_rounded, color: _kTextSub, size: 14),
+                    Icon(Icons.copy_rounded, color: _kTextSub, size: 14),
                     const SizedBox(width: 8),
-                    const Text('Copy code', style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500)),
+                    Text('Copy code', style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500)),
                   ],
                 ),
               ),
@@ -333,16 +333,16 @@ class _FriendsScreenState extends State<FriendsScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: _kCardBorder,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.person_add_alt_1_rounded, color: _kTextSub, size: 20),
+            child: Icon(Icons.person_add_alt_1_rounded, color: _kTextSub, size: 20),
           ),
           const SizedBox(height: 20),
           Text('Add Friend', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 20, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          const Text('by code', style: TextStyle(color: _kTextSub, fontSize: 13)),
+          Text('by code', style: TextStyle(color: _kTextSub, fontSize: 13)),
           const SizedBox(height: 24),
           Container(
             height: 44,
@@ -353,17 +353,17 @@ class _FriendsScreenState extends State<FriendsScreen> {
             ),
             child: TextField(
               controller: _codeController,
-              style: const TextStyle(color: _kText, fontSize: 13),
+              style: TextStyle(color: _kText, fontSize: 13),
               textCapitalization: TextCapitalization.characters,
               onSubmitted: (_) => _sendRequest(),
               decoration: InputDecoration(
                 hintText: 'Enter invite code',
-                hintStyle: const TextStyle(color: _kTextSub, fontSize: 13),
+                hintStyle: TextStyle(color: _kTextSub, fontSize: 13),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 suffixIcon: _isSending
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
+                    ? Padding(
+                        padding: const EdgeInsets.all(12),
                         child: CircularProgressIndicator(color: _kSage, strokeWidth: 2),
                       )
                     : null,
@@ -402,7 +402,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
             child: Center(
               child: Text(
                 req.requesterName.isNotEmpty ? req.requesterName[0].toUpperCase() : '?',
-                style: const TextStyle(color: _kText, fontSize: 20, fontWeight: FontWeight.w600),
+                style: TextStyle(color: _kText, fontSize: 20, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -415,12 +415,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   text: TextSpan(
                     children: [
                       TextSpan(text: req.requesterName, style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 16, fontWeight: FontWeight.bold)),
-                      const TextSpan(text: ' wants to join your flow', style: TextStyle(color: _kTextSub, fontSize: 13)),
+                      TextSpan(text: ' wants to join your flow', style: TextStyle(color: _kTextSub, fontSize: 13)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text('They heard Flow brings calm', style: TextStyle(color: _kTextSub, fontSize: 12)),
+                Text('They heard Flow brings calm', style: TextStyle(color: _kTextSub, fontSize: 12)),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -433,13 +433,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: _kSage.withOpacity(0.3)),
                         ),
-                        child: const Text('Accept', style: TextStyle(color: _kSage, fontSize: 13, fontWeight: FontWeight.w600)),
+                        child: Text('Accept', style: TextStyle(color: _kSage, fontSize: 13, fontWeight: FontWeight.w600)),
                       ),
                     ),
                     const SizedBox(width: 16),
                     GestureDetector(
                       onTap: () => _remove(req.friendshipId),
-                      child: const Text('Maybe later', style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500)),
+                      child: Text('Maybe later', style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500)),
                     ),
                   ],
                 ),
@@ -471,7 +471,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [_kSage.withOpacity(0.3), const Color(0xFF64B5F6).withOpacity(0.3)],
+                    colors: [_kSage.withOpacity(0.3), context.colors.blue.withOpacity(0.3)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -479,7 +479,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 child: Center(
                   child: Text(
                     friend.userName.isNotEmpty ? friend.userName.substring(0, 2).toUpperCase() : '?',
-                    style: const TextStyle(color: _kText, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 1.0),
+                    style: TextStyle(color: _kText, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 1.0),
                   ),
                 ),
               ),
@@ -505,7 +505,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
               children: [
                 Text(friend.userName, style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                Text(_getStatus(friend.globalStreak), style: const TextStyle(color: _kTextSub, fontSize: 12)),
+                Text(_getStatus(friend.globalStreak), style: TextStyle(color: _kTextSub, fontSize: 12)),
               ],
             ),
           ),
@@ -519,22 +519,22 @@ class _FriendsScreenState extends State<FriendsScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.whatshot_rounded, color: _kTerra, size: 14),
+                Icon(Icons.whatshot_rounded, color: _kTerra, size: 14),
                 const SizedBox(width: 4),
-                Text('${friend.globalStreak}', style: const TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w600)),
+                Text('${friend.globalStreak}', style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
           const SizedBox(width: 8),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: _kTextSub, size: 20),
+            icon: Icon(Icons.more_vert, color: _kTextSub, size: 20),
             color: _kCardBorder,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onSelected: (val) {
               if (val == 'remove') _remove(friend.friendshipId);
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'remove', child: Text('Remove Friend', style: TextStyle(color: _kTerra, fontSize: 13))),
+              PopupMenuItem(value: 'remove', child: Text('Remove Friend', style: TextStyle(color: _kTerra, fontSize: 13))),
             ],
           ),
         ],
@@ -557,7 +557,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
           const SizedBox(height: 16),
           Text('No flow network yet', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          const Text('Share your invite code to invite friends and grow together.', textAlign: TextAlign.center, style: TextStyle(color: _kTextSub, fontSize: 13, height: 1.5)),
+          Text('Share your invite code to invite friends and grow together.', textAlign: TextAlign.center, style: TextStyle(color: _kTextSub, fontSize: 13, height: 1.5)),
         ],
       ),
     );

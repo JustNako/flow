@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -7,15 +7,6 @@ import '../../models/habit.dart';
 import '../../services/local_database.dart';
 import '../../services/sync_service.dart';
 import '../../theme/app_theme.dart';
-
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSage = Color(0xFF8BA888);
-const _kLavender = Color(0xFF9F92C6);
-const _kTerra = Color(0xFFD68C7A);
-const _kText = Color(0xFFE8E8E8);
-const _kTextSub = Color(0xFF888888);
 
 class HabitDetailsScreen extends StatefulWidget {
   const HabitDetailsScreen({super.key});
@@ -137,21 +128,21 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _kCard,
+        backgroundColor: context.colors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Delete Habit?', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text('Delete Habit?', style: GoogleFonts.playfairDisplay(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
         content: Text(
           'This will permanently delete the habit and all its history.',
-          style: GoogleFonts.inter(color: _kTextSub, fontSize: 14, height: 1.5),
+          style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel', style: GoogleFonts.inter(color: _kTextSub)),
+            child: Text('Cancel', style: GoogleFonts.inter(color: context.colors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('Delete', style: GoogleFonts.inter(color: _kTerra, fontWeight: FontWeight.bold)),
+            child: Text('Delete', style: GoogleFonts.inter(color: context.colors.terracotta, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -193,7 +184,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
   void _showSnack(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg, style: GoogleFonts.inter(color: isError ? Colors.white : Colors.black)),
-      backgroundColor: isError ? _kTerra : _kSage,
+      backgroundColor: isError ? context.colors.terracotta : context.colors.sage,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ));
@@ -238,32 +229,32 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _kCard,
+        backgroundColor: context.colors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Personal Notes', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text('Personal Notes', style: GoogleFonts.playfairDisplay(color: context.colors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
         content: TextField(
           controller: controller,
           maxLines: 5,
-          style: GoogleFonts.inter(color: _kText, fontSize: 14),
+          style: GoogleFonts.inter(color: context.colors.textPrimary, fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Enter your notes here...',
-            hintStyle: GoogleFonts.inter(color: _kTextSub.withValues(alpha: 0.5)),
+            hintStyle: GoogleFonts.inter(color: context.colors.textSecondary.withValues(alpha: 0.5)),
             filled: true,
-            fillColor: _kBg,
+            fillColor: context.colors.background,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.inter(color: _kTextSub)),
+            child: Text('Cancel', style: GoogleFonts.inter(color: context.colors.textSecondary)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _updateNotes(controller.text.trim());
             },
-            child: Text('Save', style: GoogleFonts.inter(color: _kSage, fontWeight: FontWeight.bold)),
+            child: Text('Save', style: GoogleFonts.inter(color: context.colors.sage, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -276,8 +267,8 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        decoration: const BoxDecoration(
-          color: _kCard,
+        decoration: BoxDecoration(
+          color: context.colors.card,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(28),
             topRight: Radius.circular(28),
@@ -291,7 +282,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: _kCardBorder,
+                  color: context.colors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -299,26 +290,26 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               ListTile(
                 leading: Icon(
                   _habit.isPublic ? Icons.lock_outline : Icons.people_outline,
-                  color: _kText,
+                  color: context.colors.textPrimary,
                 ),
                 title: Text(
                   _habit.isPublic ? 'Make Private' : 'Make Visible to Friends',
-                  style: GoogleFonts.inter(color: _kText, fontSize: 15, fontWeight: FontWeight.w500),
+                  style: GoogleFonts.inter(color: context.colors.textPrimary, fontSize: 15, fontWeight: FontWeight.w500),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _toggleVisibility();
                 },
               ),
-              const Divider(color: _kCardBorder),
+              Divider(color: context.colors.border),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.delete_outline_rounded,
-                  color: _kTerra,
+                  color: context.colors.terracotta,
                 ),
                 title: Text(
                   'Delete Habit',
-                  style: GoogleFonts.inter(color: _kTerra, fontSize: 15, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.inter(color: context.colors.terracotta, fontSize: 15, fontWeight: FontWeight.bold),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -335,9 +326,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isDeleting) {
-      return const Scaffold(
-        backgroundColor: _kBg,
-        body: Center(child: CircularProgressIndicator(color: _kSage)),
+      return Scaffold(
+        backgroundColor: context.colors.background,
+        body: Center(child: CircularProgressIndicator(color: context.colors.sage)),
       );
     }
 
@@ -354,7 +345,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
     final subtitle = subtitleElements.join(' · ');
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -368,11 +359,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                     child: Container(
                       width: 40,
                       height: 40,
-                      decoration: const BoxDecoration(
-                        color: _kCard,
+                      decoration: BoxDecoration(
+                        color: context.colors.card,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.chevron_left_rounded, color: _kText, size: 24),
+                      child: Icon(Icons.chevron_left_rounded, color: context.colors.textPrimary, size: 24),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -385,17 +376,17 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: _kSage.withValues(alpha: 0.1),
+                                color: context.colors.sage.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.water_drop_rounded, color: _kSage, size: 16),
+                              child: Icon(Icons.water_drop_rounded, color: context.colors.sage, size: 16),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _habit.title,
                                 style: GoogleFonts.playfairDisplay(
-                                  color: _kText,
+                                  color: context.colors.textPrimary,
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -409,7 +400,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                         Text(
                           subtitle,
                           style: GoogleFonts.inter(
-                            color: _kTextSub,
+                            color: context.colors.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -422,11 +413,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                     child: Container(
                       width: 40,
                       height: 40,
-                      decoration: const BoxDecoration(
-                        color: _kCard,
+                      decoration: BoxDecoration(
+                        color: context.colors.card,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.more_horiz_rounded, color: _kText, size: 20),
+                      child: Icon(Icons.more_horiz_rounded, color: context.colors.textPrimary, size: 20),
                     ),
                   ),
                 ],
@@ -439,7 +430,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
             // Screen Content
             Expanded(
               child: _loadingStats
-                  ? const Center(child: CircularProgressIndicator(color: _kSage))
+                  ? Center(child: CircularProgressIndicator(color: context.colors.sage))
                   : _selectedTab == 0
                       ? _buildOverviewTab()
                       : _buildHistoryTab(),
@@ -455,9 +446,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: _kCard,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
@@ -467,14 +458,14 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _selectedTab == 0 ? _kCardBorder : Colors.transparent,
+                  color: _selectedTab == 0 ? context.colors.border : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   'Overview',
                   style: GoogleFonts.inter(
-                    color: _selectedTab == 0 ? _kText : _kTextSub,
+                    color: _selectedTab == 0 ? context.colors.textPrimary : context.colors.textSecondary,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -488,14 +479,14 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _selectedTab == 1 ? _kCardBorder : Colors.transparent,
+                  color: _selectedTab == 1 ? context.colors.border : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   'History',
                   style: GoogleFonts.inter(
-                    color: _selectedTab == 1 ? _kText : _kTextSub,
+                    color: _selectedTab == 1 ? context.colors.textPrimary : context.colors.textSecondary,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -546,9 +537,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                   height: 180,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: _kCard,
+                    color: context.colors.card,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: _kCardBorder),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Center(
                     child: Stack(
@@ -560,8 +551,8 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                           child: CustomPaint(
                             painter: _GradientCircularProgressPainter(
                               progress: completionRate / 100,
-                              trackColor: _kCardBorder,
-                              gradientColors: const [_kSage, _kLavender],
+                              trackColor: context.colors.border,
+                              gradientColors: [context.colors.sage, context.colors.lavender],
                               strokeWidth: 10,
                             ),
                           ),
@@ -572,7 +563,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                             Text(
                               '${completionRate.toInt()}%',
                               style: GoogleFonts.playfairDisplay(
-                                color: _kText,
+                                color: context.colors.textPrimary,
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -581,7 +572,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                             Text(
                               'this week',
                               style: GoogleFonts.inter(
-                                color: _kTextSub,
+                                color: context.colors.textSecondary,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -601,14 +592,14 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                   children: [
                     _buildBentoSmallCard(
                       icon: Icons.whatshot_rounded,
-                      iconColor: _kTerra,
+                      iconColor: context.colors.terracotta,
                       value: '$currentStreak days',
                       label: 'Current streak',
                     ),
                     const SizedBox(height: 12),
                     _buildBentoSmallCard(
                       icon: Icons.workspace_premium_rounded,
-                      iconColor: _kLavender,
+                      iconColor: context.colors.lavender,
                       value: '$longestStreak days',
                       label: 'Best streak',
                     ),
@@ -625,7 +616,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               Expanded(
                 child: _buildBentoStatsRowCard(
                   icon: Icons.trending_up_rounded,
-                  iconColor: _kSage,
+                  iconColor: context.colors.sage,
                   value: '$monthlyRate%',
                   label: 'This month',
                 ),
@@ -634,7 +625,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               Expanded(
                 child: _buildBentoStatsRowCard(
                   icon: Icons.track_changes_rounded,
-                  iconColor: _kLavender,
+                  iconColor: context.colors.lavender,
                   value: '$completedDaysCount times',
                   label: 'Total done',
                 ),
@@ -647,9 +638,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: _kCard,
+              color: context.colors.card,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: _kCardBorder),
+              border: Border.all(color: context.colors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,7 +651,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                     Text(
                       'ACTIVITY',
                       style: GoogleFonts.inter(
-                        color: _kTextSub,
+                        color: context.colors.textSecondary,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.0,
@@ -670,20 +661,20 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                       children: [
                         Text(
                           'Less',
-                          style: GoogleFonts.inter(color: _kTextSub, fontSize: 10),
+                          style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 10),
                         ),
                         const SizedBox(width: 4),
-                        _buildLegendSquare(_kCardBorder),
+                        _buildLegendSquare(context.colors.border),
                         const SizedBox(width: 3),
-                        _buildLegendSquare(_kSage.withValues(alpha: 0.3)),
+                        _buildLegendSquare(context.colors.sage.withValues(alpha: 0.3)),
                         const SizedBox(width: 3),
-                        _buildLegendSquare(_kSage.withValues(alpha: 0.6)),
+                        _buildLegendSquare(context.colors.sage.withValues(alpha: 0.6)),
                         const SizedBox(width: 3),
-                        _buildLegendSquare(_kSage),
+                        _buildLegendSquare(context.colors.sage),
                         const SizedBox(width: 4),
                         Text(
                           'More',
-                          style: GoogleFonts.inter(color: _kTextSub, fontSize: 10),
+                          style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 10),
                         ),
                       ],
                     ),
@@ -725,9 +716,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                               if (isFuture) {
                                 cellColor = Colors.transparent;
                               } else if (isCompleted) {
-                                cellColor = _kSage;
+                                cellColor = context.colors.sage;
                               } else {
-                                cellColor = _kCardBorder;
+                                cellColor = context.colors.border;
                               }
 
                               return Tooltip(
@@ -739,7 +730,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                                   decoration: BoxDecoration(
                                     color: cellColor,
                                     borderRadius: BorderRadius.circular(6),
-                                    border: isFuture ? null : Border.all(color: _kCardBorder.withValues(alpha: 0.3)),
+                                    border: isFuture ? null : Border.all(color: context.colors.border.withValues(alpha: 0.3)),
                                   ),
                                 ),
                               );
@@ -759,9 +750,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: _kCard,
+              color: context.colors.card,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: _kCardBorder),
+              border: Border.all(color: context.colors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -772,7 +763,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                     Text(
                       'PERSONAL NOTE',
                       style: GoogleFonts.inter(
-                        color: _kTextSub,
+                        color: context.colors.textSecondary,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.0,
@@ -783,13 +774,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _kCardBorder,
+                          color: context.colors.border,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           'Tap to edit',
                           style: GoogleFonts.inter(
-                            color: _kLavender,
+                            color: context.colors.lavender,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -804,7 +795,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                       ? _habit.notes!
                       : 'Morning sessions hit different. Try to keep it before 8am for maximum focus.',
                   style: GoogleFonts.inter(
-                    color: _kText,
+                    color: context.colors.textPrimary,
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -821,9 +812,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               height: 56,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: _habit.isCompletedToday ? _kCard : _kSage,
+                color: _habit.isCompletedToday ? context.colors.card : context.colors.sage,
                 borderRadius: BorderRadius.circular(28),
-                border: _habit.isCompletedToday ? Border.all(color: _kCardBorder) : null,
+                border: _habit.isCompletedToday ? Border.all(color: context.colors.border) : null,
               ),
               alignment: Alignment.center,
               child: _isToggling
@@ -840,14 +831,14 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                       children: [
                         Icon(
                           Icons.check_rounded,
-                          color: _habit.isCompletedToday ? _kSage : Colors.black,
+                          color: _habit.isCompletedToday ? context.colors.sage : Colors.black,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           _habit.isCompletedToday ? 'Completed Today' : 'Mark as Done',
                           style: GoogleFonts.inter(
-                            color: _habit.isCompletedToday ? _kText : Colors.black,
+                            color: _habit.isCompletedToday ? context.colors.textPrimary : Colors.black,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -872,9 +863,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: _kCard,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -888,7 +879,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                 child: Text(
                   value,
                   style: GoogleFonts.playfairDisplay(
-                    color: _kText,
+                    color: context.colors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -902,7 +893,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
           Text(
             label,
             style: GoogleFonts.inter(
-              color: _kTextSub,
+              color: context.colors.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
@@ -921,9 +912,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: _kCard,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
@@ -943,7 +934,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                 Text(
                   value,
                   style: GoogleFonts.playfairDisplay(
-                    color: _kText,
+                    color: context.colors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -952,7 +943,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                 Text(
                   label,
                   style: GoogleFonts.inter(
-                    color: _kTextSub,
+                    color: context.colors.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
@@ -983,7 +974,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
         child: Text(
           label,
           style: GoogleFonts.inter(
-            color: _kTextSub,
+            color: context.colors.textSecondary,
             fontSize: 11,
             fontWeight: FontWeight.bold,
           ),
@@ -1036,7 +1027,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               Text(
                 monthName,
                 style: GoogleFonts.playfairDisplay(
-                  color: _kText,
+                  color: context.colors.textPrimary,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1046,13 +1037,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _kSage.withValues(alpha: 0.15),
+                      color: context.colors.sage.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '$completedInMonth / $daysInMonthSoFar days',
                       style: GoogleFonts.inter(
-                        color: _kSage,
+                        color: context.colors.sage,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1062,13 +1053,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _kCardBorder,
+                      color: context.colors.border,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '$successRateInMonth%',
                       style: GoogleFonts.inter(
-                        color: _kTextSub,
+                        color: context.colors.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1094,10 +1085,10 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _kTerra.withValues(alpha: 0.1),
+                    color: context.colors.terracotta.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.whatshot_rounded, color: _kTerra, size: 20),
+                  child: Icon(Icons.whatshot_rounded, color: context.colors.terracotta, size: 20),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -1105,9 +1096,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$currentStreak-day streak 🔥',
+                        '$currentStreak-day streak ??',
                         style: GoogleFonts.inter(
-                          color: _kTerra,
+                          color: context.colors.terracotta,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1116,7 +1107,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                       Text(
                         'Keep it up — best is $longestStreak days',
                         style: GoogleFonts.inter(
-                          color: _kTextSub,
+                          color: context.colors.textSecondary,
                           fontSize: 12,
                         ),
                       ),
@@ -1132,9 +1123,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: _kCard,
+              color: context.colors.card,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: _kCardBorder),
+              border: Border.all(color: context.colors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1142,7 +1133,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                 Text(
                   'LOG',
                   style: GoogleFonts.inter(
-                    color: _kTextSub,
+                    color: context.colors.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.0,
@@ -1155,12 +1146,12 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 32),
                       child: Column(
                         children: [
-                          Icon(Icons.history_rounded, color: _kTextSub.withValues(alpha: 0.3), size: 40),
+                          Icon(Icons.history_rounded, color: context.colors.textSecondary.withValues(alpha: 0.3), size: 40),
                           const SizedBox(height: 12),
                           Text(
                             'No logs yet. Mark the habit completed to start tracking!',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(color: _kTextSub, fontSize: 13),
+                            style: GoogleFonts.inter(color: context.colors.textSecondary, fontSize: 13),
                           ),
                         ],
                       ),
@@ -1214,9 +1205,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: _kBg,
+        color: context.colors.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
@@ -1226,7 +1217,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               Text(
                 day,
                 style: GoogleFonts.inter(
-                  color: isCompleted ? _kSage : _kTextSub,
+                  color: isCompleted ? context.colors.sage : context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1235,7 +1226,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
               Text(
                 date,
                 style: GoogleFonts.inter(
-                  color: _kTextSub,
+                  color: context.colors.textSecondary,
                   fontSize: 11,
                 ),
               ),
@@ -1249,7 +1240,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: isCompleted ? _kSage : _kTextSub,
+                    color: isCompleted ? context.colors.sage : context.colors.textSecondary,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -1257,7 +1248,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                 Text(
                   status,
                   style: GoogleFonts.inter(
-                    color: isCompleted ? _kText : _kTextSub,
+                    color: isCompleted ? context.colors.textPrimary : context.colors.textSecondary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1266,9 +1257,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
             ),
           ),
           if (isCompleted)
-            const Icon(
+            Icon(
               Icons.check_rounded,
-              color: _kSage,
+              color: context.colors.sage,
               size: 18,
             ),
         ],

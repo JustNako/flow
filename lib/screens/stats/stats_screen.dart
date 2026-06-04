@@ -6,16 +6,7 @@ import 'package:intl/intl.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/ai_insights_response.dart';
 import 'package:share_plus/share_plus.dart';
-
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
-const _kCardBorder = Color(0xFF2E2E2E);
-const _kSage = Color(0xFF8BA888);
-const _kLavender = Color(0xFF9F92C6);
-const _kTerra = Color(0xFFD68C7A);
-const _kGold = Color(0xFFFFD700);
-const _kText = Color(0xFFE8E8E8);
-const _kTextSub = Color(0xFF888888);
+import '../../theme/app_theme.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -24,7 +15,19 @@ class StatsScreen extends StatefulWidget {
   State<StatsScreen> createState() => _StatsScreenState();
 }
 
-class _StatsScreenState extends State<StatsScreen> {
+mixin _ThemeColorsMixin<T extends StatefulWidget> on State<T> {
+  Color get _kBg => context.colors.background;
+  Color get _kCard => context.colors.card;
+  Color get _kCardBorder => context.colors.border;
+  Color get _kSage => context.colors.sage;
+  Color get _kLavender => context.colors.lavender;
+  Color get _kTerra => context.colors.terracotta;
+  Color get _kGold => context.colors.gold;
+  Color get _kText => context.colors.textPrimary;
+  Color get _kTextSub => context.colors.textSecondary;
+}
+
+class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsScreen> {
   final _api = HabitApiService.instance;
   bool _isLoading = true;
   String? _error;
@@ -105,7 +108,7 @@ class _StatsScreenState extends State<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: _kBg,
         body: Center(child: CircularProgressIndicator(color: _kGold)),
       );
@@ -118,13 +121,13 @@ class _StatsScreenState extends State<StatsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: _kTerra, size: 48),
-              const SizedBox(height: 16),
-              Text(_error!, style: const TextStyle(color: _kTextSub)),
-              const SizedBox(height: 16),
+              Icon(Icons.error_outline, color: _kTerra, size: 48),
+              SizedBox(height: 16),
+              Text(_error!, style: TextStyle(color: _kTextSub)),
+              SizedBox(height: 16),
               TextButton(
                 onPressed: _loadData,
-                child: const Text('Retry', style: TextStyle(color: _kGold)),
+                child: Text('Retry', style: TextStyle(color: _kGold)),
               ),
             ],
           ),
@@ -155,7 +158,7 @@ class _StatsScreenState extends State<StatsScreen> {
           backgroundColor: _kCard,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-            padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
+            padding: EdgeInsets.fromLTRB(24, 32, 24, 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -176,7 +179,7 @@ class _StatsScreenState extends State<StatsScreen> {
                             letterSpacing: 1.5,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           'Insights',
                           style: GoogleFonts.playfairDisplay(
@@ -190,7 +193,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     ),
                     // Toggle
                     Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         color: _kCardBorder.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(24),
@@ -214,7 +217,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     )
                   ],
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
 
                 // Top Bento - Completions Chart
                 _BentoCard(
@@ -225,15 +228,15 @@ class _StatsScreenState extends State<StatsScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF64B5F6).withOpacity(0.1),
+                              color: context.colors.blue.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.show_chart_rounded, color: Color(0xFF64B5F6), size: 16),
+                            child: Icon(Icons.show_chart_rounded, color: context.colors.blue, size: 16),
                           ),
-                          const SizedBox(width: 12),
-                          const Text('Completions', style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500)),
+                          SizedBox(width: 12),
+                          Text('Completions', style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500)),
                         ],
                       ),
                       const Spacer(),
@@ -245,11 +248,11 @@ class _StatsScreenState extends State<StatsScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text('$completions', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 42, fontWeight: FontWeight.bold, height: 1.0)),
-                              const SizedBox(height: 4),
-                              Text(_isWeekly ? 'this week' : 'last 24 days', style: const TextStyle(color: _kTextSub, fontSize: 13)),
+                              SizedBox(height: 4),
+                              Text(_isWeekly ? 'this week' : 'last 24 days', style: TextStyle(color: _kTextSub, fontSize: 13)),
                             ],
                           ),
-                          const SizedBox(width: 24),
+                          SizedBox(width: 24),
                           Expanded(
                             child: _buildArtisticBarChart(_isWeekly, _isWeekly ? currentWeekData : currentMonthData),
                           ),
@@ -258,7 +261,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Middle Bento row 1
                 Row(
@@ -271,22 +274,22 @@ class _StatsScreenState extends State<StatsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: _kTerra.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.local_fire_department_rounded, color: _kTerra, size: 18),
+                              child: Icon(Icons.local_fire_department_rounded, color: _kTerra, size: 18),
                             ),
                             const Spacer(),
                             Text('$globalStreak', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 32, fontWeight: FontWeight.bold, height: 1.0)),
-                            const SizedBox(height: 4),
-                            const Text('global streak', style: TextStyle(color: _kTextSub, fontSize: 13)),
+                            SizedBox(height: 4),
+                            Text('global streak', style: TextStyle(color: _kTextSub, fontSize: 13)),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       flex: 6,
                       child: _BentoCard(
@@ -295,34 +298,34 @@ class _StatsScreenState extends State<StatsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: _kLavender.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.bolt_rounded, color: _kLavender, size: 18),
+                              child: Icon(Icons.bolt_rounded, color: _kLavender, size: 18),
                             ),
-                            const SizedBox(height: 12),
+                            SizedBox(height: 12),
                             Row(
                               children: [
                                 _miniEmojiTile('🧘‍♀️', _kSage),
-                                const SizedBox(width: 6),
-                                _miniEmojiTile('💧', const Color(0xFF64B5F6)),
-                                const SizedBox(width: 6),
+                                SizedBox(width: 6),
+                                _miniEmojiTile('💧', context.colors.blue),
+                                SizedBox(width: 6),
                                 _miniEmojiTile('📖', _kLavender),
                               ],
                             ),
                             const Spacer(),
                             Text('$totalHabits', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 32, fontWeight: FontWeight.bold, height: 1.0)),
-                            const SizedBox(height: 4),
-                            const Text('active habits', style: TextStyle(color: _kTextSub, fontSize: 13)),
+                            SizedBox(height: 4),
+                            Text('active habits', style: TextStyle(color: _kTextSub, fontSize: 13)),
                           ],
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Middle Bento row 2
                 Row(
@@ -335,12 +338,12 @@ class _StatsScreenState extends State<StatsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: _kGold.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.emoji_events_rounded, color: _kGold, size: 18),
+                              child: Icon(Icons.emoji_events_rounded, color: _kGold, size: 18),
                             ),
                             const Spacer(),
                             Row(
@@ -348,17 +351,17 @@ class _StatsScreenState extends State<StatsScreen> {
                               textBaseline: TextBaseline.alphabetic,
                               children: [
                                 Text('$bestStreak', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 32, fontWeight: FontWeight.bold, height: 1.0)),
-                                const SizedBox(width: 4),
-                                const Text('d', style: TextStyle(color: _kTextSub, fontSize: 16, fontWeight: FontWeight.w600)),
+                                SizedBox(width: 4),
+                                Text('d', style: TextStyle(color: _kTextSub, fontSize: 16, fontWeight: FontWeight.w600)),
                               ],
                             ),
-                            const SizedBox(height: 4),
-                            const Text('best streak', style: TextStyle(color: _kTextSub, fontSize: 13)),
+                            SizedBox(height: 4),
+                            Text('best streak', style: TextStyle(color: _kTextSub, fontSize: 13)),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       flex: 6,
                       child: _BentoCard(
@@ -381,7 +384,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                       child: CircularProgressIndicator(
                                         value: 1.0,
                                         strokeWidth: 6.5,
-                                        color: const Color(0xFF262E26), // very dark green-charcoal
+                                        color: context.isDark ? const Color(0xFF262E26) : context.colors.border, // progress track
                                       ),
                                     ),
                                     // 2. Animated Active Sage green progress ring
@@ -410,7 +413,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                           TextSpan(
                                             text: '${completionRate.isNaN ? 0 : completionRate.toInt()}',
                                             style: GoogleFonts.playfairDisplay(
-                                              color: Colors.white,
+                                              color: _kText,
                                               fontSize: 30,
                                               fontWeight: FontWeight.w400,
                                               letterSpacing: -0.5,
@@ -419,11 +422,11 @@ class _StatsScreenState extends State<StatsScreen> {
                                           WidgetSpan(
                                             alignment: PlaceholderAlignment.top,
                                             child: Padding(
-                                              padding: const EdgeInsets.only(left: 1, top: 4),
+                                              padding: EdgeInsets.only(left: 1, top: 4),
                                               child: Text(
                                                 '%',
                                                 style: GoogleFonts.inter(
-                                                  color: Colors.white.withOpacity(0.45),
+                                                  color: _kText.withOpacity(0.45),
                                                   fontSize: 11,
                                                   fontWeight: FontWeight.w400,
                                                 ),
@@ -436,8 +439,8 @@ class _StatsScreenState extends State<StatsScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              const Text(
+                              SizedBox(height: 16),
+                              Text(
                                 'completion rate',
                                 style: TextStyle(
                                   color: _kTextSub,
@@ -452,13 +455,13 @@ class _StatsScreenState extends State<StatsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // AI Coach Insight Card — shown only for Pro users
                 if (isPro) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: _kCard,
                       borderRadius: BorderRadius.circular(24),
@@ -475,8 +478,8 @@ class _StatsScreenState extends State<StatsScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.auto_awesome_rounded, color: _kLavender, size: 20),
-                                const SizedBox(width: 8),
+                                Icon(Icons.auto_awesome_rounded, color: _kLavender, size: 20),
+                                SizedBox(width: 8),
                                 Text('AI Coach', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.w600)),
                               ],
                             ),
@@ -486,9 +489,9 @@ class _StatsScreenState extends State<StatsScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         if (_aiInsightsLoading)
-                          const Center(
+                          Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 8),
                               child: SizedBox(
@@ -502,19 +505,19 @@ class _StatsScreenState extends State<StatsScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Personalized analysis unavailable',
                                 style: TextStyle(color: _kTerra, fontSize: 14, fontWeight: FontWeight.w600),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               Text(
                                 _aiInsightsError!,
-                                style: const TextStyle(color: _kTextSub, fontSize: 13, height: 1.5),
+                                style: TextStyle(color: _kTextSub, fontSize: 13, height: 1.5),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               GestureDetector(
                                 onTap: _loadAiInsights,
-                                child: const Text(
+                                child: Text(
                                   'Tap to retry',
                                   style: TextStyle(color: _kLavender, fontSize: 13, fontWeight: FontWeight.w500),
                                 ),
@@ -526,20 +529,20 @@ class _StatsScreenState extends State<StatsScreen> {
                             _aiInsights != null && _aiInsights!.insights.isNotEmpty
                                 ? _aiInsights!.insights.first
                                 : 'Your personalized insights will appear here once we have enough data from the past week.',
-                            style: const TextStyle(color: _kTextSub, fontSize: 14, height: 1.6),
+                            style: TextStyle(color: _kTextSub, fontSize: 14, height: 1.6),
                           ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         GestureDetector(
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Full analysis report is being generated... (Coming soon!)'),
+                              SnackBar(
+                                content: const Text('Full analysis report is being generated... (Coming soon!)'),
                                 backgroundColor: _kLavender,
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );
                           },
-                          child: const Row(
+                          child: Row(
                             children: [
                               Text('Full analysis', style: TextStyle(color: _kLavender, fontSize: 13, fontWeight: FontWeight.w500)),
                               SizedBox(width: 4),
@@ -550,14 +553,14 @@ class _StatsScreenState extends State<StatsScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                 ],
 
                 // Monthly Recap CTA
                 GestureDetector(
                   onTap: () => _showMonthlyRecapSheet(context, completionRate),
                   child: Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: _kCard,
                       borderRadius: BorderRadius.circular(24),
@@ -566,31 +569,31 @@ class _StatsScreenState extends State<StatsScreen> {
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: _kSage.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.calendar_today_rounded, color: _kSage, size: 20),
+                          child: Icon(Icons.calendar_today_rounded, color: _kSage, size: 20),
                         ),
-                        const SizedBox(width: 16),
+                        SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Monthly Recap', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 4),
-                              Text('${DateFormat('MMMM yyyy').format(DateTime.now())} - ${completionRate.toInt()}% completion', style: const TextStyle(color: _kTextSub, fontSize: 13)),
+                              SizedBox(height: 4),
+                              Text('${DateFormat('MMMM yyyy').format(DateTime.now())} - ${completionRate.toInt()}% completion', style: TextStyle(color: _kTextSub, fontSize: 13)),
                             ],
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: _kTextSub.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.arrow_forward_rounded, color: _kTextSub, size: 16),
+                          child: Icon(Icons.arrow_forward_rounded, color: _kTextSub, size: 16),
                         )
                       ],
                     ),
@@ -611,7 +614,7 @@ class _StatsScreenState extends State<StatsScreen> {
         color: color.withOpacity(0.1),
         shape: BoxShape.circle,
       ),
-      child: Center(child: Text(emoji, style: const TextStyle(fontSize: 12))),
+      child: Center(child: Text(emoji, style: TextStyle(fontSize: 12))),
     );
   }
 
@@ -638,7 +641,7 @@ class _StatsScreenState extends State<StatsScreen> {
           width: isWeekly ? 16 : 4,
           height: 60 * heightRatio,
           decoration: BoxDecoration(
-            color: isToday ? const Color(0xFF64B5F6) : const Color(0xFF64B5F6).withOpacity(0.3),
+            color: isToday ? context.colors.blue : context.colors.blue.withOpacity(0.3),
             borderRadius: BorderRadius.circular(4),
           ),
         );
@@ -653,7 +656,7 @@ class _StatsScreenState extends State<StatsScreen> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Expanded(child: bars),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day) {
@@ -680,11 +683,14 @@ class _ToggleBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _kCardBorder = context.colors.border;
+    final _kText = context.colors.textPrimary;
+    final _kTextSub = context.colors.textSecondary;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? _kCardBorder : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
@@ -710,9 +716,11 @@ class _BentoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _kCard = context.colors.card;
+    final _kCardBorder = context.colors.border;
     return Container(
       height: height,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _kCard,
         borderRadius: BorderRadius.circular(24),
@@ -742,7 +750,7 @@ class _MonthlyRecapSheet extends StatefulWidget {
   State<_MonthlyRecapSheet> createState() => _MonthlyRecapSheetState();
 }
 
-class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
+class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> with _ThemeColorsMixin<_MonthlyRecapSheet> {
   bool _isLoading = true;
   String? _error;
   Map<String, dynamic>? _recapData;
@@ -843,14 +851,14 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kBg,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -865,7 +873,7 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -881,11 +889,11 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.close_rounded, color: _kTextSub, size: 22),
+                    child: Icon(Icons.close_rounded, color: _kTextSub, size: 22),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -897,10 +905,10 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               if (_isLoading)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 40),
                   child: Center(
                     child: CircularProgressIndicator(color: _kGold),
@@ -908,17 +916,17 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                 )
               else if (_error != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  padding: EdgeInsets.symmetric(vertical: 40),
                   child: Column(
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: _kTerra, size: 40),
-                      const SizedBox(height: 12),
+                      Icon(Icons.error_outline_rounded, color: _kTerra, size: 40),
+                      SizedBox(height: 12),
                       Text(
                         _error!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: _kTextSub, fontSize: 14),
+                        style: TextStyle(color: _kTextSub, fontSize: 14),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () {
                           setState(() {
@@ -931,7 +939,7 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                           backgroundColor: _kCard,
                           foregroundColor: _kText,
                         ),
-                        child: const Text('Retry'),
+                        child: Text('Retry'),
                       )
                     ],
                   ),
@@ -1006,8 +1014,8 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    const Text(
+                    SizedBox(height: 2),
+                    Text(
                       'Success Rate',
                       style: TextStyle(color: _kTextSub, fontSize: 11),
                     ),
@@ -1015,9 +1023,9 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: archetypeColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(24),
@@ -1033,19 +1041,19 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 archetypeDesc,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: _kTextSub, fontSize: 13),
+                style: TextStyle(color: _kTextSub, fontSize: 13),
               ),
             ),
           ],
         ),
       ),
-      const SizedBox(height: 32),
+      SizedBox(height: 32),
 
       // Stats Grid (Bento style)
       Row(
@@ -1058,7 +1066,7 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
               iconColor: _kTerra,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: _BentoStatCard(
               title: 'BEST HABIT',
@@ -1069,7 +1077,7 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
           ),
         ],
       ),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       _BentoStatCard(
         title: 'COMPLETIONS',
         value: '$completedDays habit logs completed',
@@ -1077,12 +1085,12 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
         iconColor: _kSage,
         isFullWidth: true,
       ),
-      const SizedBox(height: 20),
+      SizedBox(height: 20),
 
       // AI Insight if present
       if (aiInsight != null && aiInsight.isNotEmpty) ...[
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: _kCard,
             borderRadius: BorderRadius.circular(20),
@@ -1094,14 +1102,14 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: _kLavender.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.auto_awesome_rounded, color: _kLavender, size: 16),
+                    child: Icon(Icons.auto_awesome_rounded, color: _kLavender, size: 16),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Text(
                     'AI INSIGHT',
                     style: GoogleFonts.inter(
@@ -1113,15 +1121,15 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 aiInsight,
-                style: const TextStyle(color: _kText, fontSize: 13, height: 1.5),
+                style: TextStyle(color: _kText, fontSize: 13, height: 1.5),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
       ],
 
       // Actions
@@ -1141,7 +1149,7 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                   ),
                 ),
                 child: _isSharing
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
@@ -1149,7 +1157,7 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                           color: Colors.black,
                         ),
                       )
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.share_rounded, size: 18),
@@ -1163,7 +1171,7 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           SizedBox(
             width: 54,
             height: 54,
@@ -1174,15 +1182,15 @@ class _MonthlyRecapSheetState extends State<_MonthlyRecapSheet> {
                 foregroundColor: _kText,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: const BorderSide(color: _kCardBorder),
+                  side: BorderSide(color: _kCardBorder),
                 ),
               ),
-              child: const Icon(Icons.copy_rounded, size: 20),
+              child: Icon(Icons.copy_rounded, size: 20),
             ),
           ),
         ],
       ),
-      const SizedBox(height: 20),
+      SizedBox(height: 20),
     ];
   }
 }
@@ -1204,9 +1212,13 @@ class _BentoStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _kCard = context.colors.card;
+    final _kCardBorder = context.colors.border;
+    final _kTextSub = context.colors.textSecondary;
+    final _kText = context.colors.textPrimary;
     return Container(
       width: isFullWidth ? double.infinity : null,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: _kCard,
         borderRadius: BorderRadius.circular(20),
@@ -1219,7 +1231,7 @@ class _BentoStatCard extends StatelessWidget {
           Row(
             children: [
               Icon(icon, color: iconColor, size: 16),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
@@ -1233,7 +1245,7 @@ class _BentoStatCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             value,
             style: GoogleFonts.playfairDisplay(
