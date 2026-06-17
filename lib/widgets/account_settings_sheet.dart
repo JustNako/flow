@@ -82,7 +82,7 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
   }
 
   Future<void> _launchPrivacyPolicy() async {
-    final url = Uri.parse('${ApiService.serverRoot}/privacy.html');
+    final url = Uri.parse('https://flowtracks.app/privacy');
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         throw 'Could not launch $url';
@@ -138,6 +138,7 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
 
   @override
   Widget build(BuildContext context) {
+    final bool hasPassword = widget.initialData?['hasPassword'] ?? true;
     return Container(
       padding: EdgeInsets.only(
         left: 28, right: 28, top: 28,
@@ -180,25 +181,27 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
 
             _buildField('Username', _usernameController, icon: Icons.person_outline),
             const SizedBox(height: 16),
-            _buildField('Email', _emailController, icon: Icons.mail_outline),
-            const SizedBox(height: 24),
-            Divider(color: context.colors.border),
-            const SizedBox(height: 24),
-            Text('Change Password', style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            _buildField(
-              'Current Password', _currentPasswordController, 
-              icon: Icons.lock_outline, isPassword: true, hint: 'Required for changes',
-              obscureText: _obscureCurrentPassword,
-              onToggleObscure: () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword)
-            ),
-            const SizedBox(height: 16),
-            _buildField(
-              'New Password', _newPasswordController, 
-              icon: Icons.lock_reset, isPassword: true, hint: 'Leave empty to keep current',
-              obscureText: _obscureNewPassword,
-              onToggleObscure: () => setState(() => _obscureNewPassword = !_obscureNewPassword)
-            ),
+            _buildField('Email', _emailController, icon: Icons.mail_outline, enabled: hasPassword),
+            if (hasPassword) ...[
+              const SizedBox(height: 24),
+              Divider(color: context.colors.border),
+              const SizedBox(height: 24),
+              Text('Change Password', style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              _buildField(
+                'Current Password', _currentPasswordController, 
+                icon: Icons.lock_outline, isPassword: true, hint: 'Required for changes',
+                obscureText: _obscureCurrentPassword,
+                onToggleObscure: () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword)
+              ),
+              const SizedBox(height: 16),
+              _buildField(
+                'New Password', _newPasswordController, 
+                icon: Icons.lock_reset, isPassword: true, hint: 'Leave empty to keep current',
+                obscureText: _obscureNewPassword,
+                onToggleObscure: () => setState(() => _obscureNewPassword = !_obscureNewPassword)
+              ),
+            ],
             
             const SizedBox(height: 32),
             SizedBox(
@@ -238,25 +241,13 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
                 ),
               ),
             ],
-
-            const SizedBox(height: 16),
-            Center(
-              child: TextButton.icon(
-                onPressed: _launchPrivacyPolicy,
-                icon: Icon(Icons.privacy_tip_outlined, size: 18, color: context.colors.textSecondary),
-                label: Text('Privacy Policy', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, {required IconData icon, bool isPassword = false, String? hint, bool? obscureText, VoidCallback? onToggleObscure}) {
+  Widget _buildField(String label, TextEditingController controller, {required IconData icon, bool isPassword = false, String? hint, bool? obscureText, VoidCallback? onToggleObscure, bool enabled = true}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -264,8 +255,12 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
         const SizedBox(height: 8),
         TextField(
           controller: controller,
+          enabled: enabled,
           obscureText: obscureText ?? false,
-          style: TextStyle(color: context.colors.textPrimary, fontSize: 15),
+          style: TextStyle(
+            color: enabled ? context.colors.textPrimary : context.colors.textSecondary, 
+            fontSize: 15
+          ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: context.colors.textSecondary.withOpacity(0.5), fontSize: 14),
@@ -281,7 +276,7 @@ class _AccountSettingsBottomSheetState extends State<AccountSettingsBottomSheet>
                   )
                 : null,
             filled: true,
-            fillColor: context.colors.background,
+            fillColor: enabled ? context.colors.background : context.colors.border.withOpacity(0.2),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),

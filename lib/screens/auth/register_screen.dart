@@ -4,6 +4,9 @@ import '../../services/auth_service.dart';
 import '../../api/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'email_pending_screen.dart';
+import '../../theme/app_theme.dart';
+import '../../services/notification_service.dart';
+import '../../widgets/google_sign_in_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,7 +25,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _agreedToPrivacy = false;
 
   Future<void> _launchPrivacyPolicy() async {
-    final url = Uri.parse('${ApiService.serverRoot}/privacy.html');
+    //final url = Uri.parse('${ApiService.serverRoot}/privacy.html');
+    final url = Uri.parse('https://flowtracks.app/privacy');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open privacy policy")));
@@ -92,13 +96,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red.shade800,
+          backgroundColor: context.colors.danger,
           duration: const Duration(seconds: 4),
         ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    if (!_agreedToPrivacy) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("You must agree to the Privacy Policy")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final token = await _authService.signInWithGoogle();
+      if (token == null) {
+        // User cancelled login
+        return;
+      }
+
+      // Upload FCM token to backend
+      await NotificationService.instance.sendTokenToServer();
+
+      if (!mounted) return;
+
+      // Navigate to MainScreen (go home and clear backstack)
+      Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
+    } catch (e) {
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Google Sign-In error: $msg"),
+          backgroundColor: context.colors.danger,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildGoogleSignInButton() {
+    return GoogleSignInButton(
+      label: 'Sign up with Google',
+      onPressed: _loginWithGoogle,
+      isLoading: _isLoading,
+    );
   }
 
   @override
@@ -112,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -123,20 +172,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Header
-                  const Text(
+                  Text(
                     'Create Account',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.colors.textPrimary,
                       fontSize: 28,
                       fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Start your habit tracking journey',
                     style: TextStyle(
-                      color: Color(0xFFA0A0AB),
+                      color: context.colors.textSecondary,
                       fontSize: 16,
                     ),
                     textAlign: TextAlign.center,
@@ -183,9 +232,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Checkbox(
                           value: _agreedToPrivacy,
                           onChanged: (val) => setState(() => _agreedToPrivacy = val ?? false),
-                          activeColor: Colors.white,
-                          checkColor: Colors.black,
-                          side: const BorderSide(color: Color(0xFF6B6B78), width: 1.5),
+                          activeColor: context.colors.textPrimary,
+                          checkColor: context.colors.background,
+                          side: BorderSide(color: context.colors.textSecondary.withOpacity(0.5), width: 1.5),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                         ),
                       ),
@@ -193,14 +242,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       Expanded(
                         child: GestureDetector(
                           onTap: _launchPrivacyPolicy,
-                          child: const Text.rich(
+                          child: Text.rich(
                             TextSpan(
                               text: "I agree to the ",
-                              style: TextStyle(color: Color(0xFFA0A0AB), fontSize: 14),
+                              style: TextStyle(color: context.colors.textSecondary, fontSize: 14),
                               children: [
                                 TextSpan(
                                   text: "Privacy Policy",
-                                  style: TextStyle(color: Colors.white, decoration: TextDecoration.underline),
+                                  style: TextStyle(color: context.colors.textPrimary, decoration: TextDecoration.underline),
                                 ),
                               ],
                             ),
@@ -215,16 +264,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Create Account Button
                   _buildRegisterButton(),
   
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: context.colors.border, thickness: 1)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'or',
+                          style: TextStyle(
+                            color: context.colors.textSecondary.withOpacity(0.6),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: context.colors.border, thickness: 1)),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildGoogleSignInButton(),
+                  const SizedBox(height: 24),
   
                   // Footer
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         "Already have an account? ",
                         style: TextStyle(
-                          color: Color(0xFFA0A0AB),
+                          color: context.colors.textSecondary,
                           fontSize: 15,
                         ),
                       ),
@@ -233,10 +301,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // Go back to login screen
                           Navigator.of(context).pop();
                         },
-                        child: const Text(
+                        child: Text(
                           "Sign in",
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.colors.textPrimary,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -256,8 +324,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: context.colors.textPrimary,
         fontSize: 16,
         fontWeight: FontWeight.w500,
       ),
@@ -273,19 +341,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF16161A),
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF2C2C35), width: 1.5),
+        border: Border.all(color: context.colors.border, width: 1.5),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         autofillHints: autofillHints,
-        style: const TextStyle(color: Colors.white, fontSize: 16),
+        style: TextStyle(color: context.colors.textPrimary, fontSize: 16),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: Color(0xFF6B6B78), fontSize: 16),
+          hintStyle: TextStyle(color: context.colors.textSecondary.withOpacity(0.5), fontSize: 16),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),
@@ -299,7 +367,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withOpacity(0.15),
+            color: context.colors.primary.withOpacity(0.15),
             blurRadius: 24,
             spreadRadius: 2,
             offset: const Offset(0, 4),
@@ -309,9 +377,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: ElevatedButton(
         onPressed: _isLoading ? null : _register,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          disabledBackgroundColor: Colors.white70,
+          backgroundColor: context.colors.textPrimary,
+          foregroundColor: context.colors.background,
+          disabledBackgroundColor: context.colors.textSecondary.withOpacity(0.5),
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -319,11 +387,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           elevation: 0,
         ),
         child: _isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
-                  color: Colors.black,
+                  color: context.colors.background,
                   strokeWidth: 2.5,
                 ),
               )

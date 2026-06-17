@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import '../../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,7 +43,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      emoji: '??',
+      emoji: '🌱',
       title: 'The Welcome',
       subtitle: 'Find your flow state',
       description:
@@ -52,7 +52,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: const Color(0xFFC4B5E3),
     ),
     _OnboardingPage(
-      emoji: '??',
+      emoji: '🧠',
       title: 'Your AI Guide',
       subtitle: 'Personalized bento insights',
       description:
@@ -61,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: const Color(0xFF9CAFA3),
     ),
     _OnboardingPage(
-      emoji: '??',
+      emoji: '📊',
       title: 'No Pressure Stats',
       subtitle: 'Forgiving analytics',
       description:
@@ -70,7 +70,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: const Color(0xFFE07A5F),
     ),
     _OnboardingPage(
-      emoji: '??',
+      emoji: '🤝',
       title: 'Empathetic Friends',
       subtitle: 'Supportive social circle',
       description:
@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: const Color(0xFFC4B5E3),
     ),
     _OnboardingPage(
-      emoji: '??',
+      emoji: '📱',
       title: 'Interactive Widgets',
       subtitle: 'Seamless tracking',
       description:

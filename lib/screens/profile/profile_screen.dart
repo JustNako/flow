@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../services/auth_service.dart';
 import '../../services/theme_service.dart';
 import '../../api/habit_api_service.dart';
@@ -18,7 +20,8 @@ const _kGold = Color(0xFFFFD700);
 
 // ─── Delete Account Dialog ───────────────────────────────────────────────────
 class _DeleteAccountDialog extends StatefulWidget {
-  const _DeleteAccountDialog();
+  final bool hasPassword;
+  const _DeleteAccountDialog({required this.hasPassword});
 
   @override
   State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
@@ -57,32 +60,36 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
             style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 14, height: 1.5),
           ),
           SizedBox(height: 24),
-          Text('Enter your password to confirm:',
-              style: GoogleFonts.inter(color: colors.textPrimary, fontSize: 14)),
-          SizedBox(height: 12),
-          TextField(
-            controller: _passwordController,
-            obscureText: _obscureText,
-            style: GoogleFonts.inter(color: colors.textPrimary),
-            decoration: InputDecoration(
-              hintText: 'Your password',
-              hintStyle: GoogleFonts.inter(color: colors.textSecondary),
-              filled: true,
-              fillColor: colors.background,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.terracotta, width: 1.5)),
-              suffixIcon: IconButton(
-                icon: Icon(
-                    _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    color: colors.textSecondary),
-                onPressed: () => setState(() => _obscureText = !_obscureText),
+          if (widget.hasPassword) ...[
+            Text('Enter your password to confirm:',
+                style: GoogleFonts.inter(color: colors.textPrimary, fontSize: 14)),
+            SizedBox(height: 12),
+            TextField(
+              controller: _passwordController,
+              obscureText: _obscureText,
+              style: GoogleFonts.inter(color: colors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Your password',
+                hintStyle: GoogleFonts.inter(color: colors.textSecondary),
+                filled: true,
+                fillColor: colors.background,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.terracotta, width: 1.5)),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                      _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      color: colors.textSecondary),
+                  onPressed: () => setState(() => _obscureText = !_obscureText),
+                ),
               ),
             ),
-          ),
+          ] else
+            Text('Confirm account deletion. You will be prompted to re-authenticate with Google.',
+                style: GoogleFonts.inter(color: colors.textPrimary, fontSize: 14, height: 1.5)),
         ],
       ),
       actions: [
@@ -91,9 +98,13 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
             child: Text('Cancel', style: GoogleFonts.inter(color: colors.textSecondary, fontSize: 15))),
         TextButton(
           onPressed: () {
-            final password = _passwordController.text.trim();
-            if (password.isEmpty) return;
-            Navigator.of(context).pop(password);
+            if (widget.hasPassword) {
+              final password = _passwordController.text.trim();
+              if (password.isEmpty) return;
+              Navigator.of(context).pop(password);
+            } else {
+              Navigator.of(context).pop(""); // Google confirm (empty password)
+            }
           },
           child: Text('Delete',
               style: GoogleFonts.inter(color: colors.terracotta, fontSize: 15, fontWeight: FontWeight.w600)),
@@ -159,20 +170,21 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showDeleteAccountDialog() async {
+    final hasPassword = _userProfile?['hasPassword'] ?? true;
     final confirmedPassword = await showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => const _DeleteAccountDialog(),
+      builder: (ctx) => _DeleteAccountDialog(hasPassword: hasPassword),
     );
     if (confirmedPassword != null && mounted) {
-      await _deleteAccount(confirmedPassword);
+      await _deleteAccount(password: confirmedPassword.isNotEmpty ? confirmedPassword : null);
     }
   }
 
-  Future<void> _deleteAccount(String password) async {
+  Future<void> _deleteAccount({String? password}) async {
     setState(() => _isDeletingAccount = true);
     try {
-      await AuthService.instance.deleteAccount(password);
+      await AuthService.instance.deleteAccount(password: password);
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
       }
@@ -278,6 +290,52 @@ class ProfileScreenState extends State<ProfileScreen> {
       builder: (ctx) => AccountSettingsBottomSheet(initialData: _userProfile),
     );
     if (result == true) loadData(showLoading: false);
+  }
+
+  Future<void> _sendFeedback() async {
+    const email = 'codexsstudio@gmail.com';
+    const subject = 'Flow App – Feedback';
+    const body = 'Hi Flow team,\n\n';
+    final uri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+    );
+    if (!await launchUrl(uri)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Could not open mail app',
+              style: GoogleFonts.inter(color: context.colors.textPrimary)),
+          backgroundColor: context.colors.card,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: context.colors.border)),
+        ));
+      }
+    }
+  }
+
+  Future<void> _openReview() async {
+    const packageId = 'com.codex.flow';
+    final marketUri = Uri.parse('market://details?id=$packageId');
+    final webUri = Uri.parse('https://play.google.com/store/apps/details?id=$packageId');
+    if (!await launchUrl(marketUri, mode: LaunchMode.externalApplication)) {
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _openPrivacyPolicy() async {
+    final uri = Uri.parse('https://flowtracks.app/privacy');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _shareApp() async {
+    const packageId = 'com.codex.flow';
+    const message =
+        '✨ I\'ve been using Flow to build better habits — it\'s beautifully designed and super motivating!\n\n'
+        'Download it on Google Play:\n'
+        'https://play.google.com/store/apps/details?id=$packageId';
+    await SharePlus.instance.share(ShareParams(text: message));
   }
 
   @override
@@ -577,8 +635,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SizedBox(height: 24),
 
-                // ── SUPPORT Section ───────────────────────────────────────────
-                _SectionLabel(label: 'SUPPORT'),
+                // ── PREFERENCES Section ────────────────────────────────────────
+                _SectionLabel(label: 'PREFERENCES'),
                 SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
@@ -593,8 +651,24 @@ class ProfileScreenState extends State<ProfileScreen> {
                         iconColor: context.colors.sage,
                         title: 'Daily Reminders',
                         onTap: _showDailyReminders,
+                        isLast: true,
                       ),
-                      _Divider(),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24),
+
+                // ── SUPPORT Section ───────────────────────────────────────────
+                _SectionLabel(label: 'SUPPORT'),
+                SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.colors.card,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: context.colors.border),
+                  ),
+                  child: Column(
+                    children: [
                       _SettingsRow(
                         icon: Icons.help_outline_rounded,
                         iconColor: context.colors.terracotta,
@@ -612,6 +686,50 @@ class ProfileScreenState extends State<ProfileScreen> {
                             ),
                           );
                         },
+                      ),
+                      _Divider(),
+                      _SettingsRow(
+                        icon: Icons.feedback_outlined,
+                        iconColor: context.colors.lavender,
+                        title: 'Feedback',
+                        onTap: _sendFeedback,
+                      ),
+                      _Divider(),
+                      _SettingsRow(
+                        icon: Icons.star_outline_rounded,
+                        iconColor: _kGold,
+                        title: 'Write a Review',
+                        onTap: _openReview,
+                        isLast: true,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24),
+
+                // ── ABOUT Section ─────────────────────────────────────────────
+                _SectionLabel(label: 'ABOUT'),
+                SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.colors.card,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: context.colors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      _SettingsRow(
+                        icon: Icons.policy_outlined,
+                        iconColor: context.colors.textSecondary,
+                        title: 'Privacy Policy',
+                        onTap: _openPrivacyPolicy,
+                      ),
+                      _Divider(),
+                      _SettingsRow(
+                        icon: Icons.share_outlined,
+                        iconColor: context.colors.sage,
+                        title: 'Share the App',
+                        onTap: _shareApp,
                         isLast: true,
                       ),
                     ],

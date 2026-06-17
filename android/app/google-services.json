@@ -12,7 +12,28 @@
           "package_name": "com.codex.flow"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "375627728769-7qphjtkndcbr0dlh8dhc5apvpddfsie9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.codex.flow",
+            "certificate_hash": "b03467f199a18a6bfd719ff5fd79f0c4e7d876a2"
+          }
+        },
+        {
+          "client_id": "375627728769-mrf1fppmi48dv5gbu8b7iuul7u3dkf3f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.codex.flow",
+            "certificate_hash": "3c4480c5c86db82c643d3279874fd6fac9b3c45d"
+          }
+        },
+        {
+          "client_id": "375627728769-kqqtour41b2nek28e2phrf5htkodl7uc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyACKZ1njkSFptIXFITPh_oAw1APR4hYIOo"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "375627728769-kqqtour41b2nek28e2phrf5htkodl7uc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +57,12 @@
           "package_name": "com.example.habittracker_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "375627728769-kqqtour41b2nek28e2phrf5htkodl7uc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyACKZ1njkSFptIXFITPh_oAw1APR4hYIOo"
@@ -39,7 +70,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "375627728769-kqqtour41b2nek28e2phrf5htkodl7uc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

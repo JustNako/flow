@@ -1,6 +1,7 @@
 ﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../api/api_service.dart';
+import '../../theme/app_theme.dart';
 
 class EmailPendingScreen extends StatefulWidget {
   final String email;
@@ -22,9 +23,10 @@ class _EmailPendingScreenState extends State<EmailPendingScreen> with SingleTick
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    // Делаем анимацию более медленной и плавной (Zen-дыхание)
+    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.97, end: 1.03).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOutSine),
     );
   }
 
@@ -46,143 +48,194 @@ class _EmailPendingScreenState extends State<EmailPendingScreen> with SingleTick
     });
   }
 
+  // Кастомный мягкий SnackBar без агрессивных системных цветов
+  void _showSoftSnackbar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(
+            // Терракотовый для ошибок, Шалфейный для успеха
+            color: isError ? context.colors.danger : context.colors.sage,
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        backgroundColor: context.colors.card, // Matte charcoal
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32), // Максимальное скругление
+          side: BorderSide(color: context.colors.border, width: 1),
+        ),
+        margin: const EdgeInsets.only(bottom: 40, left: 24, right: 24),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   Future<void> _resend() async {
     if (_cooldown > 0 || _isSending) return;
     setState(() => _isSending = true);
     try {
       await ApiService().resendConfirmationEmail(widget.email);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Confirmation email sent! Check your inbox.'),
-          backgroundColor: Color(0xFF2ECC71),
-        ),
-      );
+      _showSoftSnackbar('✨ A reminder has been sent.');
       _startCooldown();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red.shade800,
-        ),
-      );
+      _showSoftSnackbar(e.toString().replaceFirst('Exception: ', ''), isError: true);
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
   }
 
   String get _cooldownLabel {
-    if (_cooldown <= 0) return 'Resend Email';
+    if (_cooldown <= 0) return 'Send another link';
     final m = _cooldown ~/ 60;
     final s = _cooldown % 60;
-    return m > 0 ? 'Resend in ${m}m ${s.toString().padLeft(2, '0')}s' : 'Resend in ${s}s';
+    return m > 0 ? 'Wait ${m}m ${s.toString().padLeft(2, '0')}s' : 'Wait ${s}s';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C1017),
+      backgroundColor: context.colors.background, // Deep Flow background
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(),
 
-              // Animated envelope icon
+              // Мягкая пульсирующая иконка (вместо градиента и эмодзи)
               ScaleTransition(
                 scale: _pulseAnimation,
                 child: Container(
-                  width: 110,
-                  height: 110,
+                  width: 100,
+                  height: 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFE8845C), Color(0xFFC96B42)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: context.colors.card, // Цвет Bento-карточки
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFE8845C).withOpacity(0.35),
+                        color: context.colors.sage.withOpacity(0.08), // Нежное шалфейное свечение
                         blurRadius: 40,
-                        spreadRadius: 8,
+                        spreadRadius: 10,
                       ),
                     ],
+                    border: Border.all(color: context.colors.border, width: 1),
                   ),
-                  child: const Center(
-                    child: Text('📧', style: TextStyle(fontSize: 52)),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 36),
-
-              // Title
-              const Text(
-                'Check your inbox',
-                style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 14),
-
-              // Subtitle
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  style: const TextStyle(color: Color(0xFF8A8F9E), fontSize: 15, height: 1.6),
-                  children: [
-                    const TextSpan(text: 'We sent a confirmation link to\n'),
-                    TextSpan(
-                      text: widget.email,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  child: Center(
+                    child: Icon(
+                      Icons.mail_outline_rounded,
+                      color: context.colors.sage, // Sage green
+                      size: 42,
                     ),
-                    const TextSpan(text: '\n\nClick the link in the email to activate your account.'),
-                  ],
+                  ),
                 ),
               ),
 
               const SizedBox(height: 48),
 
-              // Resend button
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: (_cooldown > 0 || _isSending) ? null : _resend,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF161A22),
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFF161A22),
-                    disabledForegroundColor: const Color(0xFF4A4F5E),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: _cooldown > 0 ? const Color(0xFF262A34) : const Color(0xFFE8845C),
-                        width: 1.5,
+              // Title (с закосом под премиальную эстетику)
+              Text(
+                'Your space awaits',
+                style: TextStyle(
+                  color: context.colors.textPrimary,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.5,
+                  // fontFamily: 'Lora', // Раскомментируй, если используешь Serif шрифты
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Эмпатичный текст
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
+                    fontSize: 16,
+                    height: 1.6,
+                    fontWeight: FontWeight.w300,
+                  ),
+                  children: [
+                    const TextSpan(text: 'We sent a link to\n'),
+                    TextSpan(
+                      text: widget.email,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    elevation: 0,
-                  ),
-                  child: _isSending
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text(
-                          _cooldownLabel,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                        ),
+                    const TextSpan(text: '\n\nCheck your inbox\nto step into your new routine.'),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 64),
 
-              // Back to login
+              // Кнопка повторной отправки
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: (_cooldown > 0 || _isSending) ? null : _resend,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.colors.card,
+                    foregroundColor: context.colors.textPrimary,
+                    disabledBackgroundColor: context.colors.background,
+                    disabledForegroundColor: context.colors.textSecondary.withOpacity(0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(40), // Pill-shape для кнопки
+                      side: BorderSide(
+                        color: _cooldown > 0 ? Colors.transparent : context.colors.border,
+                        width: 1,
+                      ),
+                    ),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                  ),
+                  child: _isSending
+                      ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: context.colors.sage, // Мягкий лоадер
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : Text(
+                    _cooldownLabel,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Ссылка возврата
               TextButton(
                 onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.colors.textSecondary,
+                  splashFactory: NoSplash.splashFactory, // Отключаем жесткий ripple-эффект (Zen)
+                ),
                 child: const Text(
-                  'Back to Login',
-                  style: TextStyle(color: Color(0xFF8A8F9E), fontSize: 15),
+                  'Return to start',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
 

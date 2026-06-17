@@ -1,9 +1,10 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../api/api_service.dart';
+import '../theme/app_theme.dart';
 
 class UpdateService {
   static const _keyAndroid = 'rc_api_key_android';
@@ -78,35 +79,40 @@ class UpdateService {
       builder: (context) => PopScope(
         canPop: !isForceUpdate,
         child: AlertDialog(
-          backgroundColor: const Color(0xFF161A22),
+          backgroundColor: context.colors.card,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             isForceUpdate ? 'Critical Update Required' : 'Update Available',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.bold),
           ),
           content: Text(
             isForceUpdate 
                 ? 'Your version of Flow is no longer supported. Please update to continue building habits.'
                 : 'A new version of Flow is available with new features and bug fixes. Would you like to update?',
-            style: const TextStyle(color: Color(0xFF8A8F9E)),
+            style: TextStyle(color: context.colors.textSecondary),
           ),
           actions: [
             if (!isForceUpdate)
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Later', style: TextStyle(color: Colors.white54)),
+                child: Text('Later', style: TextStyle(color: context.colors.textSecondary)),
               ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE8845C),
+                backgroundColor: context.colors.terracotta,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () async {
-                if (url != null && await canLaunchUrl(Uri.parse(url))) {
-                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                final fallbackUrl = Platform.isAndroid 
+                    ? 'https://play.google.com/store/apps/details?id=com.codex.flow'
+                    : 'https://apps.apple.com/app/id1234567890';
+                final urlStr = (url != null && url.isNotEmpty) ? url : fallbackUrl;
+                final uri = Uri.parse(urlStr);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
                 }
               },
-              child: const Text('Update Now', style: TextStyle(color: Colors.white)),
+              child: Text('Update Now', style: TextStyle(color: context.colors.background)),
             ),
           ],
         ),

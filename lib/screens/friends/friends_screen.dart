@@ -21,24 +21,19 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Color get _kText => context.colors.textPrimary;
   Color get _kTextSub => context.colors.textSecondary;
   final _api = FriendsApiService();
-  final _codeController = TextEditingController();
 
   String? _myCode;
   List<FriendDto> _friends = [];
   List<FriendRequestDto> _requests = [];
+  List<SuggestedUserDto> _suggestions = [];
+  final Set<String> _sentSuggestionRequestIds = {};
+  final Set<String> _sendingSuggestionRequestIds = {};
   bool _isLoading = true;
-  bool _isSending = false;
 
   @override
   void initState() {
     super.initState();
     _load();
-  }
-
-  @override
-  void dispose() {
-    _codeController.dispose();
-    super.dispose();
   }
 
   Future<void> _load() async {
@@ -48,12 +43,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
         _api.getMyCode(),
         _api.getFriends(),
         _api.getPendingRequests(),
+        _api.getSuggestions(),
       ]);
       if (mounted) {
         setState(() {
           _myCode = results[0] as String;
           _friends = results[1] as List<FriendDto>;
           _requests = results[2] as List<FriendRequestDto>;
+          _suggestions = results[3] as List<SuggestedUserDto>;
         });
       }
     } catch (_) {} finally {
@@ -61,21 +58,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
-  Future<void> _sendRequest() async {
-    final code = _codeController.text.trim().toUpperCase();
-    if (code.isEmpty) return;
-    setState(() => _isSending = true);
-    try {
-      await _api.sendRequest(code);
-      _codeController.clear();
-      _showSnack('Friend request sent! 🎉', success: true);
-      await _load();
-    } catch (e) {
-      _showSnack(e.toString().replaceAll('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _isSending = false);
-    }
-  }
+
 
   Future<void> _acceptRequest(FriendRequestDto req) async {
     try {
@@ -195,6 +178,33 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           ],
                         ),
                       ),
+
+                      // Friend Suggestions (People You May Know)
+                      if (_suggestions.isNotEmpty) ...[
+                        const SizedBox(height: 32),
+                        Text(
+                          'PEOPLE YOU MAY KNOW',
+                          style: GoogleFonts.inter(
+                            color: _kTextSub,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 160,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: _suggestions.length,
+                            itemBuilder: (context, index) {
+                              final user = _suggestions[index];
+                              return _buildSuggestionCard(user);
+                            },
+                          ),
+                        ),
+                      ],
 
                       // Pending Requests
                       if (_requests.isNotEmpty) ...[
@@ -320,53 +330,174 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 
   Widget _buildAddFriendCard() {
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: _kBg,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+          builder: (_) => _AddFriendSheet(onAdd: (code) => _api.sendRequest(code).then((_) => _load())),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _kCard,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _kCardBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _kCardBorder,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person_add_alt_1_rounded, color: _kSage, size: 22),
+            ),
+            const SizedBox(height: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Add Friend', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 20, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Connect using their unique code', style: TextStyle(color: _kTextSub, fontSize: 12, height: 1.3)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: _kCardBorder.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _kCardBorder),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Enter code', style: TextStyle(color: _kTextSub, fontSize: 13, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right_rounded, color: _kTextSub, size: 14),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sendSuggestionRequest(SuggestedUserDto user) async {
+    if (_sendingSuggestionRequestIds.contains(user.id) || _sentSuggestionRequestIds.contains(user.id)) return;
+    setState(() {
+      _sendingSuggestionRequestIds.add(user.id);
+    });
+    try {
+      await _api.sendRequestById(user.id);
+      if (mounted) {
+        setState(() {
+          _sentSuggestionRequestIds.add(user.id);
+        });
+        _showSnack('Friend request sent to ${user.userName}! 🎉', success: true);
+      }
+    } catch (e) {
+      _showSnack(e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sendingSuggestionRequestIds.remove(user.id);
+        });
+      }
+    }
+  }
+
+  Widget _buildSuggestionCard(SuggestedUserDto user) {
+    final isSent = _sentSuggestionRequestIds.contains(user.id);
+    final isSending = _sendingSuggestionRequestIds.contains(user.id);
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: 150,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
         color: _kCard,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: _kCardBorder),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Avatar
           Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _kCardBorder,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.person_add_alt_1_rounded, color: _kTextSub, size: 20),
-          ),
-          const SizedBox(height: 20),
-          Text('Add Friend', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 20, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text('by code', style: TextStyle(color: _kTextSub, fontSize: 13)),
-          const SizedBox(height: 24),
-          Container(
+            width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: _kBg,
-              borderRadius: BorderRadius.circular(22),
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [_kLavender.withOpacity(0.2), _kSage.withOpacity(0.2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               border: Border.all(color: _kCardBorder),
             ),
-            child: TextField(
-              controller: _codeController,
-              style: TextStyle(color: _kText, fontSize: 13),
-              textCapitalization: TextCapitalization.characters,
-              onSubmitted: (_) => _sendRequest(),
-              decoration: InputDecoration(
-                hintText: 'Enter invite code',
-                hintStyle: TextStyle(color: _kTextSub, fontSize: 13),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                suffixIcon: _isSending
-                    ? Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: CircularProgressIndicator(color: _kSage, strokeWidth: 2),
+            child: Center(
+              child: Text(
+                user.userName.isNotEmpty ? user.userName.substring(0, 1).toUpperCase() : '?',
+                style: TextStyle(color: _kText, fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Name
+          Text(
+            user.userName,
+            style: GoogleFonts.playfairDisplay(
+              color: _kText,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 12),
+          // Add/Sent Button
+          GestureDetector(
+            onTap: (isSent || isSending) ? null : () => _sendSuggestionRequest(user),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                color: isSent
+                    ? Colors.transparent
+                    : _kSage.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSent
+                      ? _kCardBorder
+                      : _kSage.withOpacity(0.3),
+                ),
+              ),
+              child: Center(
+                child: isSending
+                    ? SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(color: _kSage, strokeWidth: 1.5),
                       )
-                    : null,
+                    : Text(
+                        isSent ? 'Sent' : 'Add',
+                        style: TextStyle(
+                          color: isSent ? _kTextSub : _kSage,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -451,18 +582,30 @@ class _FriendsScreenState extends State<FriendsScreen> {
     );
   }
 
+  void _showFriendDetails(FriendDto friend) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: _kBg,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (_) => _FriendDetailsSheet(friend: friend),
+    );
+  }
+
   Widget _buildFriendCard(FriendDto friend) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _kCard,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _kCardBorder),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+    return GestureDetector(
+      onTap: () => _showFriendDetails(friend),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _kCard,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _kCardBorder),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
           Stack(
             children: [
               Container(
@@ -539,8 +682,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildEmptyState() {
     return Container(
@@ -560,6 +704,430 @@ class _FriendsScreenState extends State<FriendsScreen> {
           Text('Share your invite code to invite friends and grow together.', textAlign: TextAlign.center, style: TextStyle(color: _kTextSub, fontSize: 13, height: 1.5)),
         ],
       ),
+    );
+  }
+}
+
+// ── Friend Details Preview Sheet ─────────────────────────────────────────────
+
+class _FriendDetailsSheet extends StatelessWidget {
+  final FriendDto friend;
+  const _FriendDetailsSheet({super.key, required this.friend});
+
+  IconData _getDynamicIcon(String title) {
+    final lower = title.toLowerCase();
+    if (lower.contains('water') || lower.contains('drink')) return Icons.water_drop_rounded;
+    if (lower.contains('read') || lower.contains('book')) return Icons.menu_book_rounded;
+    if (lower.contains('meditat') || lower.contains('breath')) return Icons.self_improvement_rounded;
+    if (lower.contains('journal') || lower.contains('write')) return Icons.book_rounded;
+    if (lower.contains('walk') || lower.contains('step')) return Icons.directions_walk_rounded;
+    if (lower.contains('run') || lower.contains('jog')) return Icons.directions_run_rounded;
+    if (lower.contains('sleep') || lower.contains('bed')) return Icons.nights_stay_rounded;
+    if (lower.contains('workout') || lower.contains('gym')) return Icons.fitness_center_rounded;
+    if (lower.contains('code') || lower.contains('program')) return Icons.code_rounded;
+    return Icons.spa_rounded;
+  }
+
+  Color _getDynamicColor(BuildContext context, String title) {
+    final lower = title.toLowerCase();
+    if (lower.contains('water') || lower.contains('read')) return const Color(0xFF64B5F6);
+    if (lower.contains('meditat') || lower.contains('walk')) return context.colors.sage;
+    if (lower.contains('journal') || lower.contains('sleep')) return context.colors.lavender;
+    if (lower.contains('workout') || lower.contains('run')) return context.colors.terracotta;
+    return const Color(0xFFFFB74D);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final habits = friend.publicHabits;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+      decoration: BoxDecoration(
+        color: colors.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Profile Header
+          Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [colors.sage.withOpacity(0.3), colors.lavender.withOpacity(0.3)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(color: colors.border, width: 1.5),
+                ),
+                child: Center(
+                  child: Text(
+                    friend.userName.isNotEmpty ? friend.userName.substring(0, 2).toUpperCase() : '?',
+                    style: TextStyle(color: colors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      friend.userName,
+                      style: GoogleFonts.playfairDisplay(color: colors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Streakz Community Member',
+                      style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Streak Counter
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colors.terracotta.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: colors.terracotta.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.whatshot_rounded, color: colors.terracotta, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  '${friend.globalStreak} day streak',
+                  style: TextStyle(color: colors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                Text(
+                  friend.globalStreak > 0 ? 'Flowing strong!' : 'Taking it slow',
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Public Habits Title
+          Text(
+            'PUBLIC HABITS',
+            style: GoogleFonts.inter(
+              color: colors.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Habits List
+          if (habits.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              decoration: BoxDecoration(
+                color: colors.card,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: colors.border),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.spa_outlined, color: colors.textSecondary.withOpacity(0.5), size: 36),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No public habits shared yet',
+                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
+                  ),
+                ],
+              ),
+            )
+          else
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: habits.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final h = habits[index];
+                  final icon = _getDynamicIcon(h.title);
+                  final color = _getDynamicColor(context, h.title);
+                  final progress = (h.completedThisWeek / 7.0).clamp(0.0, 1.0);
+
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(icon, color: color, size: 18),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                h.title,
+                                style: TextStyle(color: colors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            if (h.currentStreak > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: colors.terracotta.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.whatshot_rounded, color: colors.terracotta, size: 12),
+                                    const SizedBox(width: 4),
+                                    Text('${h.currentStreak}', style: TextStyle(color: colors.terracotta, fontSize: 11, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  backgroundColor: colors.border,
+                                  valueColor: AlwaysStoppedAnimation<Color>(colors.sage),
+                                  minHeight: 5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              '${h.completedThisWeek}/7 done',
+                              style: TextStyle(color: colors.textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Add Friend Modal Sheet ───────────────────────────────────────────────────
+
+class _AddFriendSheet extends StatefulWidget {
+  final Future<void> Function(String) onAdd;
+  const _AddFriendSheet({required this.onAdd});
+
+  @override
+  State<_AddFriendSheet> createState() => _AddFriendSheetState();
+}
+
+class _AddFriendSheetState extends State<_AddFriendSheet> {
+  final _controller = TextEditingController();
+  bool _isSending = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final code = _controller.text.trim().toUpperCase();
+    if (code.isEmpty) return;
+    setState(() {
+      _isSending = true;
+      _error = null;
+    });
+    try {
+      await widget.onAdd(code);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString().replaceAll('Exception: ', '');
+          _isSending = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 32,
+        top: 16,
+        left: 24,
+        right: 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(color: colors.border, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Add Friend',
+            style: GoogleFonts.playfairDisplay(color: colors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Enter your friend's invite code to join their flow.",
+            style: TextStyle(color: colors.textSecondary, fontSize: 14),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            height: 52,
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: _error != null ? colors.terracotta : colors.border),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    style: TextStyle(color: colors.textPrimary, fontSize: 15),
+                    textCapitalization: TextCapitalization.characters,
+                    inputFormatters: [
+                      _InviteCodeFormatter(),
+                    ],
+                    onSubmitted: (_) => _submit(),
+                    decoration: InputDecoration(
+                      hintText: 'Enter invite code (e.g. USER-XXXX)',
+                      hintStyle: TextStyle(color: colors.textSecondary, fontSize: 14),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _isSending ? null : _submit,
+                  child: Container(
+                    height: 40,
+                    margin: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: colors.sage.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colors.sage.withOpacity(0.3)),
+                    ),
+                    child: Center(
+                      child: _isSending
+                          ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: colors.sage, strokeWidth: 2))
+                          : Text('Send', style: TextStyle(color: colors.sage, fontSize: 14, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                _error!,
+                style: TextStyle(color: colors.terracotta, fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Invite Code Text Formatter ───────────────────────────────────────────────
+
+class _InviteCodeFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.length < oldValue.text.length) {
+      if (oldValue.text.endsWith('-') && newValue.text.length == oldValue.text.length - 1) {
+        final newText = newValue.text.substring(0, newValue.text.length - 1);
+        return TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: newText.length),
+        );
+      }
+    }
+
+    final text = newValue.text.replaceAll('-', '').toUpperCase();
+    if (text.length > 8) {
+      return oldValue;
+    }
+
+    var buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      buffer.write(text[i]);
+      if (i == 3 && i != text.length - 1) {
+        buffer.write('-');
+      }
+    }
+
+    final formattedText = buffer.toString();
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
     );
   }
 }

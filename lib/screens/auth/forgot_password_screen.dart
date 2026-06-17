@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import '../../api/api_service.dart';
+import '../../theme/app_theme.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   final String? initialEmail;
@@ -28,20 +29,42 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  // Кастомный мягкий SnackBar для сохранения Zen-атмосферы
+  void _showSoftSnackbar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(
+            color: isError ? context.colors.danger : context.colors.sage,
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        backgroundColor: context.colors.card,
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32),
+          side: BorderSide(color: context.colors.border, width: 1),
+        ),
+        margin: const EdgeInsets.only(bottom: 40, left: 24, right: 24),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   Future<void> _sendResetLink() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your email address")),
-      );
+      _showSoftSnackbar("Please enter your email address.", isError: true);
       return;
     }
 
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter a valid email address")),
-      );
+      _showSoftSnackbar("That doesn't look quite right. Try again.", isError: true);
       return;
     }
 
@@ -53,12 +76,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       setState(() => _success = true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red.shade800,
-        ),
-      );
+      _showSoftSnackbar(e.toString().replaceFirst('Exception: ', ''), isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -67,19 +85,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: context.colors.background, // Deep Flow background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: context.colors.textSecondary, size: 20),
           onPressed: () => Navigator.pop(context),
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
         ),
       ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            physics: const BouncingScrollPhysics(),
             child: _success ? _buildSuccessState() : _buildInputState(),
           ),
         ),
@@ -89,73 +110,101 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Widget _buildInputState() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.lock_reset, size: 64, color: Color(0xFFE8845C)),
-        const SizedBox(height: 24),
-        const Text(
-          'Reset Password',
-          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w600),
+        // Мягкая иконка ключа
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: context.colors.card,
+            border: Border.all(color: context.colors.border, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: context.colors.lavender.withOpacity(0.08), // Lavender glow
+                blurRadius: 30,
+                spreadRadius: 8,
+              ),
+            ],
+          ),
+          child: Icon(Icons.vpn_key_outlined, size: 32, color: context.colors.lavender),
+        ),
+        const SizedBox(height: 32),
+
+        // Заголовок
+        Text(
+          'Find your way back',
+          style: TextStyle(
+            color: context.colors.textPrimary,
+            fontSize: 28,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 0.5,
+          ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'Enter the email associated with your account and we\'ll send you a link to reset your password.',
-          style: TextStyle(color: Color(0xFFA0A0AB), fontSize: 16, height: 1.5),
+        const SizedBox(height: 16),
+
+        // Эмпатичный текст
+        Text(
+          'Breathe, it happens. Enter your email and we\'ll send you a reminder to reset your password.',
+          style: TextStyle(
+            color: context.colors.textSecondary,
+            fontSize: 16,
+            height: 1.6,
+            fontWeight: FontWeight.w300,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 48),
-        
-        const Text(
-          'Email',
-          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 8),
+
+        // Поле ввода Email (Bento-стиль)
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF16161A),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF2C2C35), width: 1.5),
+            color: context.colors.card,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: context.colors.border, width: 1),
           ),
           child: TextField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            decoration: const InputDecoration(
+            style: TextStyle(color: context.colors.textPrimary, fontSize: 16),
+            cursorColor: context.colors.lavender,
+            decoration: InputDecoration(
               hintText: 'your@email.com',
-              hintStyle: TextStyle(color: Color(0xFF6B6B78), fontSize: 16),
+              hintStyle: TextStyle(color: context.colors.textSecondary.withOpacity(0.5), fontSize: 16, fontWeight: FontWeight.w300),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             ),
           ),
         ),
-        const SizedBox(height: 40),
-        
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFE8845C).withOpacity(0.3),
-                blurRadius: 24,
-                spreadRadius: 2,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+        const SizedBox(height: 32),
+
+        // Главная кнопка действия (Lavender)
+        SizedBox(
+          width: double.infinity,
+          height: 56,
           child: ElevatedButton(
             onPressed: _isLoading ? null : _sendResetLink,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE8845C),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: context.colors.lavender, // Soft Lavender
+              foregroundColor: Colors.black87, // Темный текст для контраста
+              disabledBackgroundColor: context.colors.card,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
               elevation: 0,
+              shadowColor: Colors.transparent,
             ),
             child: _isLoading
-                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                : const Text('Send Reset Link', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(color: Colors.black87, strokeWidth: 2)
+            )
+                : const Text(
+              'Send Reset Link',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, letterSpacing: 0.3),
+            ),
           ),
         ),
       ],
@@ -167,38 +216,69 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        // Иконка успеха (Sage Green)
         Container(
-          padding: const EdgeInsets.all(20),
+          width: 80,
+          height: 80,
           decoration: BoxDecoration(
-            color: const Color(0xFF00E676).withOpacity(0.1),
             shape: BoxShape.circle,
+            color: context.colors.card,
+            border: Border.all(color: context.colors.border, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: context.colors.sage.withOpacity(0.08),
+                blurRadius: 30,
+                spreadRadius: 8,
+              ),
+            ],
           ),
-          child: const Icon(Icons.mark_email_read, size: 64, color: Color(0xFF00E676)),
+          child: Icon(Icons.mail_outline_rounded, size: 32, color: context.colors.sage),
         ),
         const SizedBox(height: 32),
-        const Text(
-          'Check your email',
-          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+
+        Text(
+          'Check your inbox',
+          style: TextStyle(
+            color: context.colors.textPrimary,
+            fontSize: 28,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 0.5,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        Text(
-          'We sent a password reset link to\n${_emailController.text}',
-          style: const TextStyle(color: Color(0xFFA0A0AB), fontSize: 16, height: 1.5),
+
+        RichText(
           textAlign: TextAlign.center,
+          text: TextSpan(
+            style: TextStyle(
+              color: context.colors.textSecondary,
+              fontSize: 16,
+              height: 1.6,
+              fontWeight: FontWeight.w300,
+            ),
+            children: [
+              const TextSpan(text: 'We sent a reset link to\n'),
+              TextSpan(
+                text: _emailController.text,
+                style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.w500),
+              ),
+              const TextSpan(text: '\n\nClick the link to create a new password.'),
+            ],
+          ),
         ),
         const SizedBox(height: 48),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFF2C2C35), width: 1.5),
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            ),
-            child: const Text('Back to Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+
+        // Кнопка возврата (TextButton вместо агрессивного Outlined)
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(
+            foregroundColor: context.colors.textSecondary,
+            splashFactory: NoSplash.splashFactory,
+          ),
+          child: const Text(
+            'Return to Sign In',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
           ),
         ),
       ],

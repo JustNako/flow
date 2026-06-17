@@ -84,6 +84,31 @@ class ApiService {
     }
   }
 
+  Future<String> loginWithGoogle(String idToken) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/google"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "idToken": idToken,
+          "timeZoneOffset": DateTime.now().timeZoneOffset.inMinutes,
+        }),
+      );
+
+      _processResponse(response);
+      if (response.statusCode != 200) {
+        final body = jsonDecode(response.body);
+        final msg = body['message'] ?? 'Google login failed';
+        throw Exception(msg);
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data["token"] as String;
+    } catch (e) {
+      throw Exception(_parseError(e));
+    }
+  }
+
   Future<void> removeFcmToken() async {
     try {
       final response = await http.delete(
@@ -125,14 +150,15 @@ class ApiService {
     }
   }
 
-  Future<void> deleteAccount(String username, String password) async {
+  Future<void> deleteAccount(String username, {String? password, String? googleIdToken}) async {
     try {
       final response = await http.delete(
         Uri.parse("$baseUrl/auth/delete"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": username,
-          "password": password,
+          if (password != null) "password": password,
+          if (googleIdToken != null) "idToken": googleIdToken,
         }),
       );
 

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../api/habit_api_service.dart';
+import '../../api/friends_api_service.dart';
 import '../../models/habit.dart';
 import '../../services/auth_service.dart';
 import '../../services/offline_manager.dart';
@@ -31,7 +32,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
   bool _isLoading = false;
   String? _error;
   String? _username;
-
+  int _pendingRequestsCount = 0;
   final Set<String> _togglingIds = {};
 
   late AnimationController _progressController;
@@ -67,10 +68,12 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
       final results = await Future.wait([
         _api.getHabits(),
         _authService.getUsername(),
+        FriendsApiService().getPendingRequests().catchError((_) => <FriendRequestDto>[]),
       ]);
       
       final habits = results[0] as List<Habit>;
       final username = results[1] as String?;
+      final pendingCount = (results[2] as List<FriendRequestDto>).length;
       final today = DateTime.now();
 
       final todayHabits = <Habit>[];
@@ -121,6 +124,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
         _todayHabits = todayHabits;
         _otherHabits = otherHabits;
         _username = username;
+        _pendingRequestsCount = pendingCount;
       });
       
       int total = _todayHabits.length;
@@ -154,6 +158,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
           _todayHabits[index] = h.copyWith(
             isCompletedToday: !wasCompleted,
             completedDays: wasCompleted ? h.completedDays - 1 : h.completedDays + 1,
+            currentStreak: wasCompleted ? 0 : h.currentStreak + 1,
           );
         }
 
@@ -164,6 +169,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
           _otherHabits[otherIndex] = h.copyWith(
             isCompletedToday: !wasCompleted,
             completedDays: wasCompleted ? h.completedDays - 1 : h.completedDays + 1,
+            currentStreak: wasCompleted ? 0 : h.currentStreak + 1,
           );
         }
         
@@ -276,7 +282,18 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
     int completed = _todayHabits.where((h) => h.isCompletedToday).length;
     bool isAllDone = total > 0 && completed == total;
 
-    String greeting = 'Good morning ';
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good morning ';
+    } else if (hour >= 12 && hour < 18) {
+      greeting = 'Good afternoon ';
+    } else if (hour >= 18 && hour < 22) {
+      greeting = 'Good evening ';
+    } else {
+      greeting = 'Good night ';
+    }
+
     if (total > 0) {
       if (isAllDone) greeting = 'Beautiful work ';
       else if (completed > 0) greeting = "You're flowing ";
@@ -318,13 +335,35 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
                                           showModalBottomSheet(
                                             context: context,
                                             backgroundColor: Colors.transparent,
-                                            builder: (ctx) => const _FlowMenuSheet(),
+                                            builder: (ctx) => _FlowMenuSheet(
+                                              pendingRequestsCount: _pendingRequestsCount,
+                                              onRefresh: () => loadData(showLoading: false),
+                                            ),
                                           );
                                         },
-                                        child: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(color: context.colors.card, shape: BoxShape.circle, border: Border.all(color: context.colors.border)),
-                                          child: Icon(Icons.apps_rounded, color: context.colors.textSecondary, size: 20),
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(color: context.colors.card, shape: BoxShape.circle, border: Border.all(color: context.colors.border)),
+                                              child: Icon(Icons.apps_rounded, color: context.colors.textSecondary, size: 20),
+                                            ),
+                                            if (_pendingRequestsCount > 0)
+                                              Positioned(
+                                                top: -2,
+                                                right: -2,
+                                                child: Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  decoration: BoxDecoration(
+                                                    color: context.colors.terracotta,
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(color: context.colors.background, width: 1.5),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       )
                                     ],
@@ -864,7 +903,7 @@ class _ZenHabitCard extends StatelessWidget {
                                 Flexible(child: Text(habit.timeOfDay!, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.sage, fontSize: 13, fontWeight: FontWeight.w600))),
                               ],
 
-                              if (habit.completedDays > 0) ...[
+                              if (habit.currentStreak > 0) ...[
                                 SizedBox(width: 8),
                                 Text('|', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.1) : context.colors.border, fontSize: 13)),
                                 SizedBox(width: 8),
@@ -877,9 +916,9 @@ class _ZenHabitCard extends StatelessWidget {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text('🔥', style: TextStyle(fontSize: 10, color: isDone ? context.colors.textSecondary : Colors.white)),
+                                      Icon(Icons.whatshot_rounded, size: 12, color: isDone ? context.colors.textSecondary.withOpacity(0.5) : context.colors.terracotta),
                                       SizedBox(width: 4),
-                                      Text('${habit.completedDays}', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.5) : context.colors.terracotta, fontSize: 12, fontWeight: FontWeight.bold)),
+                                      Text('${habit.currentStreak}', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.5) : context.colors.terracotta, fontSize: 12, fontWeight: FontWeight.bold)),
                                     ],
                                   ),
                                 )
@@ -933,7 +972,9 @@ class _ZenHabitCard extends StatelessWidget {
 // ── Flow Menu Bottom Sheet ───────────────────────────────────────────────────
 
 class _FlowMenuSheet extends StatelessWidget {
-  const _FlowMenuSheet();
+  final int pendingRequestsCount;
+  final VoidCallback? onRefresh;
+  const _FlowMenuSheet({super.key, this.pendingRequestsCount = 0, this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -989,9 +1030,12 @@ class _FlowMenuSheet extends StatelessWidget {
               title: 'Friends',
               subtitle: 'Stay connected and motivated together',
               color: context.colors.terracotta,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/friends');
+              badgeCount: pendingRequestsCount,
+              onTap: () async {
+                final nav = Navigator.of(context);
+                nav.pop();
+                await nav.pushNamed('/friends');
+                onRefresh?.call();
               },
             ),
           ],
@@ -1007,6 +1051,7 @@ class _MenuTile extends StatelessWidget {
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
+  final int badgeCount;
 
   const _MenuTile({
     required this.icon,
@@ -1014,6 +1059,7 @@ class _MenuTile extends StatelessWidget {
     required this.subtitle,
     required this.color,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   @override
@@ -1042,8 +1088,30 @@ class _MenuTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
-                  SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(title, style: TextStyle(color: context.colors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600)),
+                      if (badgeCount > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: context.colors.terracotta,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '$badgeCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Text(subtitle, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
                 ],
               ),

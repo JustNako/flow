@@ -1,9 +1,10 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../api/api_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/local_database.dart';
@@ -370,10 +371,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 shadowColor: context.colors.terracotta.withOpacity(0.4),
               ),
               onPressed: () async {
-                // Launch app store URL
-                if (_updateUrl.isNotEmpty) {
-                  // Standard url launcher call
-                  // In premium apps we use standard plugins
+                final fallbackUrl = Platform.isAndroid 
+                    ? 'https://play.google.com/store/apps/details?id=com.codex.flow'
+                    : 'https://apps.apple.com/app/id1234567890';
+                final urlStr = _updateUrl.isNotEmpty ? _updateUrl : fallbackUrl;
+                final uri = Uri.parse(urlStr);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
                 }
               },
               child: Text(

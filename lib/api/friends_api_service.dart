@@ -65,6 +65,20 @@ class FriendRequestDto {
   );
 }
 
+class SuggestedUserDto {
+  final String id;
+  final String userName;
+  final bool isPro;
+
+  SuggestedUserDto({required this.id, required this.userName, required this.isPro});
+
+  factory SuggestedUserDto.fromJson(Map<String, dynamic> j) => SuggestedUserDto(
+    id: j['id'] as String,
+    userName: j['userName'] as String,
+    isPro: j['isPro'] as bool? ?? false,
+  );
+}
+
 class FriendsApiService {
   static final FriendsApiService _instance = FriendsApiService._internal();
   factory FriendsApiService() => _instance;
@@ -153,6 +167,31 @@ class FriendsApiService {
         return list.map((e) => FriendRequestDto.fromJson(e as Map<String, dynamic>)).toList();
       }
       throw Exception('Failed to load requests');
+    } catch (e) {
+      throw Exception(_parseError(e));
+    }
+  }
+
+  Future<List<SuggestedUserDto>> getSuggestions() async {
+    try {
+      final res = await http.get(Uri.parse('$_baseUrl/friends/suggestions'), headers: await _headers());
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List<dynamic>;
+        return list.map((e) => SuggestedUserDto.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      throw Exception('Failed to load suggestions');
+    } catch (e) {
+      throw Exception(_parseError(e));
+    }
+  }
+
+  Future<void> sendRequestById(String userId) async {
+    try {
+      final res = await http.post(Uri.parse('$_baseUrl/friends/request/$userId'), headers: await _headers());
+      if (res.statusCode != 200) {
+        final body = jsonDecode(res.body);
+        throw Exception(body['message'] ?? 'Failed to send request');
+      }
     } catch (e) {
       throw Exception(_parseError(e));
     }

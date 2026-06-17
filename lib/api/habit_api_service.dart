@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/habit.dart';
 import '../models/ai_habit_dto.dart';
 import '../models/ai_insights_response.dart';
+import '../models/behavioral_analysis.dart';
 import 'api_service.dart';
 import '../services/auth_service.dart';
 
@@ -33,6 +34,9 @@ class HabitApiService {
     final lower = errStr.toLowerCase();
     if (lower.contains('socketexception') || lower.contains('host lookup') || lower.contains('failed host lookup')) {
       return 'Network error. Please check your internet connection.';
+    }
+    if (lower.contains('timeoutexception') || lower.contains('timed out')) {
+      return 'Request timed out. Please try again.';
     }
 
     // 2. Try to parse JSON from the error message (often wrapped in Exception: ...)
@@ -248,7 +252,7 @@ class HabitApiService {
       final response = await http.get(
         Uri.parse('$_baseUrl/habits/ai-insights'),
         headers: await _headers(),
-      );
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         return AiInsightsResponse.fromJson(jsonDecode(response.body));
@@ -419,6 +423,66 @@ class HabitApiService {
       }
       
       throw Exception('Failed to share recap: ${response.statusCode}');
+    } catch (e) {
+      throw Exception(_parseError(e));
+    }
+  }
+
+  // ─── GET /habits/behavioral-analysis ───────────────────────────────────────
+  Future<BehavioralAnalysis> getBehavioralAnalysis() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/habits/behavioral-analysis'),
+        headers: await _headers(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return BehavioralAnalysis.fromJson(data);
+      }
+      
+      if (response.statusCode == 403) {
+        throw Exception('ProRequired');
+      }
+
+      throw Exception('Failed to load behavioral analysis: ${response.statusCode}');
+    } catch (e) {
+      throw Exception(_parseError(e));
+    }
+  }
+
+  // ─── PATCH /habits/{id} ───────────────────────────────────────────────────
+  Future<void> updateHabitSettings(
+    String habitId, {
+    int? targetDays,
+    String? timeOfDay,
+    String? title,
+    String? description,
+  }) async {
+    try {
+      final body = {
+        if (targetDays != null) 'targetDays': targetDays,
+        if (timeOfDay != null) 'timeOfDay': timeOfDay,
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
+      };
+
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/habits/$habitId'),
+        headers: await _headers(),
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200) {
+        var detail = response.body;
+        try {
+          final data = jsonDecode(response.body);
+          if (data is Map && data['error'] is Map) {
+            detail = data['error']['message']?.toString() ?? detail;
+          }
+        } catch (_) {}
+        throw Exception('Failed to update habit settings: ${response.statusCode} - $detail');
+      }
     } catch (e) {
       throw Exception(_parseError(e));
     }

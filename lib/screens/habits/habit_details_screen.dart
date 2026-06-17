@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -77,6 +77,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
       _habit = _habit.copyWith(
         isCompletedToday: !wasCompleted,
         completedDays: newCompletedDays,
+        currentStreak: wasCompleted ? 0 : _habit.currentStreak + 1,
       );
     });
 
@@ -1096,7 +1097,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$currentStreak-day streak ??',
+                        '$currentStreak-day streak',
                         style: GoogleFonts.inter(
                           color: context.colors.terracotta,
                           fontSize: 15,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import '../../api/habit_api_service.dart';
 import '../../models/ai_insights_response.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../theme/app_theme.dart';
+import 'full_analysis_screen.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -38,10 +40,36 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
   bool _aiInsightsLoading = false;
   bool _isWeekly = false;
 
+  // Retry cooldown — 30 seconds between retry attempts
+  static const _retryCooldownSecs = 30;
+  int _retryCountdown = 0;
+  Timer? _retryTimer;
+
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startRetryCooldown() {
+    _retryTimer?.cancel();
+    setState(() => _retryCountdown = _retryCooldownSecs);
+    _retryTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      setState(() {
+        _retryCountdown--;
+        if (_retryCountdown <= 0) {
+          _retryCountdown = 0;
+          timer.cancel();
+        }
+      });
+    });
   }
 
   Future<void> _loadData() async {
@@ -61,7 +89,7 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
   }
 
   Future<void> _loadAiInsights() async {
-    if (_aiInsightsLoading) return;
+    if (_aiInsightsLoading || _retryCountdown > 0) return;
     setState(() {
       _aiInsightsLoading = true;
       _aiInsightsError = null;
@@ -71,9 +99,7 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
       if (mounted) {
         setState(() {
           _aiInsights = insights;
-          _aiInsightsError = insights.isPersonalized
-              ? null
-              : (insights.message ?? 'Personalized AI is temporarily unavailable.');
+          _aiInsightsError = null;
         });
       }
     } catch (e) {
@@ -83,7 +109,10 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
         });
       }
     } finally {
-      if (mounted) setState(() => _aiInsightsLoading = false);
+      if (mounted) {
+        setState(() => _aiInsightsLoading = false);
+        _startRetryCooldown();
+      }
     }
   }
 
@@ -485,7 +514,11 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
                             ),
                             Container(
                               width: 8, height: 8,
-                              decoration: BoxDecoration(color: _kSage, shape: BoxShape.circle, boxShadow: [BoxShadow(color: _kSage, blurRadius: 4)]),
+                              decoration: BoxDecoration(
+                                color: (_aiInsights?.isPersonalized ?? false) ? _kSage : _kGold,
+                                shape: BoxShape.circle,
+                                boxShadow: [BoxShadow(color: (_aiInsights?.isPersonalized ?? false) ? _kSage : _kGold, blurRadius: 4)],
+                              ),
                             ),
                           ],
                         ),
@@ -516,29 +549,54 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
                               ),
                               SizedBox(height: 8),
                               GestureDetector(
-                                onTap: _loadAiInsights,
+                                onTap: _retryCountdown > 0 ? null : _loadAiInsights,
                                 child: Text(
-                                  'Tap to retry',
-                                  style: TextStyle(color: _kLavender, fontSize: 13, fontWeight: FontWeight.w500),
+                                  _retryCountdown > 0
+                                      ? 'Retry in ${_retryCountdown}s...'
+                                      : 'Tap to retry',
+                                  style: TextStyle(
+                                    color: _retryCountdown > 0 ? _kTextSub : _kLavender,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ],
                           )
                         else
-                          Text(
-                            _aiInsights != null && _aiInsights!.insights.isNotEmpty
-                                ? _aiInsights!.insights.first
-                                : 'Your personalized insights will appear here once we have enough data from the past week.',
-                            style: TextStyle(color: _kTextSub, fontSize: 14, height: 1.6),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _aiInsights != null && _aiInsights!.insights.isNotEmpty
+                                    ? _aiInsights!.insights.first
+                                    : 'Your personalized insights will appear here once we have enough data from the past week.',
+                                style: TextStyle(color: _kTextSub, fontSize: 14, height: 1.6),
+                              ),
+                              if (_aiInsights != null && !_aiInsights!.isPersonalized) ...[
+                                SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: _retryCountdown > 0 ? null : _loadAiInsights,
+                                  child: Text(
+                                    _retryCountdown > 0
+                                        ? 'Retry in ${_retryCountdown}s...'
+                                        : 'Tap to retry',
+                                    style: TextStyle(
+                                      color: _retryCountdown > 0 ? _kTextSub : _kLavender,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         SizedBox(height: 20),
                         GestureDetector(
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Text('Full analysis report is being generated... (Coming soon!)'),
-                                backgroundColor: _kLavender,
-                                behavior: SnackBarBehavior.floating,
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const FullAnalysisScreen(),
                               ),
                             );
                           },

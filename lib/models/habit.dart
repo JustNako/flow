@@ -82,6 +82,8 @@ class Habit {
   final bool isPublic;
   final String? notes;
   final String? timeOfDay;
+  final int currentStreak;
+  final int completionRate30Day;
 
   const Habit({
     this.id,
@@ -91,6 +93,8 @@ class Habit {
     this.targetDays = 0,
     this.unit,
     this.completedDays = 0,
+    this.currentStreak = 0,
+    this.completionRate30Day = 0,
     this.repeatType = HabitRepeatType.everyDay,
     this.repeatDaysOfWeek,
     this.repeatDaysOfMonth,
@@ -136,6 +140,8 @@ class Habit {
       isPublic: json['isPublic'] as bool? ?? true,
       notes: json['notes'] as String?,
       timeOfDay: json['timeOfDay'] as String?,
+      currentStreak: json['currentStreak'] as int? ?? 0,
+      completionRate30Day: json['completionRate30Day'] as int? ?? 0,
     );
   }
 
@@ -184,6 +190,7 @@ class Habit {
     'isCompletedToday': isCompletedToday ? 1 : 0,
     'isPublic': isPublic ? 1 : 0,
     'notes': notes,
+    'completionRate30Day': completionRate30Day,
     'timeOfDay': timeOfDay,
   };
 
@@ -210,6 +217,8 @@ class Habit {
       isPublic: (map['isPublic'] as int?) != 0,
       notes: map['notes'] as String?,
       timeOfDay: map['timeOfDay'] as String?,
+      currentStreak: map['currentStreak'] as int? ?? 0,
+      completionRate30Day: map['completionRate30Day'] as int? ?? 0,
     );
   }
 
@@ -235,6 +244,8 @@ class Habit {
     bool? isPublic,
     String? notes,
     String? timeOfDay,
+    int? currentStreak,
+    int? completionRate30Day,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -258,6 +269,8 @@ class Habit {
       isPublic: isPublic ?? this.isPublic,
       notes: notes ?? this.notes,
       timeOfDay: timeOfDay ?? this.timeOfDay,
+      currentStreak: currentStreak ?? this.currentStreak,
+      completionRate30Day: completionRate30Day ?? this.completionRate30Day,
     );
   }
 
