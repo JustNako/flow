@@ -193,7 +193,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         ),
                         const SizedBox(height: 16),
                         SizedBox(
-                          height: 160,
+                          height: 200,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             physics: const BouncingScrollPhysics(),
@@ -420,83 +420,87 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final isSending = _sendingSuggestionRequestIds.contains(user.id);
 
     return Container(
-      width: 150,
+      width: 130,
       margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
-        color: _kCard,
+        color: const Color(0xFF16161A),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Avatar
+          // Avatar wrapped in muted gradient border
           Container(
-            width: 44,
-            height: 44,
+            padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [_kLavender.withOpacity(0.2), _kSage.withOpacity(0.2)],
+                colors: [
+                  _kSage.withOpacity(0.4),
+                  _kLavender.withOpacity(0.4),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: _kCardBorder),
             ),
-            child: Center(
+            child: CircleAvatar(
+              radius: 28,
+              backgroundColor: const Color(0xFF222227),
               child: Text(
                 user.userName.isNotEmpty ? user.userName.substring(0, 1).toUpperCase() : '?',
-                style: TextStyle(color: _kText, fontSize: 16, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(
+                  color: const Color(0xFFF5F5F5),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           // Name
           Text(
             user.userName,
-            style: GoogleFonts.playfairDisplay(
-              color: _kText,
+            style: GoogleFonts.inter(
+              color: const Color(0xFFF5F5F5),
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 12),
-          // Add/Sent Button
+          const SizedBox(height: 14),
+          // Add/Sent circular button
           GestureDetector(
             onTap: (isSent || isSending) ? null : () => _sendSuggestionRequest(user),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
-                color: isSent
-                    ? Colors.transparent
-                    : _kSage.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(16),
+                shape: BoxShape.circle,
+                color: isSent ? const Color(0xFF222227) : const Color(0xFF1B261F),
                 border: Border.all(
-                  color: isSent
-                      ? _kCardBorder
-                      : _kSage.withOpacity(0.3),
+                  color: isSent ? Colors.white.withOpacity(0.05) : const Color(0xFF2E3E34).withOpacity(0.4),
                 ),
               ),
               child: Center(
                 child: isSending
-                    ? SizedBox(
+                    ? const SizedBox(
                         width: 14,
                         height: 14,
-                        child: CircularProgressIndicator(color: _kSage, strokeWidth: 1.5),
-                      )
-                    : Text(
-                        isSent ? 'Sent' : 'Add',
-                        style: TextStyle(
-                          color: isSent ? _kTextSub : _kSage,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF81C784),
+                          strokeWidth: 1.5,
                         ),
+                      )
+                    : Icon(
+                        isSent ? Icons.check_rounded : Icons.person_add_rounded,
+                        color: isSent ? const Color(0xFF9CA3AF) : const Color(0xFF81C784),
+                        size: 16,
                       ),
               ),
             ),

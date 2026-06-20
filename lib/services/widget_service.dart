@@ -3,6 +3,7 @@ import 'package:home_widget/home_widget.dart';
 import '../models/habit.dart';
 import '../api/habit_api_service.dart';
 import '../services/auth_service.dart';
+import '../services/local_database.dart';
 
 @pragma('vm:entry-point')
 class WidgetService {
@@ -100,6 +101,9 @@ class WidgetService {
       if (habitId != null && habitId.isNotEmpty) {
         try {
           await HomeWidget.setAppGroupId(appGroupId);
+
+          // Initialize DB before any database operations in background isolate
+          await LocalDatabase.instance.init();
 
           // Find which slot this habit occupies so we can set its loading state
           int? loadingSlot;

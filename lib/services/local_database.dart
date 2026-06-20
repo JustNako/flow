@@ -272,12 +272,12 @@ class LocalDatabase {
     return result.map((e) => Habit.fromMap(e)).toList();
   }
 
-  /// Получить одну привычку по ID
+  /// Получить одну привычку по ID (ищет по id и по localId)
   Future<Habit?> getHabit(String id) async {
     final result = await _db?.query(
       'habits',
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'id = ? OR localId = ?',
+      whereArgs: [id, id],
     ) ?? [];
 
     if (result.isEmpty) return null;

@@ -261,13 +261,22 @@ class HabitApiService {
     final now = DateTime.now();
     final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
+    // Auto-resolve habitLocalId if not provided (e.g. from background widget callback)
+    var resolvedLocalId = habitLocalId;
+    if (resolvedLocalId == null) {
+      final habit = await _db.getHabit(habitId);
+      if (habit != null) {
+        resolvedLocalId = habit.localId;
+      }
+    }
+
     // 1. Найти существующий лог за сегодня (по id и localId привычки)
-    final existingLog = await _db.getHabitLogForDate(habitId, now, habitLocalId: habitLocalId);
+    final existingLog = await _db.getHabitLogForDate(habitId, now, habitLocalId: resolvedLocalId);
 
     if (existingLog != null) {
       // Обновить ВСЕ дублирующиеся логи за сегодня единым UPDATE
       final newStatus = !existingLog.isCompleted;
-      await _db.updateAllLogsForHabitAndDate(habitId, habitLocalId, now, newStatus);
+      await _db.updateAllLogsForHabitAndDate(habitId, resolvedLocalId, now, newStatus);
     } else {
       // Создать новый лог (выполнено)
       final newLog = HabitLog(

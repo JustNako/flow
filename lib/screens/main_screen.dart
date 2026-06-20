@@ -8,6 +8,7 @@ import 'habits/templates_screen.dart';
 import '../api/habit_api_service.dart';
 import '../services/update_service.dart';
 import '../services/widget_service.dart';
+import '../services/offline_manager.dart';
 import '../theme/app_theme.dart';
 
 class MainScreen extends StatefulWidget {
@@ -55,6 +56,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       UpdateService.checkForUpdates(context);
+      OfflineManager.instance.manualSync();
     }
   }
 

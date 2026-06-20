@@ -104,18 +104,29 @@ class OfflineManager {
 
   /// Синхронизировать данные при появлении интернета
   Future<void> _synchronizeWhenOnline() async {
-    try {
-      print('⏳ Синхронизирую данные...');
-      
-      final success = await _syncService.sync();
-      
-      if (success) {
-        print('✅ Синхронизация завершена');
-      } else {
-        print('⚠️ Синхронизация с ошибками, будет повторена позже');
+    // Ждём 2 секунды, чтобы соединение с интернетом успело стабилизироваться (получение IP, DNS резолв)
+    await Future.delayed(const Duration(seconds: 2));
+    if (!_isOnline) return;
+
+    int retries = 3;
+    while (retries > 0) {
+      try {
+        print('⏳ Синхронизирую данные (осталось попыток: $retries)...');
+        final success = await _syncService.sync();
+        if (success) {
+          print('✅ Синхронизация завершена успешно');
+          break;
+        } else {
+          print('⚠️ Синхронизация завершилась с ошибкой');
+        }
+      } catch (e) {
+        print('❌ Ошибка при попытке синхронизации: $e');
       }
-    } catch (e) {
-      print('❌ Ошибка синхронизации: $e');
+      retries--;
+      if (retries > 0) {
+        // Ждем 5 секунд перед следующей попыткой
+        await Future.delayed(const Duration(seconds: 5));
+      }
     }
   }
 
@@ -133,6 +144,7 @@ class OfflineManager {
 
   /// Принудительная синхронизация (на случай если автоматическая не сработала)
   Future<bool> manualSync() async {
+    await _checkConnectivity();
     if (!_isOnline) {
       print('⚠️ Интернет не подключен, синхронизация невозможна');
       return false;
