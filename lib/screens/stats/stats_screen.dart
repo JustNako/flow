@@ -1,11 +1,9 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../api/habit_api_service.dart';
-import '../../models/ai_insights_response.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../theme/app_theme.dart';
 import 'full_analysis_screen.dart';
@@ -35,15 +33,7 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
   String? _error;
   
   Map<String, dynamic>? _stats;
-  AiInsightsResponse? _aiInsights;
-  String? _aiInsightsError;
-  bool _aiInsightsLoading = false;
   bool _isWeekly = false;
-
-  // Retry cooldown — 30 seconds between retry attempts
-  static const _retryCooldownSecs = 30;
-  int _retryCountdown = 0;
-  Timer? _retryTimer;
 
   @override
   void initState() {
@@ -53,23 +43,7 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
 
   @override
   void dispose() {
-    _retryTimer?.cancel();
     super.dispose();
-  }
-
-  void _startRetryCooldown() {
-    _retryTimer?.cancel();
-    setState(() => _retryCountdown = _retryCooldownSecs);
-    _retryTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) { timer.cancel(); return; }
-      setState(() {
-        _retryCountdown--;
-        if (_retryCountdown <= 0) {
-          _retryCountdown = 0;
-          timer.cancel();
-        }
-      });
-    });
   }
 
   Future<void> _loadData() async {
@@ -77,42 +51,10 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
     try {
       final stats = await _api.getGlobalStats();
       if (mounted) setState(() => _stats = stats);
-
-      if (_stats?['isPro'] == true) {
-        _loadAiInsights();
-      }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _loadAiInsights() async {
-    if (_aiInsightsLoading || _retryCountdown > 0) return;
-    setState(() {
-      _aiInsightsLoading = true;
-      _aiInsightsError = null;
-    });
-    try {
-      final insights = await _api.getAiInsights();
-      if (mounted) {
-        setState(() {
-          _aiInsights = insights;
-          _aiInsightsError = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _aiInsightsError = e.toString().replaceFirst('Exception: ', '');
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _aiInsightsLoading = false);
-        _startRetryCooldown();
-      }
     }
   }
 
@@ -440,7 +382,7 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
                                       text: TextSpan(
                                         children: [
                                           TextSpan(
-                                            text: '${completionRate.isNaN ? 0 : completionRate.toInt()}',
+                                            text: '${completionRate.isNaN ? 0 : completionRate.round()}',
                                             style: GoogleFonts.playfairDisplay(
                                               color: _kText,
                                               fontSize: 30,
@@ -486,129 +428,68 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
                 ),
                 SizedBox(height: 16),
 
-                // AI Coach Insight Card — shown only for Pro users
+                // Full Analysis CTA Card — shown only for Pro users
                 if (isPro) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: _kCard,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: _kLavender.withOpacity(0.3)),
-                      boxShadow: [
-                        BoxShadow(color: _kLavender.withOpacity(0.08), blurRadius: 40, spreadRadius: 0),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const FullAnalysisScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: _kCard,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: _kLavender.withOpacity(0.3)),
+                        boxShadow: [
+                          BoxShadow(color: _kLavender.withOpacity(0.08), blurRadius: 40, spreadRadius: 0),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _kLavender.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.auto_awesome_rounded, color: _kLavender, size: 20),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.auto_awesome_rounded, color: _kLavender, size: 20),
-                                SizedBox(width: 8),
-                                Text('AI Coach', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                            Container(
-                              width: 8, height: 8,
-                              decoration: BoxDecoration(
-                                color: (_aiInsights?.isPersonalized ?? false) ? _kSage : _kGold,
-                                shape: BoxShape.circle,
-                                boxShadow: [BoxShadow(color: (_aiInsights?.isPersonalized ?? false) ? _kSage : _kGold, blurRadius: 4)],
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 20),
-                        if (_aiInsightsLoading)
-                          Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: _kLavender),
-                              ),
-                            ),
-                          )
-                        else if (_aiInsightsError != null)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Personalized analysis unavailable',
-                                style: TextStyle(color: _kTerra, fontSize: 14, fontWeight: FontWeight.w600),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                _aiInsightsError!,
-                                style: TextStyle(color: _kTextSub, fontSize: 13, height: 1.5),
-                              ),
-                              SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: _retryCountdown > 0 ? null : _loadAiInsights,
-                                child: Text(
-                                  _retryCountdown > 0
-                                      ? 'Retry in ${_retryCountdown}s...'
-                                      : 'Tap to retry',
-                                  style: TextStyle(
-                                    color: _retryCountdown > 0 ? _kTextSub : _kLavender,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
+                                Text(
+                                  'Full Analysis',
+                                  style: GoogleFonts.playfairDisplay(
+                                    color: _kText,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ),
-                            ],
-                          )
-                        else
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _aiInsights != null && _aiInsights!.insights.isNotEmpty
-                                    ? _aiInsights!.insights.first
-                                    : 'Your personalized insights will appear here once we have enough data from the past week.',
-                                style: TextStyle(color: _kTextSub, fontSize: 14, height: 1.6),
-                              ),
-                              if (_aiInsights != null && !_aiInsights!.isPersonalized) ...[
-                                SizedBox(height: 8),
-                                GestureDetector(
-                                  onTap: _retryCountdown > 0 ? null : _loadAiInsights,
-                                  child: Text(
-                                    _retryCountdown > 0
-                                        ? 'Retry in ${_retryCountdown}s...'
-                                        : 'Tap to retry',
-                                    style: TextStyle(
-                                      color: _retryCountdown > 0 ? _kTextSub : _kLavender,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Deep dive into your weekly rhythm, friction patterns, and AI prescriptions.',
+                                  style: TextStyle(color: _kTextSub, fontSize: 13, height: 1.3),
                                 ),
                               ],
-                            ],
+                            ),
                           ),
-                        SizedBox(height: 20),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const FullAnalysisScreen(),
-                              ),
-                            );
-                          },
-                          child: Row(
-                            children: [
-                              Text('Full analysis', style: TextStyle(color: _kLavender, fontSize: 13, fontWeight: FontWeight.w500)),
-                              SizedBox(width: 4),
-                              Icon(Icons.arrow_forward_rounded, color: _kLavender, size: 14),
-                            ],
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _kLavender.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.arrow_forward_rounded, color: _kLavender, size: 16),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 16),
@@ -641,7 +522,7 @@ class _StatsScreenState extends State<StatsScreen> with _ThemeColorsMixin<StatsS
                             children: [
                               Text('Monthly Recap', style: GoogleFonts.playfairDisplay(color: _kText, fontSize: 18, fontWeight: FontWeight.w600)),
                               SizedBox(height: 4),
-                              Text('${DateFormat('MMMM yyyy').format(DateTime.now())} - ${completionRate.toInt()}% completion', style: TextStyle(color: _kTextSub, fontSize: 13)),
+                              Text('${DateFormat('MMMM yyyy').format(DateTime.now())} - ${completionRate.round()}% completion', style: TextStyle(color: _kTextSub, fontSize: 13)),
                             ],
                           ),
                         ),

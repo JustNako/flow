@@ -46,9 +46,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
     setState(() => _loadingStats = true);
     try {
       final results = await Future.wait([
-        _api.getStreak(_habit.id!),
-        _api.getStats(_habit.id!),
-        _api.getHeatmap(_habit.id!),
+        _api.getStreak(_habit.id!, localId: _habit.localId),
+        _api.getStats(_habit.id!, localId: _habit.localId),
+        _api.getHeatmap(_habit.id!, localId: _habit.localId),
       ]);
       if (mounted) {
         setState(() {
@@ -82,7 +82,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
     });
 
     try {
-      await _api.toggleHabit(_habit.id!);
+      await _api.toggleHabit(_habit.id!, habitLocalId: _habit.localId);
       await _loadAllData();
     } catch (e) {
       if (mounted) {

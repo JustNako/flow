@@ -54,6 +54,11 @@ class OfflineManager {
       // Проверить начальный статус сети
       await _checkConnectivity();
 
+      // Если при старте интернет есть — сразу запускаем фоновую синхронизацию в обе стороны
+      if (_isOnline) {
+        _synchronizeWhenOnline();
+      }
+
       // Слушать изменения сети
       _connectivitySubscription = _connectivity.onConnectivityChanged.listen((result) {
         _handleConnectivityChange(result);

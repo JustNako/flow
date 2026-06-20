@@ -30,6 +30,7 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
   List<Habit> _todayHabits = [];
   List<Habit> _otherHabits = [];
   bool _isLoading = false;
+  bool _isLoadingData = false; // guard against concurrent loadData() calls
   String? _error;
   String? _username;
   int _pendingRequestsCount = 0;
@@ -59,7 +60,10 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
   }
 
   Future<void> loadData({bool showLoading = true}) async {
+    if (_isLoadingData) return; // prevent concurrent rebuilds
+    _isLoadingData = true;
     if (showLoading) setState(() { _isLoading = true; _error = null; });
+
     if (!showLoading && mounted) {
       UpdateService.checkForUpdates(context);
     }
@@ -137,17 +141,19 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       setState(() => _isLoading = false);
+      _isLoadingData = false;
     }
   }
 
   Future<void> _toggleHabit(Habit habit) async {
     final id = habit.id;
     if (id == null) return;
+    if (_togglingIds.contains(id)) return;
 
     HapticFeedback.mediumImpact();
     setState(() => _togglingIds.add(id));
     try {
-      await _api.toggleHabit(id);
+      await _api.toggleHabit(id, habitLocalId: habit.localId);
       
       // Update local state immediately & sort instantly so the user sees the card transition seamlessly
       setState(() {
@@ -883,51 +889,55 @@ class _ZenHabitCard extends StatelessWidget {
                       child: Text(habit.title),
                     ),
                     SizedBox(height: 6),
-                    Row(
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Flexible(
-                          child: Row(
-                            children: [
-                              Flexible(
-                                child: habit.unit != null && habit.unit!.isNotEmpty && habit.unit!.toLowerCase() != 'null'
-                                  ? Text('${habit.targetDays} ${habit.unit}', overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.textSecondary, fontSize: 13))
-                                  : Text('${habit.targetDays} time${habit.targetDays > 1 ? 's' : ''}', overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.textSecondary, fontSize: 13)),
-                              ),
-                              
-                              if (habit.timeOfDay != null && habit.timeOfDay!.isNotEmpty && habit.timeOfDay!.toLowerCase() != 'null') ...[
-                                SizedBox(width: 8),
-                                Text('|', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.1) : context.colors.border, fontSize: 13)),
-                                SizedBox(width: 8),
-                                Icon(Icons.access_time_rounded, size: 13, color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.sage),
-                                SizedBox(width: 4),
-                                Flexible(child: Text(habit.timeOfDay!, overflow: TextOverflow.ellipsis, style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.sage, fontSize: 13, fontWeight: FontWeight.w600))),
-                              ],
-
-                              if (habit.currentStreak > 0) ...[
-                                SizedBox(width: 8),
-                                Text('|', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.1) : context.colors.border, fontSize: 13)),
-                                SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: context.colors.terracotta.withOpacity(isDone ? 0.05 : 0.15),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.whatshot_rounded, size: 12, color: isDone ? context.colors.textSecondary.withOpacity(0.5) : context.colors.terracotta),
-                                      SizedBox(width: 4),
-                                      Text('${habit.currentStreak}', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.5) : context.colors.terracotta, fontSize: 12, fontWeight: FontWeight.bold)),
-                                    ],
-                                  ),
-                                )
-                              ]
-                            ],
+                        Text(
+                          habit.unit != null && habit.unit!.isNotEmpty && habit.unit!.toLowerCase() != 'null'
+                            ? '${habit.targetDays} ${habit.unit}'
+                            : '${habit.targetDays} time${habit.targetDays > 1 ? 's' : ''}',
+                          style: TextStyle(
+                            color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.textSecondary,
+                            fontSize: 13,
                           ),
                         ),
+                        if (habit.timeOfDay != null && habit.timeOfDay!.isNotEmpty && habit.timeOfDay!.toLowerCase() != 'null') ...[
+                          Text('·', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.2) : context.colors.border, fontSize: 13)),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.access_time_rounded, size: 13, color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.sage),
+                              SizedBox(width: 4),
+                              Text(
+                                habit.timeOfDay!,
+                                style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.3) : context.colors.sage, fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (habit.currentStreak > 0) ...[
+                          Text('·', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.2) : context.colors.border, fontSize: 13)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: context.colors.terracotta.withOpacity(isDone ? 0.05 : 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.whatshot_rounded, size: 12, color: isDone ? context.colors.textSecondary.withOpacity(0.5) : context.colors.terracotta),
+                                SizedBox(width: 4),
+                                Text('${habit.currentStreak}', style: TextStyle(color: isDone ? context.colors.textSecondary.withOpacity(0.5) : context.colors.terracotta, fontSize: 12, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
+
                   ],
                 ),
               ),

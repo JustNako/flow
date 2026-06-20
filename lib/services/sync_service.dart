@@ -49,13 +49,13 @@ class SyncService {
       _isSyncing = true;
       print('🔄 Начало синхронизации...');
 
-      // 1. PULL - получить изменения с сервера
-      await _pull();
-      print('✅ PULL завершен');
-
-      // 2. PUSH - отправить локальные изменения
+      // 1. PUSH - отправить локальные изменения
       await _push();
       print('✅ PUSH завершен');
+
+      // 2. PULL - получить изменения с сервера
+      await _pull();
+      print('✅ PULL завершен');
 
       print('🎉 Синхронизация успешна!');
       return true;
@@ -81,6 +81,14 @@ class SyncService {
       final token = await _auth.getToken();
       if (token == null) throw Exception('Нет токена авторизации');
 
+      // Однакратная миграция для углубления кэша логов с 30 до 365 дней
+      final prefs = await SharedPreferences.getInstance();
+      final hasDoneDeepPull = prefs.getBool('has_done_deep_pull_365') ?? false;
+      if (!hasDoneDeepPull) {
+        await prefs.remove(_lastSyncKey);
+        await prefs.setBool('has_done_deep_pull_365', true);
+      }
+
       // Получить время последней синхронизации
       final lastSyncTime = await _getLastSyncTime();
 
@@ -100,18 +108,29 @@ class SyncService {
       
       // Применить загруженные привычки
       if (data['habits'] is List) {
-        final habits = (data['habits'] as List)
-            .map((h) => Habit.fromJson(h).copyWith(isSynced: true))
-            .toList();
-        await _db.saveHabits(habits);
+        final habits = (data['habits'] as List).map((h) {
+          final habit = Habit.fromJson(h).copyWith(isSynced: true);
+          // Если localId не задан (привычка с сервера), используем id как localId,
+          // чтобы PRIMARY KEY (id, localId) был уникален и ConflictAlgorithm.replace
+          // обновлял существующую строку, а не создавал дубликат.
+          if (habit.localId == null || habit.localId!.isEmpty) {
+            return habit.copyWith(localId: habit.id);
+          }
+          return habit;
+        }).toList();
+        await _db.savePulledHabits(habits);
       }
 
       // Применить загруженные логи
       if (data['habitLogs'] is List) {
-        final logs = (data['habitLogs'] as List)
-            .map((l) => HabitLog.fromJson(l).copyWith(isSynced: true))
-            .toList();
-        await _db.saveHabitLogs(logs);
+        final logs = (data['habitLogs'] as List).map((l) {
+          final log = HabitLog.fromJson(l).copyWith(isSynced: true);
+          if (log.localId == null || log.localId!.isEmpty) {
+            return log.copyWith(localId: log.id);
+          }
+          return log;
+        }).toList();
+        await _db.savePulledHabitLogs(logs);
       }
 
       // Обновить время последней синхронизации серверным временем
@@ -167,8 +186,8 @@ class SyncService {
       }
 
       // Пометить как синхронизированные
-      await _db.saveHabits(unsyncedHabits.map((h) => h.copyWith(isSynced: true)).toList());
-      await _db.saveHabitLogs(unsyncedLogs.map((l) => l.copyWith(isSynced: true)).toList());
+      await _db.markHabitsAsSynced(unsyncedHabits);
+      await _db.markHabitLogsAsSynced(unsyncedLogs);
 
       print('✅ Отправлено ${unsyncedHabits.length} привычек и ${unsyncedLogs.length} логов');
     } catch (e) {
@@ -186,8 +205,8 @@ class SyncService {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_lastSyncKey);
     if (saved != null) return saved;
-    // Первая синхронизация — берём данные за последние 30 дней
-    return DateTime.now().subtract(const Duration(days: 30)).toIso8601String();
+    // Первая синхронизация — берём данные за последние 365 дней в формате UTC для построения стриков
+    return DateTime.now().subtract(const Duration(days: 365)).toUtc().toIso8601String();
   }
 
   /// Обновить время синхронизации

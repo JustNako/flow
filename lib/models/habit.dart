@@ -12,6 +12,8 @@
 /// - localId: временный ID для новых привычек до синхронизации
 library;
 
+import 'dart:convert';
+
 /// Соответствует enum HabitRepeatType на бэке
 enum HabitRepeatType {
   everyDay,         // 1
@@ -124,14 +126,10 @@ class Habit {
       unit: json['unit'] as String?,
       completedDays: json['completedDays'] as int? ?? 0,
       repeatType: _repeatTypeFromInt(json['repeatType'] as int?),
-      repeatDaysOfWeek: (json['repeatDaysOfWeek'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
-          .toList(),
-      repeatDaysOfMonth: (json['repeatDaysOfMonth'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
-          .toList(),
-      repeatTimesPerPeriod: json['repeatTimesPerPeriod'] as int?,
-      repeatPeriod: _repeatPeriodFromInt(json['repeatPeriod'] as int?),
+      repeatDaysOfWeek: _parseJsonList(json['repeatDaysOfWeek']),
+      repeatDaysOfMonth: _parseJsonList(json['repeatDaysOfMonth']),
+      repeatTimesPerPeriod: (json['repeatTimesPerPeriod'] as num?)?.toInt(),
+      repeatPeriod: _repeatPeriodFromInt((json['repeatPeriod'] as num?)?.toInt()),
       createdAt: _parseDate(json['createdAt']),
       updatedAt: _parseDate(json['updatedAt']),
       isDeleted: json['isDeleted'] as bool? ?? false,
@@ -187,10 +185,10 @@ class Habit {
     'isDeleted': isDeleted ? 1 : 0,
     'localId': localId,
     'isSynced': isSynced ? 1 : 0,
-    'isCompletedToday': isCompletedToday ? 1 : 0,
+    // NOTE: isCompletedToday & completionRate30Day are NOT in the DB schema;
+    // they are computed at read-time from habit_logs.
     'isPublic': isPublic ? 1 : 0,
     'notes': notes,
-    'completionRate30Day': completionRate30Day,
     'timeOfDay': timeOfDay,
   };
 
@@ -284,6 +282,25 @@ class Habit {
   static List<int>? _parseCsvInts(String? csv) {
     if (csv == null || csv.isEmpty) return null;
     return csv.split(',').map(int.parse).toList();
+  }
+
+  /// Handles both native JSON arrays AND string-encoded JSON arrays
+  /// (e.g. the /sync/pull endpoint may return "[1,2,3]" instead of [1,2,3])
+  static List<int>? _parseJsonList(dynamic value) {
+    if (value == null) return null;
+    if (value is List) {
+      return value.map((e) => (e as num).toInt()).toList();
+    }
+    if (value is String && value.isNotEmpty) {
+      // Try JSON decode first
+      try {
+        final parsed = jsonDecode(value);
+        if (parsed is List) return parsed.map((e) => (e as num).toInt()).toList();
+      } catch (_) {}
+      // Fall back to CSV (e.g. local DB stores "1,2,3")
+      return _parseCsvInts(value);
+    }
+    return null;
   }
 
   /// Прогресс выполнения 0.0 … 1.0

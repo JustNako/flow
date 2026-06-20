@@ -142,16 +142,40 @@ class ProfileScreenState extends State<ProfileScreen> {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final token = await AuthService.instance.getToken();
+
       if (token != null) {
-        final profile = await ApiService().getUserProfile(token);
+        // Profile: try server, fall back to cached SharedPreferences data
+        Map<String, dynamic>? profile;
+        try {
+          profile = await ApiService().getUserProfile(token)
+              .timeout(const Duration(seconds: 5));
+        } catch (e) {
+          debugPrint('Profile fetch offline: $e');
+          // Build a minimal profile from cached local data
+          final username = await AuthService.instance.getUsername();
+          final userId = await AuthService.instance.getUserId();
+          profile = {
+            'userName': username,
+            'id': userId,
+            'email': null,
+            'isPro': false,
+            'hasPassword': true,
+          };
+        }
+
+        // Habits & streak: already offline-first via HabitApiService
         final habits = await HabitApiService.instance.getHabits();
         final streak = await HabitApiService.instance.getGlobalStreak();
+
+        // Achievements: best-effort only (online feature)
         List<UserAchievementDto> achievements = [];
         try {
-          achievements = await AchievementsApiService.instance.getAchievements();
+          achievements = await AchievementsApiService.instance.getAchievements()
+              .timeout(const Duration(seconds: 5));
         } catch (e) {
-          debugPrint('Error loading achievements: $e');
+          debugPrint('Achievements offline: $e');
         }
+
         if (mounted) {
           setState(() {
             _appVersion = packageInfo.version;

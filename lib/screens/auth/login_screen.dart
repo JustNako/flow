@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth_service.dart';
+import '../../services/sync_service.dart';
 import '../../api/api_service.dart';
 import 'dart:convert';
 import 'email_pending_screen.dart';
@@ -47,7 +48,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      // Navigate to MainScreen
+      // Navigate to MainScreen after sync finishes
+      await SyncService.instance.sync();
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/main');
     } catch (e) {
       final msg = e.toString().replaceFirst('Exception: ', '');
@@ -88,7 +91,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      // Navigate to MainScreen
+      // Navigate to MainScreen after sync finishes
+      await SyncService.instance.sync();
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/main');
     } catch (e) {
       final msg = e.toString().replaceFirst('Exception: ', '');

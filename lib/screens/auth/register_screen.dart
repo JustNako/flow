@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'email_pending_screen.dart';
 import '../../theme/app_theme.dart';
 import '../../services/notification_service.dart';
+import '../../services/sync_service.dart';
 import '../../widgets/google_sign_in_button.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -124,6 +125,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       // Upload FCM token to backend
       await NotificationService.instance.sendTokenToServer();
+
+      // Sync habits from server immediately after login
+      await SyncService.instance.sync();
 
       if (!mounted) return;
 

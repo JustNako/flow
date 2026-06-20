@@ -4,6 +4,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../api/api_service.dart';
 import 'widget_service.dart';
+import 'local_database.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -120,6 +121,11 @@ class AuthService {
     return prefs.getString('auth_username');
   }
 
+  Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_user_id');
+  }
+
   Future<void> logout() async {
     // Attempt to remove FCM token from the server to prevent cross-account push notifications
     await _api.removeFcmToken();
@@ -130,6 +136,12 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_username');
     await prefs.remove('auth_user_id');
+    await prefs.remove('last_sync_time');
+    await prefs.remove('has_done_deep_pull_365');
+
+    // Wipe local database
+    await LocalDatabase.instance.wipe();
+
     // Unlink RevenueCat user on logout
     try { await Purchases.logOut(); } catch (_) {}
     
