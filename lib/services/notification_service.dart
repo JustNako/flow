@@ -4,12 +4,23 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/auth_service.dart';
-import '../utils/globals.dart';
 import 'widget_service.dart';
+import '../services/local_database.dart';
+
+// Helper function to check if habit is completed today in local DB
+Future<bool> _isHabitCompletedTodayLocally(String habitId, DateTime date) async {
+  try {
+    final db = LocalDatabase.instance;
+    await db.init();
+    final log = await db.getHabitLogForDate(habitId, date, habitLocalId: habitId);
+    return log != null && log.isCompleted && !log.isDeleted;
+  } catch (e) {
+    debugPrint('Error checking habit completion locally: $e');
+    return false;
+  }
+}
 
 // Top-level обработчик фоновых действий с кнопок (Interactive Notifications)
 @pragma('vm:entry-point')
@@ -19,8 +30,7 @@ void onNotificationAction(NotificationResponse response) async {
   if (response.actionId != null && response.actionId!.startsWith('complete_')) {
     final habitId = response.actionId!.replaceAll('complete_', '');
     
-    const secureStorage = FlutterSecureStorage();
-    final token = await secureStorage.read(key: 'auth_token');
+    final token = await AuthService.instance.getToken();
     
     if (token != null) {
       try {
@@ -70,9 +80,29 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       if (idsStr != null && titlesStr != null && idsStr.isNotEmpty) {
         final ids = idsStr.split(',');
         final titles = titlesStr.split(',');
+        
+        final List<String> uncompletedIds = [];
+        final List<String> uncompletedTitles = [];
+        final now = DateTime.now();
+        
+        for (int i = 0; i < ids.length; i++) {
+          final habitId = ids[i];
+          final isCompleted = await _isHabitCompletedTodayLocally(habitId, now);
+          if (!isCompleted) {
+            uncompletedIds.add(habitId);
+            uncompletedTitles.add(titles[i]);
+          }
+        }
+        
+        // If all habits are completed locally, don't show the reminder notification
+        if (uncompletedIds.isEmpty) {
+          debugPrint('🤫 Skipping reminder notification: all habits are already completed locally.');
+          return;
+        }
+        
         actions = [];
-        for (int i = 0; i < ids.length && i < 3; i++) {
-          actions.add(AndroidNotificationAction('complete_${ids[i]}', titles[i]));
+        for (int i = 0; i < uncompletedIds.length && i < 3; i++) {
+          actions.add(AndroidNotificationAction('complete_${uncompletedIds[i]}', uncompletedTitles[i]));
         }
       }
     }
@@ -165,7 +195,7 @@ class NotificationService {
     _fcm.onTokenRefresh.listen(_uploadToken);
   }
 
-  void _onForegroundMessage(RemoteMessage message) {
+  void _onForegroundMessage(RemoteMessage message) async {
     debugPrint('📩 Foreground: ${message.data}');
     
     final type = message.data['type'];
@@ -181,9 +211,28 @@ class NotificationService {
         if (idsStr != null && titlesStr != null && idsStr.isNotEmpty) {
           final ids = idsStr.split(',');
           final titles = titlesStr.split(',');
+          
+          final List<String> uncompletedIds = [];
+          final List<String> uncompletedTitles = [];
+          final now = DateTime.now();
+          
+          for (int i = 0; i < ids.length; i++) {
+            final habitId = ids[i];
+            final isCompleted = await _isHabitCompletedTodayLocally(habitId, now);
+            if (!isCompleted) {
+              uncompletedIds.add(habitId);
+              uncompletedTitles.add(titles[i]);
+            }
+          }
+          
+          if (uncompletedIds.isEmpty) {
+            debugPrint('🤫 Skipping reminder notification (foreground): all habits completed.');
+            return;
+          }
+          
           actions = [];
-          for (int i = 0; i < ids.length && i < 3; i++) {
-            actions.add(AndroidNotificationAction('complete_${ids[i]}', titles[i]));
+          for (int i = 0; i < uncompletedIds.length && i < 3; i++) {
+            actions.add(AndroidNotificationAction('complete_${uncompletedIds[i]}', uncompletedTitles[i]));
           }
         }
       }

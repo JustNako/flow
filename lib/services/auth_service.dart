@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
 import '../api/api_service.dart';
 import 'widget_service.dart';
 import 'local_database.dart';
@@ -46,8 +47,9 @@ class AuthService {
       const secureStorage = FlutterSecureStorage();
       await secureStorage.write(key: 'auth_token', value: token);
 
-      // Save non-secure data in SharedPreferences
+      // Save non-secure data and fallback token in SharedPreferences
       final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token_fallback', token);
       String realUsername = googleUser.email.split('@')[0];
 
       // Fetch user profile to get the real userId and userName
@@ -88,8 +90,9 @@ class AuthService {
     const secureStorage = FlutterSecureStorage();
     await secureStorage.write(key: 'auth_token', value: token);
 
-    // Save non-secure data in SharedPreferences
+    // Save non-secure data and fallback token in SharedPreferences
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token_fallback', token);
     await prefs.setString('auth_username', username);
 
     // Fetch user profile to get the real userId for RevenueCat
@@ -112,8 +115,22 @@ class AuthService {
   }
 
   Future<String?> getToken() async {
-    const secureStorage = FlutterSecureStorage();
-    return await secureStorage.read(key: 'auth_token');
+    try {
+      const secureStorage = FlutterSecureStorage();
+      final token = await secureStorage.read(key: 'auth_token');
+      if (token != null) return token;
+    } catch (e) {
+      debugPrint('[AuthService] Failed to read from secure storage: $e');
+    }
+
+    // Fallback to SharedPreferences for background isolates / widget service
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('auth_token_fallback');
+    } catch (e) {
+      debugPrint('[AuthService] Failed to read fallback token: $e');
+      return null;
+    }
   }
 
   Future<String?> getUsername() async {
@@ -134,6 +151,7 @@ class AuthService {
     await secureStorage.delete(key: 'auth_token');
 
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token_fallback');
     await prefs.remove('auth_username');
     await prefs.remove('auth_user_id');
     await prefs.remove('last_sync_time');
@@ -184,6 +202,7 @@ class AuthService {
     
     const secureStorage = FlutterSecureStorage();
     await secureStorage.delete(key: 'auth_token');
+    await prefs.remove('auth_token_fallback');
 
     await prefs.remove('auth_username');
     await prefs.remove('auth_user_id');

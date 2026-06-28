@@ -143,6 +143,7 @@ class HabitApiService {
     int? repeatPeriod,
     bool isPublic = true,
     String? timeOfDay,
+    int iconIndex = 0,
   }) async {
     final userId = await _auth.getUserId();
     final now = DateTime.now();
@@ -167,6 +168,7 @@ class HabitApiService {
           : null,
       isPublic: isPublic,
       timeOfDay: timeOfDay,
+      iconIndex: iconIndex,
       createdAt: now,
       updatedAt: now,
       localId: localId,
@@ -188,6 +190,7 @@ class HabitApiService {
       repeatPeriod: repeatPeriod,
       isPublic: isPublic,
       timeOfDay: timeOfDay,
+      iconIndex: iconIndex,
       localId: localId,
     );
   }
@@ -205,6 +208,7 @@ class HabitApiService {
     int? repeatPeriod,
     bool isPublic = true,
     String? timeOfDay,
+    int iconIndex = 0,
     required String localId,
   }) async {
     try {
@@ -222,6 +226,7 @@ class HabitApiService {
         'repeatPeriod': repeatPeriod,
         'isPublic': isPublic,
         'timeOfDay': timeOfDay,
+        'iconIndex': iconIndex,
       };
 
       final response = await http.post(
@@ -239,7 +244,12 @@ class HabitApiService {
         await _db.updateHabitIdForLogs(localId, serverHabit.id!);
         // Заменить локальную запись серверной (с реальным ID)
         await _db.hardDeleteHabit(localId);
-        await _db.saveHabit(serverHabit.copyWith(isSynced: true, localId: serverHabit.id));
+        final userId = await _auth.getUserId();
+        await _db.saveHabit(serverHabit.copyWith(
+          isSynced: true,
+          localId: serverHabit.id,
+          userId: userId,
+        ));
         debugPrint('✅ Habit synced to server: ${serverHabit.id}');
       } else if (response.statusCode == 403) {
         // Pro limit — удалить локальную запись, выбросить ошибку

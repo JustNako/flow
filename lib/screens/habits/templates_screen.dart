@@ -1,13 +1,12 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../api/habit_api_service.dart';
 import '../../models/habit_template.dart';
 import 'ai_generator_screen.dart';
 import '../paywall/paywall_screen.dart';
+import '../main_screen.dart';
 
 // ── Zen palette (always dark regardless of system theme) ──────────────────────
-import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 
 class TemplatesScreen extends StatefulWidget {
@@ -40,6 +39,19 @@ class _TemplatesScreenState extends State<TemplatesScreen>
   void dispose() {
     _glowController.dispose();
     super.dispose();
+  }
+
+  void _handleSuccess() {
+    if (!mounted) return;
+    final routeName = ModalRoute.of(context)?.settings.name;
+    if (routeName == '/templates') {
+      Navigator.of(context).pop(true);
+    } else {
+      final mainState = context.findAncestorStateOfType<MainScreenState>();
+      if (mainState != null) {
+        mainState.setTab(0, habitCreated: true);
+      }
+    }
   }
 
   Future<void> _loadProStatus() async {
@@ -196,7 +208,7 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                                 builder: (_) => const AiGeneratorScreen()),
                           );
                           if (result == true && context.mounted) {
-                            Navigator.of(context).pop(true);
+                            _handleSuccess();
                           } else if (context.mounted) {
                             _loadProStatus();
                           }
@@ -212,7 +224,7 @@ class _TemplatesScreenState extends State<TemplatesScreen>
                           final result = await Navigator.of(context)
                               .pushNamed('/add_habit');
                           if (result == true && context.mounted) {
-                            Navigator.of(context).pop(true);
+                            _handleSuccess();
                           } else if (context.mounted) {
                             _loadProStatus();
                           }
@@ -306,13 +318,16 @@ class _TemplatesScreenState extends State<TemplatesScreen>
     );
   }
 
-  void _showCategorySheet(BuildContext ctx, HabitTemplateCategory cat) {
-    showModalBottomSheet(
+  void _showCategorySheet(BuildContext ctx, HabitTemplateCategory cat) async {
+    final result = await showModalBottomSheet<bool>(
       context: ctx,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => _CategorySheet(category: cat),
     );
+    if (result == true) {
+      _handleSuccess();
+    }
   }
 }
 
@@ -717,7 +732,6 @@ class _CategorySheet extends StatelessWidget {
                         arguments: t,
                       );
                       if (result == true && ctx.mounted) {
-                        Navigator.of(ctx).pop();
                         Navigator.of(ctx).pop(true);
                       }
                     },

@@ -86,6 +86,7 @@ class Habit {
   final String? timeOfDay;
   final int currentStreak;
   final int completionRate30Day;
+  final int iconIndex; // Index into the icon picker list (0 = water drop, 1 = workout, etc.)
 
   const Habit({
     this.id,
@@ -111,6 +112,7 @@ class Habit {
     this.isPublic = true,
     this.notes,
     this.timeOfDay,
+    this.iconIndex = 0,
   });
 
   // ─── Из JSON (ответ бэка: GET /habits или PULL) ─────────────────────────────
@@ -140,6 +142,7 @@ class Habit {
       timeOfDay: json['timeOfDay'] as String?,
       currentStreak: json['currentStreak'] as int? ?? 0,
       completionRate30Day: json['completionRate30Day'] as int? ?? 0,
+      iconIndex: json['iconIndex'] as int? ?? 0,
     );
   }
 
@@ -163,6 +166,7 @@ class Habit {
     'isPublic': isPublic,
     'notes': notes,
     'timeOfDay': timeOfDay,
+    'iconIndex': iconIndex,
   };
 
   // ─── Для локальной SQLite ───────────────────────────────────────────────────
@@ -190,6 +194,7 @@ class Habit {
     'isPublic': isPublic ? 1 : 0,
     'notes': notes,
     'timeOfDay': timeOfDay,
+    'iconIndex': iconIndex,
   };
 
   factory Habit.fromMap(Map<String, dynamic> map) {
@@ -217,6 +222,7 @@ class Habit {
       timeOfDay: map['timeOfDay'] as String?,
       currentStreak: map['currentStreak'] as int? ?? 0,
       completionRate30Day: map['completionRate30Day'] as int? ?? 0,
+      iconIndex: map['iconIndex'] as int? ?? 0,
     );
   }
 
@@ -244,6 +250,7 @@ class Habit {
     String? timeOfDay,
     int? currentStreak,
     int? completionRate30Day,
+    int? iconIndex,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -269,6 +276,7 @@ class Habit {
       timeOfDay: timeOfDay ?? this.timeOfDay,
       currentStreak: currentStreak ?? this.currentStreak,
       completionRate30Day: completionRate30Day ?? this.completionRate30Day,
+      iconIndex: iconIndex ?? this.iconIndex,
     );
   }
 

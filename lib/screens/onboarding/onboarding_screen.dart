@@ -56,7 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       title: 'Offline First',
       subtitle: 'Internet is optional',
       description:
-          'Log your habits seamlessly even without an internet connection. Flow runs on a local SQLite database and automatically syncs to the cloud when you are back online.',
+          'Log your habits seamlessly even without an internet connection. Flow runs locally on your device and automatically syncs to the cloud when you are back online.',
       gradientColors: [const Color(0xFF9CAFA3), const Color(0xFFC4B5E3)], // Sage green to lavender
       accentColor: const Color(0xFF9CAFA3),
     ),

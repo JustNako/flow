@@ -108,8 +108,12 @@ class SyncService {
       
       // Применить загруженные привычки
       if (data['habits'] is List) {
+        final userId = await _auth.getUserId();
         final habits = (data['habits'] as List).map((h) {
-          final habit = Habit.fromJson(h).copyWith(isSynced: true);
+          final habit = Habit.fromJson(h).copyWith(
+            isSynced: true,
+            userId: userId,
+          );
           // Если localId не задан (привычка с сервера), используем id как localId,
           // чтобы PRIMARY KEY (id, localId) был уникален и ConflictAlgorithm.replace
           // обновлял существующую строку, а не создавал дубликат.

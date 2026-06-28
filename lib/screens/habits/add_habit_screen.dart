@@ -222,6 +222,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         timeOfDay: _selectedTime != null
             ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
             : null,
+        iconIndex: _selectedIconIndex,
       );
 
       if (mounted) Navigator.of(context).pop(true);

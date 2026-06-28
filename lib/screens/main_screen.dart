@@ -7,7 +7,6 @@ import 'stats/stats_screen.dart';
 import 'habits/templates_screen.dart';
 import '../api/habit_api_service.dart';
 import '../services/update_service.dart';
-import '../services/widget_service.dart';
 import '../services/offline_manager.dart';
 import '../theme/app_theme.dart';
 
@@ -15,12 +14,11 @@ class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<MainScreen> createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
+class MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
-  int _previousIndex = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey();
   StreamSubscription<Uri?>? _widgetClickSubscription;
 
@@ -56,16 +54,34 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       UpdateService.checkForUpdates(context);
-      OfflineManager.instance.manualSync();
+      // Step 1: instantly reflect widget toggles from local DB (no network wait)
+      _dashboardKey.currentState?.loadFromLocal();
+      // Step 2: sync unsynced logs to server in background
+      OfflineManager.instance.manualSync().then((_) {
+        // Step 3: after sync, do a full refresh from server
+        _dashboardKey.currentState?.loadData(showLoading: false);
+      });
+    }
+  }
+
+  /// Switches to a tab, optionally triggering a habit-created refresh.
+  void setTab(int index, {bool habitCreated = false}) {
+    if (index != _currentIndex) {
+      setState(() => _currentIndex = index);
+    }
+    if (habitCreated && index == 0) {
+      // Instantly show the new habit from SQLite, then sync from server
+      _dashboardKey.currentState?.loadFromLocal().then((_) {
+        _dashboardKey.currentState?.loadData(showLoading: false);
+      });
+    } else if (index == 0) {
+      _dashboardKey.currentState?.loadData(showLoading: false);
     }
   }
 
   void _onTabTapped(int index) {
     if (_currentIndex == index) return;
-    setState(() {
-      _previousIndex = _currentIndex;
-      _currentIndex = index;
-    });
+    setState(() => _currentIndex = index);
     if (index == 0) _dashboardKey.currentState?.loadData(showLoading: false);
   }
 
@@ -82,11 +98,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
     try {
       await HabitApiService.instance.toggleHabit(habitId);
-      setState(() {
-        _previousIndex = _currentIndex;
-        _currentIndex = 0;
-      });
-      await Future.delayed(const Duration(milliseconds: 200));
+      setState(() => _currentIndex = 0);
       _dashboardKey.currentState?.loadData(showLoading: false);
     } catch (e) {
       debugPrint('[MainScreen] Widget toggle failed: $e');
@@ -97,31 +109,18 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.colors.background,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 400),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          final isEntering = child.key == ValueKey(_currentIndex);
-          final slideDirection = _currentIndex > _previousIndex ? 1.0 : -1.0;
-          
-          final inOffset = Tween<Offset>(begin: Offset(slideDirection, 0.0), end: Offset.zero)
-              .animate(animation);
-          final outOffset = Tween<Offset>(begin: Offset(-slideDirection, 0.0), end: Offset.zero)
-              .animate(animation);
-
-          return SlideTransition(
-            position: isEntering ? inOffset : outOffset,
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens.asMap().entries.map((entry) {
+          final i = entry.key;
+          final screen = entry.value;
+          return AnimatedOpacity(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            opacity: _currentIndex == i ? 1.0 : 0.0,
+            child: screen,
           );
-        },
-        child: KeyedSubtree(
-          key: ValueKey(_currentIndex),
-          child: _screens[_currentIndex],
-        ),
+        }).toList(),
       ),
       bottomNavigationBar: _CustomBottomNav(
         currentIndex: _currentIndex,

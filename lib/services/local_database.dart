@@ -39,7 +39,7 @@ class LocalDatabase {
 
     _db = await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _createTables,
       onUpgrade: _onUpgrade,
     );
@@ -128,6 +128,7 @@ class LocalDatabase {
         isPublic INTEGER DEFAULT 1,
         notes TEXT,
         timeOfDay TEXT,
+        iconIndex INTEGER DEFAULT 0,
         PRIMARY KEY (id, localId)
       )
     ''');
@@ -188,6 +189,11 @@ class LocalDatabase {
 
     if (oldVersion == 5) {
       await db.execute('ALTER TABLE habits ADD COLUMN timeOfDay TEXT');
+      oldVersion = 6;
+    }
+
+    if (oldVersion == 6) {
+      await db.execute('ALTER TABLE habits ADD COLUMN iconIndex INTEGER DEFAULT 0');
     }
   }
 

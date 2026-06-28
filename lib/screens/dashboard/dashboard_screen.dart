@@ -11,6 +11,7 @@ import '../../services/auth_service.dart';
 import '../../services/offline_manager.dart';
 import '../../services/update_service.dart';
 import '../../services/widget_service.dart';
+import '../../services/local_database.dart';
 import '../../theme/app_theme.dart';
 
 const _kGold = Color(0xFFFFD700);
@@ -57,6 +58,39 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
     _progressAnimation = Tween<double>(begin: _progressAnimation.value, end: progress)
         .animate(CurvedAnimation(parent: _progressController, curve: Curves.easeOutBack));
     _progressController.forward(from: 0);
+  }
+
+  /// Мгновенно обновляет UI из локальной базы данных без ожидания сети.
+  /// Вызывается при resume приложения чтобы сразу показать актуальное состояние из виджета.
+  Future<void> loadFromLocal() async {
+    try {
+      final userId = await AuthService.instance.getUserId();
+      if (userId == null) return;
+      final habits = await LocalDatabase.instance.getHabitsWithCompletionStatus(userId);
+      if (!mounted) return;
+      final today = DateTime.now();
+      final todayHabits = habits.where((h) => h.isScheduledFor(today)).toList();
+      final otherHabits = habits.where((h) => !h.isScheduledFor(today)).toList();
+
+      todayHabits.sort((a, b) {
+        if (a.isCompletedToday != b.isCompletedToday) return a.isCompletedToday ? 1 : -1;
+        if (a.timeOfDay != null && b.timeOfDay != null) return a.timeOfDay!.compareTo(b.timeOfDay!);
+        if (a.timeOfDay != null) return -1;
+        if (b.timeOfDay != null) return 1;
+        return a.title.compareTo(b.title);
+      });
+
+      setState(() {
+        _todayHabits = todayHabits;
+        _otherHabits = otherHabits;
+      });
+
+      final total = todayHabits.length;
+      final completed = todayHabits.where((h) => h.isCompletedToday).length;
+      _updateProgressAnimation(total == 0 ? 0 : completed / total);
+    } catch (e) {
+      debugPrint('[Dashboard] loadFromLocal error: $e');
+    }
   }
 
   Future<void> loadData({bool showLoading = true}) async {
@@ -138,9 +172,9 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
 
       WidgetService.updateWidget();
     } catch (e) {
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       _isLoadingData = false;
     }
   }
@@ -276,8 +310,10 @@ class DashboardScreenState extends State<DashboardScreen> with TickerProviderSta
 
   Future<void> _navigateToAddHabit() async {
     final result = await Navigator.of(context).pushNamed('/templates');
-    if (result == true) {
-      // Silently load new habits in the background without any blocking full-screen loaders
+    if (result == true && mounted) {
+      // 1. Instantly show the new habit from local DB (no network wait → no black screen)
+      await loadFromLocal();
+      // 2. Silently sync with server in the background
       loadData(showLoading: false);
     }
   }
@@ -754,34 +790,55 @@ class _ZenHabitCard extends StatelessWidget {
     required this.onDetails,
   });
 
-  IconData _getDynamicIcon(String title) {
-    final lower = title.toLowerCase();
-    if (lower.contains('water') || lower.contains('drink')) return Icons.water_drop_rounded;
-    if (lower.contains('read') || lower.contains('book')) return Icons.menu_book_rounded;
-    if (lower.contains('meditat') || lower.contains('breath')) return Icons.self_improvement_rounded;
-    if (lower.contains('journal') || lower.contains('write')) return Icons.book_rounded;
-    if (lower.contains('walk') || lower.contains('step')) return Icons.directions_walk_rounded;
-    if (lower.contains('run') || lower.contains('jog')) return Icons.directions_run_rounded;
-    if (lower.contains('sleep') || lower.contains('bed')) return Icons.nights_stay_rounded;
-    if (lower.contains('workout') || lower.contains('gym')) return Icons.fitness_center_rounded;
-    if (lower.contains('code') || lower.contains('program')) return Icons.code_rounded;
-    return Icons.spa_rounded;
-  }
+  // Same order as _iconOptions in AddHabitScreen
+  static const List<IconData> _kHabitIcons = [
+    Icons.water_drop_outlined,   // 0 Water
+    Icons.fitness_center,        // 1 Workout
+    Icons.book_outlined,         // 2 Read
+    Icons.nights_stay_outlined,  // 3 Sleep
+    Icons.favorite_border,       // 4 Health
+    Icons.local_cafe_outlined,   // 5 Coffee
+    Icons.restaurant_outlined,   // 6 Diet
+    Icons.psychology_outlined,   // 7 Mind
+    Icons.code,                  // 8 Code
+    Icons.directions_run,        // 9 Run
+    Icons.self_improvement,      // 10 Meditate
+    Icons.music_note_outlined,   // 11 Music
+    Icons.bed_outlined,          // 12 Bed
+    Icons.accessibility_new,     // 13 Stretch
+    Icons.directions_walk,       // 14 Walk
+    Icons.menu_book,             // 15 Book
+    Icons.computer,              // 16 Work
+    Icons.edit_note,             // 17 Plan
+  ];
 
-  Color _getDynamicColor(BuildContext context, String title) {
-    final lower = title.toLowerCase();
-    if (lower.contains('water') || lower.contains('read')) return const Color(0xFF64B5F6);
-    if (lower.contains('meditat') || lower.contains('walk')) return context.colors.sage;
-    if (lower.contains('journal') || lower.contains('sleep')) return context.colors.lavender;
-    if (lower.contains('workout') || lower.contains('run')) return context.colors.terracotta;
-    return const Color(0xFFFFB74D);
-  }
+  static const List<Color> _kHabitColors = [
+    Color(0xFF64B5F6), // 0 Water — blue
+    Color(0xFFEF9A9A), // 1 Workout — red
+    Color(0xFFFFB74D), // 2 Read — amber
+    Color(0xFFB39DDB), // 3 Sleep — purple
+    Color(0xFFF48FB1), // 4 Health — pink
+    Color(0xFFFFCC80), // 5 Coffee — light orange
+    Color(0xFFA5D6A7), // 6 Diet — green
+    Color(0xFF80CBC4), // 7 Mind — teal
+    Color(0xFF90CAF9), // 8 Code — light blue
+    Color(0xFFEF9A9A), // 9 Run — red
+    Color(0xFFA5D6A7), // 10 Meditate — green
+    Color(0xFFCE93D8), // 11 Music — lilac
+    Color(0xFFB39DDB), // 12 Bed — purple
+    Color(0xFF80DEEA), // 13 Stretch — cyan
+    Color(0xFF80CBC4), // 14 Walk — teal
+    Color(0xFFFFB74D), // 15 Book — amber
+    Color(0xFF90CAF9), // 16 Work — blue
+    Color(0xFFA5D6A7), // 17 Plan — green
+  ];
 
   @override
   Widget build(BuildContext context) {
     final isDone = habit.isCompletedToday;
-    final iconData = _getDynamicIcon(habit.title);
-    final iconColor = _getDynamicColor(context, habit.title);
+    final idx = habit.iconIndex.clamp(0, _kHabitIcons.length - 1);
+    final iconData = _kHabitIcons[idx];
+    final iconColor = _kHabitColors[idx];
 
     return Dismissible(
       key: Key(habit.id ?? habit.title),
